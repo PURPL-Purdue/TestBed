@@ -1,3 +1,17 @@
+#Startup
+# 1.	Open SN-N2-01
+# 2.	Close SN-N2-01
+# 3.	Immediately Open SN-O2-01
+# 4.	Start the spark.
+# 5.	Open SN-H2-01 fuel 
+# 6.	Stop the spark
+
+# Shutdown
+# 1.	Open SN-N2-01
+# 2.	Close SN-H2-01
+# 3.	Close SN-O2-01
+# 4.	Close SN-N2-01
+
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QTimer
 import sys
