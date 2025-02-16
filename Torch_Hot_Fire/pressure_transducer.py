@@ -16,7 +16,10 @@ class PressureTransducer:
     def update_pressure(self, handle):
         try:
             voltage = ljm.eReadName(handle, self.input_channel)
-            self.pressure = max(0.0, min(500.0, ((voltage - 0.5) / 4.0) * 500))
+            excitation_voltage = 12.0
+            full_scale_output = (3.00 + 0.015) * 1e-3 * excitation_voltage
+            pressure_full_scale = 30000  # 30,000 PSI max
+            self.pressure = (voltage / full_scale_output) * pressure_full_scale
             self.label.setText(f"{self.pressure:.2f} psi")
             self.data.append(self.pressure)
         except Exception as e:
