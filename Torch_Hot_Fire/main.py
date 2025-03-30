@@ -9,12 +9,14 @@ from sequencer import Sequencer
 from pyqtgraph import PlotWidget
 from PyQt5.QtCore import QTimer
 
-
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TeenyK P&ID")
         self.setGeometry(100, 100, 1320, 700)
+        
+        self._transducers = []
+        self._graphs = []
 
         # Background
         bg_label = QtWidgets.QLabel(self)
@@ -33,10 +35,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labjack.connect_to_labjack()
 
         # Devices
-        self.device_one = ValveControl("SN-H2-01", "CIO0", 570, 438, parent=self)
-        self.device_two = ValveControl("SN-OX-01", "CIO1", 356, 438, parent=self)
-        self.device_three = ValveControl("SN-N2-01", "CIO2", 676, 200, parent=self)
-        self.device_four = ValveControl("Spark-Plug", "CIO3", 100, 100, parent=self)
+        self.device_one = ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self)
+        self.device_two = ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self)
+        self.device_three = ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self)
+        self.device_four = ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self)
 
         # Device Mapping
         self.device_map = {
@@ -47,28 +49,28 @@ class MainWindow(QtWidgets.QMainWindow):
         }
 
         # Create the sequencer with the events and devices
-        self.sequencer = Sequencer(self.device_map, 500, 500, parent=self)
+        self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)
 
         # Pressure Transducers
-        self.transducer1 = PressureTransducer("PT-O2-01", "AIN0", 303, 280, self)
-        self.transducer2 = PressureTransducer("PT-H2-01", "AIN1", 584, 280, self)
-        self.transducer3 = PressureTransducer("PT-TO-01", "AIN2", 457, 392, self)
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN96", "AIN97", 332, 318, self))
+        self._transducers.append(PressureTransducer("PT-H2-01", "AIN98", "AIN99", 562, 318, self))
+        self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
 
         # Graphs for pressure readings
-        self.graph1 = PlotWidget(self)
-        self.graph1.setGeometry(1020, 0, 280, 230)
-        self.graph1.setBackground('w')
-        self.graph1.setTitle("PT1 Pressure")
+        self._graphs[0] = PlotWidget(self)
+        self._graphs[0].setGeometry(1020, 0, 280, 230)
+        self._graphs[0].setBackground('w')
+        self._graphs[0].setTitle("AIN96 Pressure")
 
-        self.graph2 = PlotWidget(self)
-        self.graph2.setGeometry(1020, 230, 280, 230)
-        self.graph2.setBackground('w')
-        self.graph2.setTitle("PT2 Pressure")
+        self._graphs[1] = PlotWidget(self)
+        self._graphs[1].setGeometry(1020, 230, 280, 230)
+        self._graphs[1].setBackground('w')
+        self._graphs[1].setTitle("AIN98 Pressure")
 
-        self.graph3 = PlotWidget(self)
-        self.graph3.setGeometry(1020, 460, 280, 230)
-        self.graph3.setBackground('w')
-        self.graph3.setTitle("PT3 Pressure")
+        self._graphs[2] = PlotWidget(self)
+        self._graphs[2].setGeometry(1020, 460, 280, 230)
+        self._graphs[2].setBackground('w')
+        self._graphs[2].setTitle("AIN100 Pressure")
 
         # Data Logger
         self.data_logger = TransducerDataLogger()
@@ -84,21 +86,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_pressure(self):
         if self.labjack.connection_status:
-            self.transducer1.update_pressure(self.labjack.handle)
-            self.transducer2.update_pressure(self.labjack.handle)
-            self.transducer3.update_pressure(self.labjack.handle)
+            for i in range(len(self._transducers)):
+                try:
+                    # Update pressure
+                    self._transducers[i].update_pressure(self.labjack.handle)
 
-            # Update Graphs
-            self.graph1.plot(self.transducer1.data, clear=True)
-            self.graph2.plot(self.transducer2.data, clear=True)
-            self.graph3.plot(self.transducer3.data, clear=True)
+                    # Update Graphs
+                    self._graphs[i].plot(self._transducers[i].data, clear=True)
+                except Exception as e:
+                    print(f"Error reading pressure from {self.input_channel_1}, {self.input_channel_2}: {e}")
 
             # Log Data
-            self.data_logger.log_data(self.transducer1.pressure, self.transducer2.pressure, self.transducer3.pressure)
-
+            self.data_logger.log_data(self._transducers[0].pressure, self._transducers[1].pressure, self._transducers[2].pressure)
 
     def closeEvent(self, event):
-        self.data_logger.export_to_csv()
+        self.data_logger.stop()
         self.labjack.close_connection()
         print("Shutting down")
         event.accept()
