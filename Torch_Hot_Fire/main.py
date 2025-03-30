@@ -73,7 +73,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._graphs[2].setTitle("AIN100 Pressure")
 
         # Data Logger
-        self.data_logger = TransducerDataLogger()
+        self.data_logger = TransducerDataLogger(self._transducers)
 
         # Timers for updating pressure value and checking connection
         self.pressure_timer = QTimer(self)
