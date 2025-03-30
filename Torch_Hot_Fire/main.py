@@ -57,17 +57,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
 
         # Graphs for pressure readings
-        self._graphs[0] = PlotWidget(self)
+        self._graphs.append(PlotWidget(self))
         self._graphs[0].setGeometry(1020, 0, 280, 230)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("AIN96 Pressure")
 
-        self._graphs[1] = PlotWidget(self)
+        self._graphs.append(PlotWidget(self))
         self._graphs[1].setGeometry(1020, 230, 280, 230)
         self._graphs[1].setBackground('w')
         self._graphs[1].setTitle("AIN98 Pressure")
 
-        self._graphs[2] = PlotWidget(self)
+        self._graphs.append(PlotWidget(self))
         self._graphs[2].setGeometry(1020, 460, 280, 230)
         self._graphs[2].setBackground('w')
         self._graphs[2].setTitle("AIN100 Pressure")
