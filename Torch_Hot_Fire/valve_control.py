@@ -77,16 +77,21 @@ class ValveControl(QtWidgets.QPushButton):
         msg.exec_()
 
         if msg.clickedButton() == yes_button:
-            self.toggle_valve()
+            if (self.valve_open == True):
+                self.toggle_valve_off()
+            elif (self.valve_open == False):
+                self.toggle_valve_on()
 
-    def toggle_valve(self):
-        """Toggle the valve state and update LabJack output."""
-        if not self.device_connected:
-            self.connect_to_labjack()
-            print("Failed to toggle valve because the device is not connected.")
-            return
 
-        self.valve_open = not self.valve_open
+    def toggle_valve_on(self):
+        """Toggle on the valve and update LabJack output"""
+        self.valve_open = True
+        self.update_button_style()
+        self.update_labjack_output()
+
+    def toggle_valve_off(self):
+        """Toggle off the valve and update LabJack output"""
+        self.valve_open = False
         self.update_button_style()
         self.update_labjack_output()
 
