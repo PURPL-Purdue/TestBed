@@ -41,11 +41,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
         self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
 
-        # TODO: Cleanup
-        # self.device_two = 
-        # self.device_three = 
-        # self.device_four = 
-
         # Device Mapping
         self.device_map = {
             "SN-H2-01": self._devices[0],
