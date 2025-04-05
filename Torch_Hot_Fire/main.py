@@ -106,24 +106,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         print("Shutting down")
-        # for device in self._devices:
-        #     try:
-        #         # Ensure connection to LabJack
-        #         if not device.device_connected:
-        #             device.connect_to_labjack()
+        # Turn off all devices
+        for device in self._devices:
+            try:
+                # Ensure connection to LabJack
+                if not device.device_connected:
+                    device.connect_to_labjack()
                 
-        #         # Force the valve closed regardless of UI state
-        #         if device.device_connected and device.handle:
-        #             # Update the UI state to match
-        #             device.valve_open = False
-        #             device.update_button_style()
-        #             device.toggle_valve_off()
+                # Force the valve closed regardless of UI state
+                if device.device_connected and device.handle:
+                    # Update the UI state to match
+                    device.valve_open = False
+                    device.update_button_style()
+                    device.toggle_valve_off()
                     
-        #             print(f"Closed valve: {device.name}")
-        #         else:
-        #             print(f"WARNING: Could not close {device.name} - No connection")
-        #     except Exception as e:
-        #         print(f"ERROR closing {device.name}: {e}")
+                    print(f"Closed valve: {device.name}")
+                else:
+                    print(f"WARNING: Could not close {device.name} - No connection")
+            except Exception as e:
+                print(f"ERROR closing {device.name}: {e}")
         self.data_logger.stop()
         self.labjack.close_connection()
         event.accept()

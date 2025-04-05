@@ -3,7 +3,6 @@ from labjack import ljm
 import datetime as dt
 
 # TODO: Fix connect_to_labjack redundancies. Many try catches
-# TODO: Seperate on/off for safety
 class ValveControl(QtWidgets.QPushButton):
     def __init__(self, name, labjack_output, x, y, parent=None):
         super(ValveControl, self).__init__(parent)
@@ -18,22 +17,25 @@ class ValveControl(QtWidgets.QPushButton):
         self.move(x, y)
         self.adjustSize()
 
-        # # Initialize a connection and read initial values
-        # self.connect_to_labjack()
-        # if self.device_connected:
-        #     try:
-        #         # Read the current state from the LabJack
-        #         current_state = ljm.eReadName(self.handle, self.labjack_output)
-        #         print(f"{current_state}")
-        #         # Update our internal state based on actual hardware state (0=open, 1=closed)
-        #         self.valve_open = (current_state == 0)
-                
-        #         # Update button appearance to match actual state
-        #         self.update_button_style()
-                
-        #         print(f"Initialized {self.name} - Current state: {'OPEN' if self.valve_open else 'CLOSED'}")
-        #     except Exception as e:
-        #         print(f"Error reading initial state of {self.name}: {e}")
+        # Initialize a connection and read initial values
+        self.connect_to_labjack()
+        if self.device_connected:
+            try:
+                # Read the current state from the LabJack
+                current_state = ljm.eReadName(self.handle, self.labjack_output)
+                print(f"This is the current state: {current_state}")
+                # Update our internal state based on actual hardware state (0=open, 1=closed)
+                self.valve_open = (current_state == 0)
+
+                if (self.valve_open):
+                    # Update button appearance to match actual state
+                    self.update_button_style()
+                    # eReadName resets the switch to off, this will switch it back to on
+                    self.toggle_valve_on()
+
+                print(f"Initialized {self.name} - Current state: {'OPEN' if self.valve_open else 'CLOSED'}")
+            except Exception as e:
+                print(f"Error reading initial state of {self.name}: {e}")
 
     def connect_to_labjack(self):
         """Establish connection to LabJack if not already connected."""
