@@ -113,11 +113,11 @@ class MainWindow(QtWidgets.QMainWindow):
         #             device.connect_to_labjack()
                 
         #         # Force the valve closed regardless of UI state
-        #         # Using direct LabJack command (assuming 1 = closed based on your implementation)
         #         if device.device_connected and device.handle:
         #             # Update the UI state to match
         #             device.valve_open = False
         #             device.update_button_style()
+        #             device.toggle_valve_off()
                     
         #             print(f"Closed valve: {device.name}")
         #         else:
