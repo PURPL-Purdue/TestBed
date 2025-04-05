@@ -17,6 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self._transducers = []
         self._graphs = []
+        self._devices = []
 
         # Background
         bg_label = QtWidgets.QLabel(self)
@@ -35,26 +36,31 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labjack.connect_to_labjack()
 
         # Devices
-        self.device_one = ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self)
-        self.device_two = ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self)
-        self.device_three = ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self)
-        self.device_four = ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self)
+        self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
+        self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
+        self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
+        self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
+
+        # TODO: Cleanup
+        # self.device_two = 
+        # self.device_three = 
+        # self.device_four = 
 
         # Device Mapping
         self.device_map = {
-            "SN-H2-01": self.device_one,
-            "SN-OX-01": self.device_two,
-            "SN-N2-01": self.device_three,
-            "Spark-Plug": self.device_four,
+            "SN-H2-01": self._devices[0],
+            "SN-OX-01": self._devices[1],
+            "SN-N2-01": self._devices[2],
+            "Spark-Plug": self._devices[3],
         }
 
         # Create the sequencer with the events and devices
         self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN96", "AIN97", 332, 318, self))
-        self._transducers.append(PressureTransducer("PT-H2-01", "AIN98", "AIN99", 562, 318, self))
-        self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN1", "", 332, 318, self))
+        # self._transducers.append(PressureTransducer("PT-H2-01", "AIN98", "AIN99", 562, 318, self))
+        # self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
 
         # Graphs for pressure readings
         self._graphs.append(PlotWidget(self))
@@ -78,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Timers for updating pressure value and checking connection
         self.pressure_timer = QTimer(self)
         self.pressure_timer.timeout.connect(self.update_pressure)
-        self.pressure_timer.start(100)  # Changes Data Timing as Well
+        self.pressure_timer.start(10)  # Changes Data Timing as Well
 
         self.reconnect_timer = QTimer(self)
         self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
@@ -96,13 +102,30 @@ class MainWindow(QtWidgets.QMainWindow):
                 except Exception as e:
                     print(f"Error reading pressure from {self.input_channel_1}, {self.input_channel_2}: {e}")
 
-            # Log Data
-            self.data_logger.log_data(self._transducers[0].pressure, self._transducers[1].pressure, self._transducers[2].pressure)
+            self.data_logger.log_data()
 
     def closeEvent(self, event):
+        print("Shutting down")
+        # for device in self._devices:
+        #     try:
+        #         # Ensure connection to LabJack
+        #         if not device.device_connected:
+        #             device.connect_to_labjack()
+                
+        #         # Force the valve closed regardless of UI state
+        #         # Using direct LabJack command (assuming 1 = closed based on your implementation)
+        #         if device.device_connected and device.handle:
+        #             # Update the UI state to match
+        #             device.valve_open = False
+        #             device.update_button_style()
+                    
+        #             print(f"Closed valve: {device.name}")
+        #         else:
+        #             print(f"WARNING: Could not close {device.name} - No connection")
+        #     except Exception as e:
+        #         print(f"ERROR closing {device.name}: {e}")
         self.data_logger.stop()
         self.labjack.close_connection()
-        print("Shutting down")
         event.accept()
 
 # Main application
