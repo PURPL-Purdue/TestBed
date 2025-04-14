@@ -21,8 +21,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Background
         bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("TeenyK_BG.png").scaled(1000, 700)
-        bg_label.setPixmap(bg_pixmap)
+        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/TeeneyK_BG.png")
+        scaled_pixmap = bg_pixmap.scaled(1000, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        bg_label.setPixmap(scaled_pixmap)
         bg_label.setGeometry(0, 0, 1000, 700)
 
         # Connection Status Label
@@ -40,6 +41,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
         self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
         self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
+        '''
+        self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
+        self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
+        self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
+        self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
+        '''
 
         # Device Mapping
         self.device_map = {
@@ -85,6 +92,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
         self.reconnect_timer.start(5000)
 
+        QtWidgets.QApplication.instance().aboutToQuit.connect(self.perform_shutdown)
+
     def update_pressure(self):
         if self.labjack.connection_status:
             for i in range(len(self._transducers)):
@@ -98,8 +107,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(f"Error reading pressure from {self.input_channel_1}, {self.input_channel_2}: {e}")
 
             self.data_logger.log_data()
-
-    def closeEvent(self, event):
+    
+    def perform_shutdown(self):
         print("Shutting down")
         # Turn off all devices
         for device in self._devices:
@@ -122,6 +131,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 print(f"ERROR closing {device.name}: {e}")
         self.data_logger.stop()
         self.labjack.close_connection()
+
+    def closeEvent(self, event):
+        self.perform_shutdown()
         event.accept()
 
 # Main application
