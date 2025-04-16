@@ -12,8 +12,9 @@ from PyQt5.QtCore import QTimer
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        self.windim_x, self.windim_y = 900,680
         self.setWindowTitle("TeenyK P&ID")
-        self.setGeometry(100, 100, 1200, 900)
+        self.setGeometry(100, 100, self.windim_x, self.windim_y)
         
         self._transducers = []
         self._graphs = []
@@ -22,13 +23,13 @@ class MainWindow(QtWidgets.QMainWindow):
         # Background
         bg_label = QtWidgets.QLabel(self)
         bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/torch_bk_bg.png")
-        scaled_pixmap = bg_pixmap.scaled(1200, 900, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        scaled_pixmap = bg_pixmap.scaled(self.windim_x, self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
-        bg_label.setGeometry(0, 0, 1200, 900)
+        bg_label.setGeometry(0, 0, self.windim_x, self.windim_y)
 
         # Connection Status Label
         self.connection_status = QtWidgets.QLabel("LabJack T7: Connection Missing", self)
-        self.connection_status.setGeometry(740, 20, 240, 25)
+        self.connection_status.setGeometry(640, 20, 240, 25)
         self.connection_status.setAlignment(Qt.AlignCenter)
         self.connection_status.setStyleSheet("background-color: red; color: white; font-weight: bold;")
 
