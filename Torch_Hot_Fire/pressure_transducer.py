@@ -25,7 +25,8 @@ class PressureTransducer:
             # pressure_full_scale = 10000  # 10,000 PSI max
             # self.pressure = ((voltage_1 - voltage_2) / full_scale_output) * pressure_full_scale
             # self.label.setText(f"{self.pressure:.2f} psi")
-            self.pressure = 500 * ((abs((voltage_1/1000)-.5))/4)
+            # self.pressure = 500 * ((abs((voltage_1/1000)-.5))/4)
+            self.pressure = voltage_1
             self.data.append(self.pressure)
         except Exception as e:
             self.pressure = float('nan')

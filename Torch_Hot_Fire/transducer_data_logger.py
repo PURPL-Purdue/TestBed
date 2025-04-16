@@ -5,11 +5,12 @@ import os
 from datetime import datetime
 
 class TransducerDataLogger:
-    def __init__(self, transducers_list, filename="Torch_Hot_Fire/transducer_log.csv"):
+    def __init__(self, transducers_list, devices_list, filename="Torch_Hot_Fire/transducer_log.csv"):
         self.filename = filename
         self.log_queue = queue.Queue()
         self.running = True
         self._transducers = transducers_list
+        self._devices = devices_list
 
         # Create CSV file and write header if it doesn't exist
         if not os.path.exists(self.filename):
@@ -17,6 +18,8 @@ class TransducerDataLogger:
                 entry = ["Timestamp"]
                 for transducer in self._transducers:
                     entry.append(f"{transducer.input_channel_1} Pressure")
+                for device in self._devices:
+                    entry.append(f"{device.name} State")
                 writer = csv.writer(file)
                 writer.writerow(entry)
 
@@ -30,6 +33,8 @@ class TransducerDataLogger:
         entry = [timestamp]
         for transducer in self._transducers:
             entry.append(transducer.pressure)
+        for device in self._devices:
+            entry.append(device.valve_open)
         self.log_queue.put(entry)
 
     def _process_queue(self):

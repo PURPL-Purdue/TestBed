@@ -13,7 +13,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TeenyK P&ID")
-        self.setGeometry(100, 100, 1320, 700)
+        self.setGeometry(100, 100, 1200, 900)
         
         self._transducers = []
         self._graphs = []
@@ -21,10 +21,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Background
         bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/TeeneyK_BG.png")
-        scaled_pixmap = bg_pixmap.scaled(1000, 700, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/torch_bk_bg.png")
+        scaled_pixmap = bg_pixmap.scaled(1200, 900, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
-        bg_label.setGeometry(0, 0, 1000, 700)
+        bg_label.setGeometry(0, 0, 1200, 900)
 
         # Connection Status Label
         self.connection_status = QtWidgets.QLabel("LabJack T7: Connection Missing", self)
@@ -60,28 +60,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN1", "", 332, 318, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN13", "", 332, 318, self))
         # self._transducers.append(PressureTransducer("PT-H2-01", "AIN98", "AIN99", 562, 318, self))
         # self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
 
-        # Graphs for pressure readings
-        self._graphs.append(PlotWidget(self))
-        self._graphs[0].setGeometry(1020, 0, 280, 230)
-        self._graphs[0].setBackground('w')
-        self._graphs[0].setTitle("AIN96 Pressure")
+        # TODO: Clean up whether or not we want graphs
+        # # Graphs for pressure readings
+        # self._graphs.append(PlotWidget(self))
+        # self._graphs[0].setGeometry(1020, 0, 280, 230)
+        # self._graphs[0].setBackground('w')
+        # self._graphs[0].setTitle("AIN96 Pressure")
 
-        self._graphs.append(PlotWidget(self))
-        self._graphs[1].setGeometry(1020, 230, 280, 230)
-        self._graphs[1].setBackground('w')
-        self._graphs[1].setTitle("AIN98 Pressure")
+        # self._graphs.append(PlotWidget(self))
+        # self._graphs[1].setGeometry(1020, 230, 280, 230)
+        # self._graphs[1].setBackground('w')
+        # self._graphs[1].setTitle("AIN98 Pressure")
 
-        self._graphs.append(PlotWidget(self))
-        self._graphs[2].setGeometry(1020, 460, 280, 230)
-        self._graphs[2].setBackground('w')
-        self._graphs[2].setTitle("AIN100 Pressure")
+        # self._graphs.append(PlotWidget(self))
+        # self._graphs[2].setGeometry(1020, 460, 280, 230)
+        # self._graphs[2].setBackground('w')
+        # self._graphs[2].setTitle("AIN100 Pressure")
 
         # Data Logger
-        self.data_logger = TransducerDataLogger(self._transducers)
+        self.data_logger = TransducerDataLogger(self._transducers, self._devices)
 
         # Timers for updating pressure value and checking connection
         self.pressure_timer = QTimer(self)
@@ -101,10 +102,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     # Update pressure
                     self._transducers[i].update_pressure(self.labjack.handle)
 
-                    # Update Graphs
-                    self._graphs[i].plot(self._transducers[i].data, clear=True)
+                    # # Update Graphs
+                    # self._graphs[i].plot(self._transducers[i].data, clear=True)
                 except Exception as e:
-                    print(f"Error reading pressure from {self.input_channel_1}, {self.input_channel_2}: {e}")
+                    print(f"Error reading pressure from {self._trandsucers[i].input_channel_1}: {e}")
 
             self.data_logger.log_data()
     

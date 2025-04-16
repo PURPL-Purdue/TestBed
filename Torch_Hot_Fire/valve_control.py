@@ -11,11 +11,14 @@ class ValveControl(QtWidgets.QPushButton):
         self.valve_open = False
         self.device_connected = False
         self.handle = None
-        self.setText("Valve Closed")
+        # self.setText("C")
+        # self.setText("Valve Closed")
         self.update_button_style()
         self.clicked.connect(self.confirm_toggle_valve)
         self.move(x, y)
-        self.adjustSize()
+        # self.adjustSize()
+        self.setFixedHeight(15)
+        self.setFixedWidth(12)
 
         # Initialize a connection and read initial values
         self.connect_to_labjack()
@@ -60,29 +63,30 @@ class ValveControl(QtWidgets.QPushButton):
             QtWidgets.QMessageBox.warning(self, "Connection Error", "Failed to connect to LabJack. Please try again.")
             return
 
-        # Create a confirmation message box
-        msg = QtWidgets.QMessageBox(self)
-        msg.setWindowTitle("Confirmation")
-        msg.setText(f"Are you certain you want to {'close' if self.valve_open else 'open'} {self.name}?")
+        # TODO: Clean up - no confirmation message
+        # # Create a confirmation message box
+        # msg = QtWidgets.QMessageBox(self)
+        # msg.setWindowTitle("Confirmation")
+        # msg.setText(f"Are you certain you want to {'close' if self.valve_open else 'open'} {self.name}?")
 
-        # Apply dark mode styling
-        msg.setStyleSheet(
-            "QMessageBox { background-color: #2e2e2e; }"
-            "QLabel { color: white; }"
-            "QPushButton { background-color: #4a4a4a; color: white; font-size: 10pt; }"
-        )
+        # # Apply dark mode styling
+        # msg.setStyleSheet(
+        #     "QMessageBox { background-color: #2e2e2e; }"
+        #     "QLabel { color: white; }"
+        #     "QPushButton { background-color: #4a4a4a; color: white; font-size: 10pt; }"
+        # )
 
-        # Add Yes and No buttons
-        yes_button = msg.addButton("Yes", QtWidgets.QMessageBox.AcceptRole)
-        no_button = msg.addButton("No", QtWidgets.QMessageBox.RejectRole)
-        msg.setDefaultButton(no_button)
-        msg.exec_()
+        # # Add Yes and No buttons
+        # yes_button = msg.addButton("Yes", QtWidgets.QMessageBox.AcceptRole)
+        # no_button = msg.addButton("No", QtWidgets.QMessageBox.RejectRole)
+        # msg.setDefaultButton(no_button)
+        # msg.exec_()
 
-        if msg.clickedButton() == yes_button:
-            if (self.valve_open == True):
-                self.toggle_valve_off()
-            elif (self.valve_open == False):
-                self.toggle_valve_on()
+        # if msg.clickedButton() == yes_button:
+        #     if (self.valve_open == True):
+        #         self.toggle_valve_off()
+        #     elif (self.valve_open == False):
+        #         self.toggle_valve_on()
 
 
     def toggle_valve_on(self):
@@ -109,6 +113,7 @@ class ValveControl(QtWidgets.QPushButton):
 
     def update_button_style(self):
         """Update the button's text and style based on the valve state."""
-        text, color = ("Valve Open", "green") if self.valve_open else ("Valve Closed", "red")
+        # text, color = ("Valve Open", "green") if self.valve_open else ("Valve Closed", "red")
+        text, color = ("O", "green") if self.valve_open else ("C", "red")
         self.setText(text)
         self.setStyleSheet(f"background-color: {color}; color: white; font-size: 12pt; font-weight: bold;")
