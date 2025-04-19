@@ -17,7 +17,7 @@ class TransducerDataLogger:
             with open(self.filename, mode='w', newline='') as file:
                 entry = ["Timestamp"]
                 for transducer in self._transducers:
-                    entry.append(f"{transducer.input_channel_1} Pressure")
+                    entry.append(f"{transducer.name} Pressure")
                 for device in self._devices:
                     entry.append(f"{device.name} State")
                 writer = csv.writer(file)

@@ -60,7 +60,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN13", "", 332, 318, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN0", "", 520, 330, self))
+        self._transducers.append(PressureTransducer("PT-O2-02", "AIN96", "", 200, 470, self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 420, 200, self))
+        self._transducers.append(PressureTransducer("PT-N2-02", "AIN72", "", 200, 215, self))
+        self._transducers.append(PressureTransducer("PT-N2-03", "AIN73", "", 200, 245, self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 590, 525, self))
+        self._transducers.append(PressureTransducer("PT-N2-02", "AIN72", "", 200, 625, self))
+
+        
         # self._transducers.append(PressureTransducer("PT-H2-01", "AIN98", "AIN99", 562, 318, self))
         # self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
 
