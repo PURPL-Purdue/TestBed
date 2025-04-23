@@ -20,8 +20,8 @@ class TransducerDataLogger(QtWidgets.QPushButton):
         self.high_speed_mode = False  # Track current mode
         
         # Configure Button Display
-        self.setFixedHeight(100)  # Increased for better visibility
-        self.setFixedWidth(150)  # Increased for text
+        self.setFixedHeight(100) 
+        self.setFixedWidth(194) 
         self.setText("LOGGING SPEED: \n Low Speed")  # Initial text
         
         # Set initial color

@@ -71,13 +71,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN0", "", 520, 330, self))
-        self._transducers.append(PressureTransducer("PT-O2-02", "AIN96", "", 200, 470, self))
-        self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 420, 200, self))
-        self._transducers.append(PressureTransducer("PT-N2-02", "AIN72", "", 200, 215, self))
-        self._transducers.append(PressureTransducer("PT-N2-03", "AIN73", "", 200, 245, self))
-        self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 590, 525, self))
-        self._transducers.append(PressureTransducer("PT-N2-02", "AIN72", "", 200, 625, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN0", "", 540, 332, self))
+        self._transducers.append(PressureTransducer("PT-O2-03", "AIN96", "", 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 439, 188, self))
+        self._transducers.append(PressureTransducer("PT-N2-04", "AIN72", "", 210, 231, self))
+        self._transducers.append(PressureTransducer("PT-H2-01", "AIN0", "", 607, 530, self))
+        self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", "", 210, 623, self))
 
         # Data Logger
         self.data_logger = TransducerDataLogger(self._transducers, self._devices, parent=self)
