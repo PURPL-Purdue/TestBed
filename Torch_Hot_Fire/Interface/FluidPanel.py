@@ -56,22 +56,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Create the valve controls in the main window but don't display them
         # These will serve as the "backend" for the solenoid panel
-        self._devices.append(ValveControl("SN-H2-01", "CIO0", 40, 20, parent=self.valve_window))
-        self._devices.append(ValveControl("SN-O2-01", "CIO1", 300, 120, parent=self.valve_window))
-        self._devices.append(ValveControl("SN-N2-01", "EIO7", 365, 60, parent=self.valve_window))
-        # self._devices.append(ValveControl("Spark-Plug", "CIO3", 80, 80, parent=self.valve_window))
+        self._devices.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
+        self._devices.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
+        self._devices.append(ValveControl("SN-N2-01", "EIO7", 369, 52, parent=self.valve_window))
         self.valve_window.show()
 
         # Device Mapping
-
         self.device_map = {}
 
         for i in range(len(self._devices)):
             self.device_map[self._devices[i].name] = self._devices[i]
-            # "SN-H2-01": self._devices[0],
-            # "SN-OX-01": self._devices[1],
-            # "SN-N2-01": self._devices[2],
-            # "Spark-Plug": self._devices[3],
 
         # Create the sequencer with the events and devices
         self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)

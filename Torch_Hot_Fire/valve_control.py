@@ -18,7 +18,7 @@ class ValveControl(QtWidgets.QPushButton):
         self.clicked.connect(self.confirm_toggle_valve)
         self.move(x, y)
         # self.adjustSize()
-        self.setFixedHeight(15)
+        self.setFixedHeight(30)
         self.setFixedWidth(12)
 
         # Initialize a connection and read initial values
