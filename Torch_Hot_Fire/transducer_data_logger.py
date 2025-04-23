@@ -62,6 +62,7 @@ class TransducerDataLogger(QtWidgets.QPushButton):
         if self.high_speed_mode:
             # Switch to low speed
             self.pressure_timer.stop()
+            print("Setting timer interval to 500ms")
             self.pressure_timer.setInterval(500)
             self.pressure_timer.start()
             self.setText("LOGGING SPEED: \n Low Speed")
@@ -69,6 +70,7 @@ class TransducerDataLogger(QtWidgets.QPushButton):
         else:
             # Switch to high speed
             self.pressure_timer.stop()
+            print("Setting timer interval to 10ms")
             self.pressure_timer.setInterval(10)
             self.pressure_timer.start()
             self.setText("LOGGING SPEED: \n High Speed")

@@ -6,25 +6,38 @@ from labjack_connection import LabJackConnection
 from transducer_data_logger import TransducerDataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
+from Interface.SolenoidPanel import SolenoidWindow
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.windim_x, self.windim_y = 900,680
+        self.windim_x, self.windim_y = 900, 680
         self.setWindowTitle("TeenyK P&ID")
-        self.setGeometry(100, 100, self.windim_x, self.windim_y)
+        desktop = QtWidgets.QApplication.desktop()
+        screen_rect = desktop.screenGeometry()
+        screen_width = screen_rect.width()
+        
+        window_x = screen_width - self.windim_x - 100
+        window_y = 100 
+        
+        self.setGeometry(window_x, window_y, self.windim_x, self.windim_y)
         
         self._transducers = []
         self._graphs = []
         self._devices = []
         self.is_closing = False
+        
+        # Store a reference to the solenoid window 
+        # (will be set by main.py after both windows are created)
+        self.valve_window = SolenoidWindow(self)
+        self.valve_window.show()
 
         # Background
         bg_label = QtWidgets.QLabel(self)
         bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/torch_bk_bg.png")
-        scaled_pixmap = bg_pixmap.scaled(self.windim_x, self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
-        bg_label.setGeometry(0, 0, self.windim_x, self.windim_y)
+        bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, scaled_pixmap.width(), self.windim_y)
 
         # Set border
         self.border_frame = QtWidgets.QFrame(self)
@@ -42,24 +55,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labjack = LabJackConnection(self.connection_status)
         self.labjack.connect_to_labjack()
 
-        # # Devices
-        # self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
-        # self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
-        # self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
-        # self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
-        '''
-        self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
-        self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
-        self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
-        self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
-        '''
+        # Create the valve controls in the main window but don't display them
+        # These will serve as the "backend" for the solenoid panel
+        self._devices.append(ValveControl("SN-H2-01", "CIO0", 0, 0, parent=self.valve_window))
+        self._devices.append(ValveControl("SN-OX-01", "CIO1", 10, 0, parent=self.valve_window))
+        self._devices.append(ValveControl("SN-N2-01", "EIO7", 20, 0, parent=self.valve_window))
+        self._devices.append(ValveControl("Spark-Plug", "CIO3", 30, 0, parent=self.valve_window))
 
-        # # Device Mapping
+        # Device Mapping
         self.device_map = {
-        #     "SN-H2-01": self._devices[0],
-        #     "SN-OX-01": self._devices[1],
-        #     "SN-N2-01": self._devices[2],
-        #     "Spark-Plug": self._devices[3],
+            "SN-H2-01": self._devices[0],
+            "SN-OX-01": self._devices[1],
+            "SN-N2-01": self._devices[2],
+            "Spark-Plug": self._devices[3],
         }
 
         # Create the sequencer with the events and devices
@@ -74,10 +82,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 590, 525, self))
         self._transducers.append(PressureTransducer("PT-N2-02", "AIN72", "", 200, 625, self))
 
-        
-        # self._transducers.append(PressureTransducer("PT-H2-01", "AIN98", "AIN99", 562, 318, self))
-        # self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
-
         # Data Logger
         self.data_logger = TransducerDataLogger(self._transducers, self._devices, parent=self)
         self.data_logger.move(10, 10) 
@@ -91,7 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Timers for updating pressure value and checking connection
         self.pressure_timer = QTimer(self)
         self.pressure_timer.timeout.connect(self.update_pressure)
-        self.pressure_timer.start(10)  # Initial timing at 10ms
+        self.pressure_timer.start(500)  # Initial timing at 500ms
 
         # Give the data logger a reference to the timer
         self.data_logger.set_timer(self.pressure_timer)
@@ -108,11 +112,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     # Update pressure
                     self._transducers[i].update_pressure(self.labjack.handle)
-
-                    # # Update Graphs
-                    # self._graphs[i].plot(self._transducers[i].data, clear=True)
                 except Exception as e:
-                    print(f"Error reading pressure from {self._trandsucers[i].input_channel_1}: {e}")
+                    print(f"Error reading pressure from {self._transducers[i].input_channel_1}: {e}")
 
             self.data_logger.log_data()
 
@@ -154,13 +155,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.is_closing:
             self.is_closing = True
             
-            # If we have a valve window and it's not already closing itself,
-            # close it without triggering its closeEvent to close the main window again
-            if hasattr(self, 'valve_window') and self.valve_window:
-                self.valve_window.is_closing = True  # Prevent it from closing main window again
-                self.valve_window.close()
+            # # If we have a valve window and it's not already closing itself,
+            # # close it without triggering its closeEvent to close the main window again
+            # if hasattr(self, 'valve_window') and self.valve_window and not self.valve_window.is_closing:
+            #     self.valve_window.is_closing = True  # Prevent it from closing main window again
+            #     self.valve_window.close()
             
-            # Perform shutdown tasks
+            # Perform shutdown tasks - only do this from the main window
             self.perform_shutdown()
             
         event.accept()
