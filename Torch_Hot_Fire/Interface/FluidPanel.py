@@ -26,6 +26,12 @@ class MainWindow(QtWidgets.QMainWindow):
         bg_label.setPixmap(scaled_pixmap)
         bg_label.setGeometry(0, 0, self.windim_x, self.windim_y)
 
+        # Set border
+        self.border_frame = QtWidgets.QFrame(self)
+        self.border_frame.setFrameStyle(QtWidgets.QFrame.Box)
+        self.border_frame.setLineWidth(5)
+        self.border_frame.setGeometry(0, 0, self.windim_x, self.windim_y)
+
         # Connection Status Label
         self.connection_status = QtWidgets.QLabel("LabJack T7: Connection Missing", self)
         self.connection_status.setGeometry(640, 20, 240, 25)
@@ -36,11 +42,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labjack = LabJackConnection(self.connection_status)
         self.labjack.connect_to_labjack()
 
-        # Devices
-        self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
-        self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
-        self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
-        self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
+        # # Devices
+        # self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
+        # self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
+        # self._devices.append(ValveControl("SN-N2-01", "EIO7", 676, 170, parent=self))
+        # self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
         '''
         self._devices.append(ValveControl("SN-H2-01", "CIO0", 562, 425, parent=self))
         self._devices.append(ValveControl("SN-OX-01", "CIO1", 317, 416, parent=self))
@@ -48,12 +54,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._devices.append(ValveControl("Spark-Plug", "CIO3", 590, 530, parent=self))
         '''
 
-        # Device Mapping
+        # # Device Mapping
         self.device_map = {
-            "SN-H2-01": self._devices[0],
-            "SN-OX-01": self._devices[1],
-            "SN-N2-01": self._devices[2],
-            "Spark-Plug": self._devices[3],
+        #     "SN-H2-01": self._devices[0],
+        #     "SN-OX-01": self._devices[1],
+        #     "SN-N2-01": self._devices[2],
+        #     "Spark-Plug": self._devices[3],
         }
 
         # Create the sequencer with the events and devices
@@ -73,12 +79,22 @@ class MainWindow(QtWidgets.QMainWindow):
         # self._transducers.append(PressureTransducer("PT-TO-01", "AIN100", "AIN101", 457, 425, self))
 
         # Data Logger
-        self.data_logger = TransducerDataLogger(self._transducers, self._devices)
+        self.data_logger = TransducerDataLogger(self._transducers, self._devices, parent=self)
+        self.data_logger.move(10, 10) 
+
+        # Connect the state_changed signal to update the main window border
+        self.data_logger.state_changed.connect(self.update_border_color)
+        
+        # Set initial border style
+        self.update_border_color(self.data_logger.high_speed_mode)
 
         # Timers for updating pressure value and checking connection
         self.pressure_timer = QTimer(self)
         self.pressure_timer.timeout.connect(self.update_pressure)
-        self.pressure_timer.start(10)  # Changes Data Timing as Well
+        self.pressure_timer.start(10)  # Initial timing at 10ms
+
+        # Give the data logger a reference to the timer
+        self.data_logger.set_timer(self.pressure_timer)
 
         self.reconnect_timer = QTimer(self)
         self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
@@ -99,6 +115,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(f"Error reading pressure from {self._trandsucers[i].input_channel_1}: {e}")
 
             self.data_logger.log_data()
+
+    def update_border_color(self, high_speed_mode):
+        """Update the border color based on the button state"""
+        if high_speed_mode:
+            # Green border for high speed mode
+            self.border_frame.setStyleSheet("border: 5px solid #4CAF50;")
+        else:
+            # Red border for normal speed mode
+            self.border_frame.setStyleSheet("border: 5px solid #f44336;")
     
     def perform_shutdown(self):
         print("Shutting down")

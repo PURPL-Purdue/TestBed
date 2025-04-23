@@ -12,7 +12,7 @@ def load_sequence_from_csv(device_map):
     """
     devices = []
     events = []
-    filename = 'Sequencer_Info/sequence.csv'
+    filename = 'Torch_Hot_Fire/Sequencer_Info/sequence.csv'
     try:
         with open(filename, "r") as file:
             reader = csv.reader(file)
