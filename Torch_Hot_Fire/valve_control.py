@@ -6,6 +6,7 @@ import datetime as dt
 class ValveControl(QtWidgets.QPushButton):
     def __init__(self, name, labjack_output, x, y, parent=None):
         super(ValveControl, self).__init__(parent)
+        print(f"Creating valve {name} with parent: {parent}")
         self.name = name
         self.labjack_output = labjack_output
         self.valve_open = False
