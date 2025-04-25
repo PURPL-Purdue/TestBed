@@ -54,6 +54,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labjack = LabJackConnection(self.connection_status)
         self.labjack.connect_to_labjack()
 
+        self.shutdown_button = QtWidgets.QPushButton("Emergency Shutdown", self)
+        self.shutdown_button.setGeometry(10, self.windim_y-110, 194, 100)  # Position below connection status
+        self.shutdown_button.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+        self.shutdown_button.clicked.connect(self.perform_shutdown)
+
         # Create the valve controls in the main window but don't display them
         # These will serve as the "backend" for the solenoid panel
         self._devices.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
@@ -68,7 +73,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.device_map[self._devices[i].name] = self._devices[i]
 
         # Create the sequencer with the events and devices
-        self.sequencer = Sequencer(self.device_map, 445, 573, parent=self)
+        self.sequencer = Sequencer(self.device_map, parent=self)
+        self.sequencer.move(10, 115)
 
         # Pressure Transducers
         self._transducers.append(PressureTransducer("PT-O2-01", "AIN0", "", 540, 332, self))
@@ -143,8 +149,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(f"WARNING: Could not close {device.name} - No connection")
             except Exception as e:
                 print(f"ERROR closing {device.name}: {e}")
-        self.data_logger.stop()
-        self.labjack.close_connection()
 
     def closeEvent(self, event):
         # Prevent multiple shutdown executions
@@ -159,4 +163,6 @@ class MainWindow(QtWidgets.QMainWindow):
             
             # Perform shutdown tasks - only do this from the main window
             self.perform_shutdown()
+            self.data_logger.stop()
+            self.labjack.close_connection()
         event.accept()
