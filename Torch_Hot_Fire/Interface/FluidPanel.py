@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from valve_control import ValveControl
 from pressure_transducer import PressureTransducer
 from labjack_connection import LabJackConnection
-from transducer_data_logger import TransducerDataLogger
+from Torch_Hot_Fire.data_logger import DataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
 from Interface.SolenoidPanel import SolenoidWindow
@@ -81,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", "", 210, 623, self))
 
         # Data Logger
-        self.data_logger = TransducerDataLogger(self._transducers, self._devices, parent=self)
+        self.data_logger = DataLogger(self._transducers, self._devices, parent=self)
         self.data_logger.move(10, 10) 
 
         # Connect the state_changed signal to update the main window border

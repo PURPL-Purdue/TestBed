@@ -7,7 +7,7 @@ import time
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
-class TransducerDataLogger(QtWidgets.QPushButton):
+class DataLogger(QtWidgets.QPushButton):
     state_changed = pyqtSignal(bool)
     
     def __init__(self, transducers_list, devices_list, parent=None, filename="Torch_Hot_Fire/transducer_log.csv"):
@@ -55,12 +55,16 @@ class TransducerDataLogger(QtWidgets.QPushButton):
         self.pressure_timer = timer
     
     def toggle_sample_rate(self):
-        """Toggle between high speed (10ms) and low speed (500ms)"""
+        """Toggle between high speed (10ms) and low speed (500ms) and create a new log file"""
         if not self.pressure_timer:
             return
-            
+        
+        # Create a new log file with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
         if self.high_speed_mode:
             # Switch to low speed
+            mode_str = "low_speed"
             self.pressure_timer.stop()
             print("Setting timer interval to 500ms")
             self.pressure_timer.setInterval(500)
@@ -69,12 +73,35 @@ class TransducerDataLogger(QtWidgets.QPushButton):
             self.high_speed_mode = False
         else:
             # Switch to high speed
+            mode_str = "high_speed"
             self.pressure_timer.stop()
             print("Setting timer interval to 10ms")
             self.pressure_timer.setInterval(10)
             self.pressure_timer.start()
             self.setText("LOGGING SPEED: \n High Speed")
             self.high_speed_mode = True
+        
+        # Create new filename with timestamp and mode
+        directory = os.path.dirname(self.filename)
+        base_filename = os.path.basename(self.filename).split(".")[0]
+        new_filename = f"{directory}/{base_filename}_{mode_str}_{timestamp}.csv"
+        print(f"Creating new log file: {new_filename}")
+        
+        # Create the new file with headers
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)
+        
+        with open(new_filename, mode='w', newline='') as file:
+            entry = ["Timestamp"]
+            for transducer in self._transducers:
+                entry.append(f"{transducer.name} Pressure")
+            for device in self._devices:
+                entry.append(f"{device.name} State")
+            writer = csv.writer(file)
+            writer.writerow(entry)
+        
+        # Update the filename to use for future logging
+        self.filename = new_filename
         
         # Update button color
         self.update_button_style()

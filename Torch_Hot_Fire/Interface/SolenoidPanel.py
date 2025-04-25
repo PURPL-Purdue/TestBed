@@ -44,6 +44,17 @@ class SolenoidWindow(QtWidgets.QWidget):
         self.border_frame.setLineWidth(5)
         self.border_frame.setGeometry(0, 0, self.windim_x, self.windim_y)
         self.border_frame.setStyleSheet("border: 5px solid #f44336;")  # Red border initially
+
+        main_window.data_logger.state_changed.connect(self.update_border_color)
+
+    def update_border_color(self, high_speed_mode):
+        """Update the border color based on the button state"""
+        if high_speed_mode:
+            # Green border for high speed mode
+            self.border_frame.setStyleSheet("border: 5px solid #4CAF50;")
+        else:
+            # Red border for normal speed mode
+            self.border_frame.setStyleSheet("border: 5px solid #f44336;")
         
     # # Override closeEvent to avoid closing loops
     # def closeEvent(self, event):

@@ -1,7 +1,6 @@
 import sys
 from PyQt5 import QtWidgets
 from Interface.FluidPanel import MainWindow
-from Interface.SolenoidPanel import SolenoidWindow
 
 def main():
     # Main application
