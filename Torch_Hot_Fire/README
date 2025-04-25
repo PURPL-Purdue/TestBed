@@ -1,7 +1,0 @@
-Main opens fluid panel which is the main point of entry for program.
-Fluid panel will open all the other panels
-Close fluid panel to close program
-
-Known bugs:
-perform_shutdown attempts to run twice. Connection is closed after first iteration so
-there are no negative effects.
