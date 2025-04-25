@@ -136,7 +136,3 @@ The application uses the following directory structure:
 ## Permissions and Hardware Access
 
 This application requires appropriate permissions to access the LabJack hardware. Ensure the user running the application has the required system permissions.
-
-## Permissions and Hardware Access
-
-This application requires appropriate permissions to access the LabJack hardware. Ensure the user running the application has the required system permissions.
