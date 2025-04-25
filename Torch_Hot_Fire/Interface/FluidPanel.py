@@ -72,10 +72,6 @@ class MainWindow(QtWidgets.QMainWindow):
         for i in range(len(self._devices)):
             self.device_map[self._devices[i].name] = self._devices[i]
 
-        # Create the sequencer with the events and devices
-        self.sequencer = Sequencer(self.device_map, parent=self)
-        self.sequencer.move(10, 115)
-
         # Pressure Transducers
         self._transducers.append(PressureTransducer("PT-O2-01", "AIN0", "", 540, 332, self))
         self._transducers.append(PressureTransducer("PT-O2-03", "AIN96", "", 210, 463, self))
@@ -102,11 +98,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # Give the data logger a reference to the timer
         self.data_logger.set_timer(self.pressure_timer)
 
+        # Create the sequencer with the events and devices
+        self.sequencer = Sequencer(self.device_map, self.data_logger, parent=self)
+        self.sequencer.move(10, 115)
+
         self.reconnect_timer = QTimer(self)
         self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
         self.reconnect_timer.start(5000)
 
-        QtWidgets.QApplication.instance().aboutToQuit.connect(self.perform_shutdown)
+        # QtWidgets.QApplication.instance().aboutToQuit.connect(self.perform_shutdown)
 
     def update_pressure(self):
         if self.labjack.connection_status:

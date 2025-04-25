@@ -15,7 +15,7 @@ class ValveControl(QtWidgets.QPushButton):
         # self.setText("C")
         # self.setText("Valve Closed")
         self.update_button_style()
-        self.clicked.connect(self.confirm_toggle_valve)
+        self.clicked.connect(self.toggle_valve)
         self.move(x, y)
         # self.adjustSize()
         self.setFixedHeight(30)
@@ -64,31 +64,43 @@ class ValveControl(QtWidgets.QPushButton):
             QtWidgets.QMessageBox.warning(self, "Connection Error", "Failed to connect to LabJack. Please try again.")
             return
 
-        # TODO: Clean up - no confirmation message
-        # # Create a confirmation message box
-        # msg = QtWidgets.QMessageBox(self)
-        # msg.setWindowTitle("Confirmation")
-        # msg.setText(f"Are you certain you want to {'close' if self.valve_open else 'open'} {self.name}?")
+        # Create a confirmation message box
+        msg = QtWidgets.QMessageBox(self)
+        msg.setWindowTitle("Confirmation")
+        msg.setText(f"Are you certain you want to {'close' if self.valve_open else 'open'} {self.name}?")
 
-        # # Apply dark mode styling
-        # msg.setStyleSheet(
-        #     "QMessageBox { background-color: #2e2e2e; }"
-        #     "QLabel { color: white; }"
-        #     "QPushButton { background-color: #4a4a4a; color: white; font-size: 10pt; }"
-        # )
+        # Apply dark mode styling
+        msg.setStyleSheet(
+            "QMessageBox { background-color: #2e2e2e; }"
+            "QLabel { color: white; }"
+            "QPushButton { background-color: #4a4a4a; color: white; font-size: 10pt; }"
+        )
 
-        # # Add Yes and No buttons
-        # yes_button = msg.addButton("Yes", QtWidgets.QMessageBox.AcceptRole)
-        # no_button = msg.addButton("No", QtWidgets.QMessageBox.RejectRole)
-        # msg.setDefaultButton(no_button)
-        # msg.exec_()
+        # Add Yes and No buttons
+        yes_button = msg.addButton("Yes", QtWidgets.QMessageBox.AcceptRole)
+        no_button = msg.addButton("No", QtWidgets.QMessageBox.RejectRole)
+        msg.setDefaultButton(no_button)
+        msg.exec_()
 
-        # if msg.clickedButton() == yes_button:
-        #     if (self.valve_open == True):
-        #         self.toggle_valve_off()
-        #     elif (self.valve_open == False):
-        #         self.toggle_valve_on()
+        if msg.clickedButton() == yes_button:
+            if (self.valve_open == True):
+                self.toggle_valve_off()
+            elif (self.valve_open == False):
+                self.toggle_valve_on()
 
+    def toggle_valve(self):
+        # Ensure connection is established before showing confirmation
+        if not self.device_connected:
+            self.connect_to_labjack()
+
+        if not self.device_connected:
+            QtWidgets.QMessageBox.warning(self, "Connection Error", "Failed to connect to LabJack. Please try again.")
+            return
+        
+        if self.valve_open:
+            self.toggle_valve_off
+        else:
+            self.toggle_valve_on
 
     def toggle_valve_on(self):
         """Toggle on the valve and update LabJack output"""

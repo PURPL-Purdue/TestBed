@@ -3,11 +3,12 @@ from PyQt5.QtWidgets import QPushButton, QMessageBox
 from PyQt5.QtCore import QTimer, Qt
 
 class Sequencer(QPushButton):
-    def __init__(self, device_map, x=0, y=0, parent=None):
+    def __init__(self, device_map, data_logger, x=0, y=0, parent=None):
         super(Sequencer, self).__init__(parent)
         self.current_event_index = 0
         self.running = False
         self.timer = None  # Store the timer reference so it can be stopped
+        self.data_logger = data_logger
         
         # Configure Button Display
         self.setFixedHeight(100) 
@@ -26,6 +27,7 @@ class Sequencer(QPushButton):
         
         # Load sequence data
         self.devices, self.events = load_sequence_from_csv(device_map)
+        print(f"Loaded sequence with {len(self.devices)} devices and {len(self.events)} events")
 
         # Connect the button click to toggle sequencer state
         self.clicked.connect(self.toggle_sequencer)
@@ -35,7 +37,7 @@ class Sequencer(QPushButton):
         if not self.running:
             self.confirm_start_sequencer()
         else:
-            self.stop_sequencer()
+            self.confirm_stop_sequencer()
     
     def confirm_start_sequencer(self):
         """Display confirmation dialog before starting the sequencer."""
@@ -56,17 +58,21 @@ class Sequencer(QPushButton):
     def start_sequencer(self):
         """Start the sequencing process."""
         if not self.devices or not self.events:
+            print("Error: No sequence data loaded")
             QMessageBox.warning(self, "Sequencer Error", 
                                "No sequence data loaded. Please check the sequence file.")
             return
-            
+        
         self.running = True
+        print(f"Starting sequencer - setting running=True")
+        if not self.data_logger.high_speed_mode:
+            self.data_logger.toggle_sample_rate()
         self.current_event_index = 0
         self.setText("Stop Sequencer")
         self.update_button_style()
         self._trigger_event()
     
-    def stop_sequencer(self):
+    def confirm_stop_sequencer(self):
         """Stop the sequencing process."""
         # Display confirmation dialog
         msg = QMessageBox(self)
@@ -81,21 +87,42 @@ class Sequencer(QPushButton):
         msg.exec_()
 
         if msg.clickedButton() == yes_button:
-            self.running = False
-            if self.timer:
-                self.timer.stop()
-            self.setText("Start Sequencer")
-            self.update_button_style()
-            print("Sequencer stopped by user.")
-            
+            self.stop_sequencer()
+    
+    def stop_sequencer(self):
+        """Stop the sequencing process."""
+        print(f"Stopping sequencer - setting running=False")
+        self.running = False
+        self.setText("Start Sequencer")
+        self.update_button_style()
+        
+        # Check all valves
+        print("Checking valve states:")
+        valves_closed = 0
+        for device in self.devices:
+            if device.valve_open:
+                print(f"Closing valve: {device.name}")
+                device.toggle_valve()
+                valves_closed += 1
+            else:
+                print(f"Valve already closed: {device.name}")
+        
+        print(f"Closed {valves_closed} open valves")
+        
+
     def _trigger_event(self):
         """Trigger events at the specified intervals."""
-        if not self.running or self.current_event_index >= len(self.events):
+        # Check if we should still be running
+        if not self.running:
+            print("Trigger cancelled: sequencer not running")
+            return
+        
+        if self.current_event_index >= len(self.events):
             if self.running:  # We've finished all events
+                print(f"Completed all {len(self.events)} events")
                 self.running = False
                 self.setText("Start Sequencer")
                 self.update_button_style()
-                print("Sequencer completed all events.")
             return
 
         # Get the current time delay
@@ -107,7 +134,7 @@ class Sequencer(QPushButton):
                self.events[self.current_event_index] == current_delay):
             devices_to_trigger.append(self.devices[self.current_event_index])
             self.current_event_index += 1
-
+        
         # Trigger all devices with the same delay
         for device in devices_to_trigger:
             try:
@@ -118,17 +145,21 @@ class Sequencer(QPushButton):
                     device.toggle_valve()
                     print(f"Triggered device: {device.name} at time {current_delay}ms")
                 else:
+                    print(f"Failed to connect to {device.name}")
                     QMessageBox.warning(self, "Connection Error",
                                        f"Failed to connect to {device.name}. Please check the connection.")
             except Exception as e:
                 print(f"Error triggering device {device.name}: {e}")
 
         # Schedule the next event if there are more events remaining
-        if self.current_event_index < len(self.events):
+        if self.current_event_index < len(self.events) and self.running:
             next_delay = self.events[self.current_event_index]
             delay_time = next_delay - current_delay
-            self.timer = QTimer.singleShot(delay_time, self._trigger_event)
             print(f"Next event scheduled in {delay_time}ms")
+            QTimer.singleShot(delay_time, self._trigger_event)
+        else:
+            if not self.running:
+                print("Not scheduling next event - sequencer stopped")
 
     def update_button_style(self):
         """Update button color based on current mode"""

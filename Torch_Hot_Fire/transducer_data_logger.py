@@ -113,6 +113,7 @@ class TransducerDataLogger(QtWidgets.QPushButton):
 
     def stop(self):
         """Stop the logging and gracefully shut down the background thread."""
+        print("Terminating Data Logger")
         self.running = False
         if self.thread.is_alive():
             self.thread.join(timeout=2)  # Wait for the thread with timeout
