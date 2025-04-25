@@ -5,31 +5,64 @@ import os
 from datetime import datetime
 import time
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 
 class DataLogger(QtWidgets.QPushButton):
     state_changed = pyqtSignal(bool)
     
-    def __init__(self, transducers_list, devices_list, parent=None, filename="Torch_Hot_Fire/transducer_log.csv"):
+    def __init__(self, transducers_list, devices_list, parent=None, path="Torch_Hot_Fire/data"):
         super().__init__(parent)  # Initialize the QPushButton parent class
-        self.filename = filename
+        self.path = path
         self.log_queue = queue.Queue()
         self.running = True
         self._transducers = transducers_list
         self._devices = devices_list
         self.high_speed_mode = False  # Track current mode
+        self.base_name = "start"
+
+        # Create layout for the button and the filename textbox
+        # Create layout for the button and the filename textbox
+        self.button_layout = QtWidgets.QVBoxLayout(self)
         
+        # Create label for the textbox
+        self.filename_label = QtWidgets.QLabel("File Name:", self)
+        self.filename_label.setStyleSheet("color: white; font-weight: bold;")
+        
+        # Create the filename textbox
+        self.filename_textbox = QtWidgets.QLineEdit(self)
+        self.filename_textbox.setText(self.base_name)
+        self.filename_textbox.setStyleSheet("background-color: white; color: black;")
+
         # Configure Button Display
         self.setFixedHeight(100) 
         self.setFixedWidth(194) 
-        self.setText("LOGGING SPEED: \n Low Speed")  # Initial text
+
+        # Create a widget for the button text
+        self.button_text = QtWidgets.QLabel("LOGGING SPEED: \n Low Speed", self)
+        self.button_text.setAlignment(Qt.AlignCenter)
+        self.button_text.setStyleSheet("color: white; font-weight: bold;")
         
+        # Add widgets to layout
+        self.button_layout.addWidget(self.filename_label)
+        self.button_layout.addWidget(self.filename_textbox)
+        self.button_layout.addWidget(self.button_text)
+        self.button_layout.setContentsMargins(10, 10, 10, 10)
+
         # Set initial color
         self.update_button_style()
-        
+
         # Connect the button click to toggle function
         self.clicked.connect(self.toggle_sample_rate)
 
+        # Create a new log file with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        if self.high_speed_mode:
+            mode_str = "high"
+        else:
+            mode_str = "low"
+        self.filename = f"{self.path}/{self.base_name}_{mode_str}_{timestamp}.csv"
+        print(f"Creating new log file: {self.filename}")
+        
         # Reference to the timer (to be set from main window)
         self.pressure_timer = None
 
@@ -59,37 +92,41 @@ class DataLogger(QtWidgets.QPushButton):
         if not self.pressure_timer:
             return
         
+        # Get the base name from the textbox
+        self.base_name = self.filename_textbox.text()
+        if not self.base_name:  # If empty, use default
+            self.base_name = "log"
+            self.filename_textbox.setText(self.base_name)
+        
         # Create a new log file with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         if self.high_speed_mode:
             # Switch to low speed
-            mode_str = "low_speed"
+            mode_str = "low"
             self.pressure_timer.stop()
             print("Setting timer interval to 500ms")
             self.pressure_timer.setInterval(500)
             self.pressure_timer.start()
-            self.setText("LOGGING SPEED: \n Low Speed")
+            self.button_text.setText("LOGGING SPEED: \n Low Speed")
             self.high_speed_mode = False
         else:
             # Switch to high speed
-            mode_str = "high_speed"
+            mode_str = "high"
             self.pressure_timer.stop()
             print("Setting timer interval to 10ms")
             self.pressure_timer.setInterval(10)
             self.pressure_timer.start()
-            self.setText("LOGGING SPEED: \n High Speed")
+            self.button_text.setText("LOGGING SPEED: \n High Speed")
             self.high_speed_mode = True
-        
+
         # Create new filename with timestamp and mode
-        directory = os.path.dirname(self.filename)
-        base_filename = os.path.basename(self.filename).split(".")[0]
-        new_filename = f"{directory}/{base_filename}_{mode_str}_{timestamp}.csv"
+        new_filename = f"{self.path}/{self.base_name}_{mode_str}_{timestamp}.csv"
         print(f"Creating new log file: {new_filename}")
         
         # Create the new file with headers
-        if not os.path.exists(directory):
-            os.makedirs(directory, exist_ok=True)
+        if not os.path.exists(self.path):
+            os.makedirs(self.path, exist_ok=True)
         
         with open(new_filename, mode='w', newline='') as file:
             entry = ["Timestamp"]
@@ -152,7 +189,7 @@ class DataLogger(QtWidgets.QPushButton):
             self.setStyleSheet("""
                 QPushButton {
                     background-color: #4CAF50;  /* Green */
-                    color: white;
+                    border: none;
                     font-weight: bold;
                 }
                 QPushButton:hover {
@@ -167,7 +204,7 @@ class DataLogger(QtWidgets.QPushButton):
             self.setStyleSheet("""
                 QPushButton {
                     background-color: #f44336;  /* Red */
-                    color: white;
+                    border: none;
                     font-weight: bold;
                 }
                 QPushButton:hover {

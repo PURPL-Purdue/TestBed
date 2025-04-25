@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from valve_control import ValveControl
 from pressure_transducer import PressureTransducer
 from labjack_connection import LabJackConnection
-from Torch_Hot_Fire.data_logger import DataLogger
+from data_logger import DataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
 from Interface.SolenoidPanel import SolenoidWindow
@@ -86,6 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Connect the state_changed signal to update the main window border
         self.data_logger.state_changed.connect(self.update_border_color)
+        self.data_logger.state_changed.connect(self.valve_window.update_border_color)
         
         # Set initial border style
         self.update_border_color(self.data_logger.high_speed_mode)
@@ -123,13 +124,24 @@ class MainWindow(QtWidgets.QMainWindow):
         """Update the border color based on the button state"""
         if high_speed_mode:
             # Green border for high speed mode
-            self.border_frame.setStyleSheet("border: 5px solid #4CAF50;")
+            border_style = "border: 5px solid #4CAF50;"
         else:
             # Red border for normal speed mode
-            self.border_frame.setStyleSheet("border: 5px solid #f44336;")
+            border_style = "border: 5px solid #f44336;"
+        
+        # Update main window border
+        self.border_frame.setStyleSheet(border_style)
+
+        # Update solenoid window border if it exists
+        if hasattr(self, 'valve_window') and self.valve_window:
+            self.valve_window.border_frame.setStyleSheet(border_style)
+            print(f"Updated solenoid window border: {'green' if high_speed_mode else 'red'}")
     
     def perform_shutdown(self):
         print("Shutting down")
+        # Stop sequencer
+        if self.sequencer.running:
+            self.sequencer.toggle_sequencer()
         # Turn off all devices
         for device in self._devices:
             try:
