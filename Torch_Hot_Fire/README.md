@@ -22,15 +22,17 @@ This application provides a graphical interface for controlling a fluid control 
 ## Installation
 
 1. Ensure you have Python 3.x installed
-2. Install required packages:
+2. Clone or download this repository to your local machine
+3. Install required packages by navigating to the Torch_Hot_Fire directory and running:
    ```
-   pip install pyqt5 labjack-ljm
+   pip install -r requirements.txt
    ```
-3. Clone or download this repository to your local machine
+   
+   This will install the necessary dependencies including PyQt5 and LabJack-LJM
 
 ## Running the Application
 
-The application is started by running the main.py file:
+The application is started by running the main.py file from within the Torch_Hot_Fire directory:
 
 ```
 python main.py
@@ -53,7 +55,6 @@ This will open the fluid panel interface, which is the main entry point for the 
 ### Main Interface
 
 The application opens with two windows:
-
 1. **TeenyK P&ID** - Main interface showing system diagram with pressure readings
 2. **Valve Control Panel** - Dedicated interface for controlling solenoid valves
 
@@ -86,7 +87,6 @@ The application opens with two windows:
 ### Data Log Files
 
 Log files are CSV format with the following columns:
-
 - Timestamp
 - Pressure readings for each transducer
 - State of each valve (True/False)
@@ -107,24 +107,30 @@ Close the Fluid Panel to close the entire program. This will perform a proper sh
 
 ## Directory Structure
 
-The application expects the following directory structure:
+The application uses the following directory structure:
 
 ```
 /
-├── main.py
-├── Interface/
-│   ├── FluidPanel.py
-│   └── SolenoidPanel.py
-├── valve_control.py
-├── pressure_transducer.py
-├── data_logger.py
-├── sequencer.py
-├── sequence_reader.py
-├── labjack_connection.py
-└── Torch_Hot_Fire/
-    ├── data/
-    ├── torch_bk_bg.png
-    └── solenoid_bg.png
+├── Torch_Hot_Fire/
+│   ├── Interface/
+│   │   ├── FluidPanel.py
+│   │   └── SolenoidPanel.py
+│   ├── Sequencer_Info/
+│   │   ├── sequence.csv
+│   │   └── __init__.py
+│   ├── .gitignore
+│   ├── AdaptiveData.py
+│   ├── data_logger.py
+│   ├── labjack_connection.py
+│   ├── main.py
+│   ├── pressure_transducer.py
+│   ├── README.md
+│   ├── requirements.txt
+│   ├── sequence_reader.py
+│   ├── sequencer.py
+│   ├── solenoid_bg.png
+│   ├── torch_bk_bg.png
+│   └── valve_control.py
 ```
 
 ## Permissions and Hardware Access
