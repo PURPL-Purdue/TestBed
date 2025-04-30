@@ -22,8 +22,8 @@ class Sequencer(QPushButton):
         # Set initial color
         self.update_button_style()
 
-        # Store device map reference
-        self.device_map = device_map
+        # # Store device map reference
+        # self.device_map = device_map
         
         # Load sequence data
         self.devices, self.events = load_sequence_from_csv(device_map)

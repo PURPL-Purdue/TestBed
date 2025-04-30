@@ -14,6 +14,7 @@ class PressureTransducer:
         self.label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.pressure = 0.0
         self.data = Buffer(100)
+        self.redline = None
 
     def update_pressure(self, handle):
         try:

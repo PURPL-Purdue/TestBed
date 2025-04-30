@@ -6,6 +6,7 @@ from labjack_connection import LabJackConnection
 from data_logger import DataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
+from pyqtgraph import PlotWidget
 from Interface.SolenoidPanel import SolenoidWindow
 from Interface.IcecubePanel import TorchWindow
 
@@ -26,6 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._transducers = []
         self._graphs = []
         self._solenoids = []
+        self._graphs = []
         self.is_closing = False
         
         # Store a reference to the solenoid window 
@@ -67,6 +69,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
         self._solenoids.append(ValveControl("SN-N2-01", "EIO7", 369, 52, parent=self.valve_window))
         self._solenoids.append(ValveControl("Spark Plug", "EIO7", 490, 230, parent=self.torch_window))
+        # Label Spark Plug
+        self.label = QtWidgets.QLabel("Spark Plug", self.torch_window)
+        self.label.setGeometry(445, 210, 100, 25)
+        self.label.setStyleSheet("background-color: #FFFFFF; color: black; font-size: 12pt")
+        self.label.setAlignment(Qt.AlignCenter)
     
         # Device Mapping
         self.device_map = {}
@@ -99,6 +106,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set initial border style
         self.update_border_color(self.data_logger.high_speed_mode)
 
+        # Graphs for pressure readings
+        self._graphs.append(PlotWidget(self))
+        self._graphs[0].setGeometry(10, 220, 194, 200)
+        self._graphs[0].setBackground('w')
+        self._graphs[0].setTitle("PT-TI-01 Pressure")
+
         # Timers for updating pressure value and checking connection
         self.pressure_timer = QTimer(self)
         self.pressure_timer.timeout.connect(self.update_pressure)
@@ -124,6 +137,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 try:
                     # Update pressure
                     self._transducers[i].update_pressure(self.labjack.handle)
+                    if self._transducers[i].redline != None:
+                        if self._transducers[i].pressure > self._transducers[i].redline:
+                            self.perform_shutdown
+
+                    # Update Graphs
+                    self._graphs[i].plot(self._transducers[i].data, clear=True)
                 except Exception as e:
                     print(f"Error reading pressure from {self._transducers[i].input_channel_1}: {e}")
 

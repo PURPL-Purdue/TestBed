@@ -21,7 +21,6 @@ class DataLogger(QtWidgets.QPushButton):
         self.base_name = "start"
 
         # Create layout for the button and the filename textbox
-        # Create layout for the button and the filename textbox
         self.button_layout = QtWidgets.QVBoxLayout(self)
         
         # Create label for the textbox
