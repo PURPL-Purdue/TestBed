@@ -1,4 +1,4 @@
-from sequence_reader import load_sequence_from_csv
+from sequence_reader import load_data_from_csv
 from PyQt5.QtWidgets import QPushButton, QMessageBox
 from PyQt5.QtCore import QTimer, Qt
 
@@ -26,7 +26,7 @@ class Sequencer(QPushButton):
         # self.device_map = device_map
         
         # Load sequence data
-        self.devices, self.events = load_sequence_from_csv(device_map)
+        self.devices, self.events = load_data_from_csv(device_map)
         print(f"Loaded sequence with {len(self.devices)} devices and {len(self.events)} events")
 
         # Connect the button click to toggle sequencer state
