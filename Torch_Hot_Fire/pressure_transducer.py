@@ -11,7 +11,7 @@ class PressureTransducer:
         self.label = QtWidgets.QLabel("0.00 psi", parent)
         self.label.setGeometry(x, y, 100, 25)
         self.label.setStyleSheet("background-color: #00baff; color: white; font-size: 12pt; font-weight: bold;")
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.pressure = 0.0
         self.data = Buffer(100)
 

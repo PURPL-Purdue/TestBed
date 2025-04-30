@@ -7,6 +7,7 @@ from data_logger import DataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
 from Interface.SolenoidPanel import SolenoidWindow
+from Interface.IcecubePanel import TorchWindow
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -24,12 +25,13 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self._transducers = []
         self._graphs = []
-        self._devices = []
+        self._solenoids = []
         self.is_closing = False
         
         # Store a reference to the solenoid window 
         # (will be set by main.py after both windows are created)
         self.valve_window = SolenoidWindow(self)
+        self.torch_window = TorchWindow(self)
 
         # Background
         bg_label = QtWidgets.QLabel(self)
@@ -61,32 +63,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Create the valve controls in the main window but don't display them
         # These will serve as the "backend" for the solenoid panel
-        self._devices.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
-        self._devices.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
-        self._devices.append(ValveControl("SN-N2-01", "EIO7", 369, 52, parent=self.valve_window))
-        self.valve_window.show()
-
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
+        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
+        self._solenoids.append(ValveControl("SN-N2-01", "EIO7", 369, 52, parent=self.valve_window))
+        self._solenoids.append(ValveControl("Spark Plug", "EIO7", 490, 230, parent=self.torch_window))
+    
         # Device Mapping
         self.device_map = {}
 
-        for i in range(len(self._devices)):
-            self.device_map[self._devices[i].name] = self._devices[i]
+        for i in range(len(self._solenoids)):
+            self.device_map[self._solenoids[i].name] = self._solenoids[i]
+        for i in range(len(self._transducers)):
+            self.device_map[self._transducers[i].name] = self._transducers[i]
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN0", "", 540, 332, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN92", "", 540, 332, self))
         self._transducers.append(PressureTransducer("PT-O2-03", "AIN96", "", 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN0", "", 265, 25, self.torch_window))
         self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 439, 188, self))
         self._transducers.append(PressureTransducer("PT-N2-04", "AIN72", "", 210, 231, self))
         self._transducers.append(PressureTransducer("PT-H2-01", "AIN0", "", 607, 530, self))
         self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", "", 210, 623, self))
+        self._transducers.append(PressureTransducer("PT-H2-05", "AIN72", "", 375, 25, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN72", "", 445, 290, self.torch_window))
 
         # Data Logger
-        self.data_logger = DataLogger(self._transducers, self._devices, parent=self)
+        self.data_logger = DataLogger(self._transducers, self._solenoids, parent=self)
         self.data_logger.move(10, 10) 
 
         # Connect the state_changed signal to update the main window border
         self.data_logger.state_changed.connect(self.update_border_color)
         self.data_logger.state_changed.connect(self.valve_window.update_border_color)
+        self.data_logger.state_changed.connect(self.torch_window.update_border_color)
         
         # Set initial border style
         self.update_border_color(self.data_logger.high_speed_mode)
@@ -107,7 +115,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
         self.reconnect_timer.start(5000)
 
-        # QtWidgets.QApplication.instance().aboutToQuit.connect(self.perform_shutdown)
+        self.valve_window.show()
+        self.torch_window.show()
 
     def update_pressure(self):
         if self.labjack.connection_status:
@@ -143,7 +152,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.sequencer.running:
             self.sequencer.toggle_sequencer()
         # Turn off all devices
-        for device in self._devices:
+        for device in self._solenoids:
             try:
                 # Ensure connection to LabJack
                 if not device.device_connected:
@@ -173,6 +182,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.valve_window.is_closing = True  # Prevent it from closing main window again
                 self.valve_window.close()
             
+            # If we have a torch window and it's not already closing itself,
+            # close it without triggering its closeEvent to close the main window again
+            if hasattr(self, 'torch_window') and self.torch_window and not self.torch_window.is_closing:
+                self.torch_window.is_closing = True  # Prevent it from closing main window again
+                self.torch_window.close()
+
             # Perform shutdown tasks - only do this from the main window
             self.perform_shutdown()
             self.data_logger.stop()
