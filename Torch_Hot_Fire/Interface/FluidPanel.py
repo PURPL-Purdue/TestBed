@@ -65,10 +65,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Create the valve controls in the main window but don't display them
         # These will serve as the "backend" for the solenoid panel
-        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO2", 465, 117, parent=self.valve_window))
         self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
-        self._solenoids.append(ValveControl("SN-N2-01", "EIO7", 369, 52, parent=self.valve_window))
-        self._solenoids.append(ValveControl("Spark Plug", "EIO7", 490, 230, parent=self.torch_window))
+        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 369, 52, parent=self.valve_window))
+        self._solenoids.append(ValveControl("Spark Plug", "CIO0", 490, 230, parent=self.torch_window))
         # Label Spark Plug
         self.label = QtWidgets.QLabel("Spark Plug", self.torch_window)
         self.label.setGeometry(445, 210, 100, 25)
@@ -84,15 +84,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.device_map[self._transducers[i].name] = self._transducers[i]
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN92", "", 540, 332, self))
-        self._transducers.append(PressureTransducer("PT-O2-03", "AIN96", "", 210, 463, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN0", "", 265, 25, self.torch_window))
-        self._transducers.append(PressureTransducer("PT-N2-01", "AIN0", "", 439, 188, self))
-        self._transducers.append(PressureTransducer("PT-N2-04", "AIN72", "", 210, 231, self))
-        self._transducers.append(PressureTransducer("PT-H2-01", "AIN0", "", 607, 530, self))
-        self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", "", 210, 623, self))
-        self._transducers.append(PressureTransducer("PT-H2-05", "AIN72", "", 375, 25, self.torch_window))
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN72", "", 445, 290, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN88", 10, 1500, 540, 332, self))
+        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN89", 10, 1500, 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 265, 25, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN91", 10, 1500, 439, 188, self))
+        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN92", 10, 1500, 210, 231, self))
+        self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
+        # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", "", 210, 623, self))
+        # self._transducers.append(PressureTransducer("PT-H2-05", "AIN72", "", 375, 25, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN91", 10, 1500, 445, 290, self.torch_window))
 
         # Data Logger
         self.data_logger = DataLogger(self._transducers, self._solenoids, parent=self)
@@ -141,10 +141,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         if self._transducers[i].pressure > self._transducers[i].redline:
                             self.perform_shutdown
 
-                    # Update Graphs
-                    self._graphs[i].plot(self._transducers[i].data, clear=True)
+                    if self._transducers[i].name == "PT-TI-01":
+                        # Update Graphs
+                        self._graphs[0].plot(self._transducers[i].data, clear=True)
                 except Exception as e:
-                    print(f"Error reading pressure from {self._transducers[i].input_channel_1}: {e}")
+                    print(f"FluidPanel.py: Error reading pressure from {self._transducers[i].input_channel_1}: {e}")
 
             self.data_logger.log_data()
 
@@ -180,7 +181,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 # Force the valve closed regardless of UI state
                 if device.device_connected and device.handle:
                     # Update the UI state to match
-                    device.valve_open = False
+                    device.valve_open = True # TODO: CHANGE THIS TO FALSE AFTER TESTING SEQUENCER
                     device.update_button_style()
                     device.toggle_valve_off()
                     

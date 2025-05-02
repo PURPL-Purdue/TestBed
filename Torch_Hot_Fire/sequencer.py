@@ -158,6 +158,7 @@ class Sequencer(QPushButton):
             print(f"Next event scheduled in {delay_time}ms")
             QTimer.singleShot(delay_time, self._trigger_event)
         else:
+            self.stop_sequencer()
             if not self.running:
                 print("Not scheduling next event - sequencer stopped")
 

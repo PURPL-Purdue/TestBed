@@ -98,17 +98,20 @@ class ValveControl(QtWidgets.QPushButton):
             return
         
         if self.valve_open:
-            self.toggle_valve_off
+            self.toggle_valve_off()
         else:
-            self.toggle_valve_on
+            self.toggle_valve_on()
+        print(f"Valve {self.name} open state: {self.valve_open}")
 
     def toggle_valve_on(self):
         """Toggle on the valve and update LabJack output"""
+        print("toggle_on triggered")
         self.valve_open = True
         self.update_button_style()
         self.update_labjack_output()
 
     def toggle_valve_off(self):
+        print("toggle_off triggered")
         """Toggle off the valve and update LabJack output"""
         self.valve_open = False
         self.update_button_style()

@@ -16,7 +16,7 @@ def load_data_from_csv(device_map):
     """
     devices = []
     events = []
-    filename = 'Torch_Hot_Fire/Sequencer_Info/sequence.csv'
+    filename = 'Torch_Hot_Fire/Sequencer_Info/test_sequence.csv'
     
     try:
         with open(filename, "r") as file:
@@ -45,6 +45,8 @@ def load_data_from_csv(device_map):
                             print(f"Redline of {limit} psi added for {device_name}")
                         except ValueError:
                             print(f"Warning: Invalid inputs for {device_name}: {limit}")
+                        except Exception as e:
+                            print(f"Random Error for device: {device_name}, limit: {limit}, error: {e}")
                             
                 elif current_section == "Sequence":
                     if len(row) >= 2:
