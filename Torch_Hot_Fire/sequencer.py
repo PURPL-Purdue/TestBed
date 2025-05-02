@@ -9,6 +9,7 @@ class Sequencer(QPushButton):
         self.running = False
         self.timer = None  # Store the timer reference so it can be stopped
         self.data_logger = data_logger
+        self.pressure_data = []
         
         # Configure Button Display
         self.setFixedHeight(100) 
@@ -92,6 +93,7 @@ class Sequencer(QPushButton):
     def stop_sequencer(self):
         """Stop the sequencing process."""
         print(f"Stopping sequencer - setting running=False")
+        self.pressure_data = []
         self.running = False
         self.setText("Start Sequencer")
         self.update_button_style()
@@ -106,7 +108,6 @@ class Sequencer(QPushButton):
                 valves_closed += 1
             else:
                 print(f"Valve already closed: {device.name}")
-        
         print(f"Closed {valves_closed} open valves")
         
 

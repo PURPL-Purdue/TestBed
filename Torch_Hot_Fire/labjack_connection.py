@@ -11,7 +11,7 @@ class LabJackConnection(QObject):
 
     def connect_to_labjack(self):
         if not self.connection_status:
-            try:
+            try:                
                 self.handle = ljm.openS("ANY", "ANY", "ANY")
                 self.connection_status = True
                 print("Connection attempt: Success - Connection Established")
@@ -24,6 +24,7 @@ class LabJackConnection(QObject):
     def update_connection_status(self, connected):
         """Update the QLabel with the connection status."""
         if self.status_label:
+            self.connection_status = connected
             if connected:
                 self.status_label.setText("LabJack T7: Connection Established")
                 self.status_label.setStyleSheet("background-color: green; color: white; font-weight: bold;")

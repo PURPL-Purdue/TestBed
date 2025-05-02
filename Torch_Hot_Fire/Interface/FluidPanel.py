@@ -6,7 +6,7 @@ from labjack_connection import LabJackConnection
 from data_logger import DataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
-from pyqtgraph import PlotWidget
+import pyqtgraph as pg
 from Interface.SolenoidPanel import SolenoidWindow
 from Interface.IcecubePanel import TorchWindow
 
@@ -27,7 +27,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._transducers = []
         self._graphs = []
         self._solenoids = []
-        self._graphs = []
         self.is_closing = False
         
         # Store a reference to the solenoid window 
@@ -74,7 +73,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label.setGeometry(445, 210, 100, 25)
         self.label.setStyleSheet("background-color: #FFFFFF; color: black; font-size: 12pt")
         self.label.setAlignment(Qt.AlignCenter)
-    
+
+        # Pressure Transducers
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN91", 10, 1500, 445, 290, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN88", 10, 1500, 540, 332, self))
+        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN89", 10, 1500, 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 265, 25, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN91", 10, 1500, 439, 188, self))
+        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN92", 10, 1500, 210, 231, self))
+        # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
+        # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 210, 623, self))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN90", 10, 1500, 375, 25, self.torch_window))
+
         # Device Mapping
         self.device_map = {}
 
@@ -82,17 +92,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.device_map[self._solenoids[i].name] = self._solenoids[i]
         for i in range(len(self._transducers)):
             self.device_map[self._transducers[i].name] = self._transducers[i]
-
-        # Pressure Transducers
-        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN88", 10, 1500, 540, 332, self))
-        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN89", 10, 1500, 210, 463, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 265, 25, self.torch_window))
-        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN91", 10, 1500, 439, 188, self))
-        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN92", 10, 1500, 210, 231, self))
-        self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
-        # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", "", 210, 623, self))
-        # self._transducers.append(PressureTransducer("PT-H2-05", "AIN72", "", 375, 25, self.torch_window))
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN91", 10, 1500, 445, 290, self.torch_window))
 
         # Data Logger
         self.data_logger = DataLogger(self._transducers, self._solenoids, parent=self)
@@ -107,8 +106,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_border_color(self.data_logger.high_speed_mode)
 
         # Graphs for pressure readings
-        self._graphs.append(PlotWidget(self))
+        self._graphs.append(pg.PlotWidget(self))
         self._graphs[0].setGeometry(10, 220, 194, 200)
+        self._graphs[0].setYRange(0, 200)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
 
@@ -126,7 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.reconnect_timer = QTimer(self)
         self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
-        self.reconnect_timer.start(5000)
+        self.reconnect_timer.start(1000)
 
         self.valve_window.show()
         self.torch_window.show()
@@ -139,15 +139,22 @@ class MainWindow(QtWidgets.QMainWindow):
                     self._transducers[i].update_pressure(self.labjack.handle)
                     if self._transducers[i].redline != None:
                         if self._transducers[i].pressure > self._transducers[i].redline:
-                            self.perform_shutdown
+                            self.perform_shutdown()
 
                     if self._transducers[i].name == "PT-TI-01":
-                        # Update Graphs
-                        self._graphs[0].plot(self._transducers[i].data, clear=True)
+                        if self.sequencer.running:
+                            # Update Graphs
+                            self.sequencer.pressure_data.append(self._transducers[i].pressure)
+                            self._graphs[0].plot(self.sequencer.pressure_data, pen=pg.mkPen(color='b', width=3), clear=True)
                 except Exception as e:
+                    print(f"LabJack disconnected: {e}")
+                    self.connection_status = False
+                    self.labjack.update_connection_status(self.connection_status)
                     print(f"FluidPanel.py: Error reading pressure from {self._transducers[i].input_channel_1}: {e}")
 
             self.data_logger.log_data()
+        else:
+            self.labjack.update_connection_status(False)
 
     def update_border_color(self, high_speed_mode):
         """Update the border color based on the button state"""
@@ -170,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Shutting down")
         # Stop sequencer
         if self.sequencer.running:
-            self.sequencer.toggle_sequencer()
+            self.sequencer.stop_sequencer()
         # Turn off all devices
         for device in self._solenoids:
             try:
@@ -181,7 +188,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 # Force the valve closed regardless of UI state
                 if device.device_connected and device.handle:
                     # Update the UI state to match
-                    device.valve_open = True # TODO: CHANGE THIS TO FALSE AFTER TESTING SEQUENCER
                     device.update_button_style()
                     device.toggle_valve_off()
                     
