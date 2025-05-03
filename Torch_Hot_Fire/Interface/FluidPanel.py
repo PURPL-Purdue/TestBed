@@ -55,7 +55,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # LabJack Connection
         self.labjack = LabJackConnection(self.connection_status)
-        self.labjack.connect_to_labjack()
+        self.labjack.connect_to_labjack()  # Initial connection attempt
 
         self.shutdown_button = QtWidgets.QPushButton("Emergency Shutdown", self)
         self.shutdown_button.setGeometry(10, self.windim_y-110, 194, 100)  # Position below connection status
@@ -64,10 +64,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Create the valve controls in the main window but don't display them
         # These will serve as the "backend" for the solenoid panel
-        self._solenoids.append(ValveControl("SN-H2-01", "CIO2", 465, 117, parent=self.valve_window))
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
         self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
         self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 369, 52, parent=self.valve_window))
-        self._solenoids.append(ValveControl("Spark Plug", "CIO0", 490, 230, parent=self.torch_window))
+        self._solenoids.append(ValveControl("Spark Plug", "EIO4", 490, 230, parent=self.torch_window))
         # Label Spark Plug
         self.label = QtWidgets.QLabel("Spark Plug", self.torch_window)
         self.label.setGeometry(445, 210, 100, 25)
@@ -76,11 +76,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Pressure Transducers
         self._transducers.append(PressureTransducer("PT-TI-01", "AIN91", 10, 1500, 445, 290, self.torch_window))
-        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN88", 10, 1500, 540, 332, self))
-        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN89", 10, 1500, 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN84", 5, 10000, 540, 332, self))
+        self._transducers.append(PressureTransducer("PT-O2-03", "AIN116", 5, 10000, 210, 463, self))
         self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 265, 25, self.torch_window))
-        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN91", 10, 1500, 439, 188, self))
-        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN92", 10, 1500, 210, 231, self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
+        self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
         # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
         # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 210, 623, self))
         self._transducers.append(PressureTransducer("PT-H2-03", "AIN90", 10, 1500, 375, 25, self.torch_window))
@@ -112,7 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
 
-        # Timers for updating pressure value and checking connection
+        # Timer for updating pressure value
         self.pressure_timer = QTimer(self)
         self.pressure_timer.timeout.connect(self.update_pressure)
         self.pressure_timer.start(500)  # Initial timing at 500ms
@@ -124,37 +124,33 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sequencer = Sequencer(self.device_map, self.data_logger, parent=self)
         self.sequencer.move(10, 115)
 
-        self.reconnect_timer = QTimer(self)
-        self.reconnect_timer.timeout.connect(self.labjack.connect_to_labjack)
-        self.reconnect_timer.start(1000)
-
         self.valve_window.show()
         self.torch_window.show()
 
     def update_pressure(self):
-        if self.labjack.connection_status:
-            for i in range(len(self._transducers)):
-                try:
-                    # Update pressure
-                    self._transducers[i].update_pressure(self.labjack.handle)
-                    if self._transducers[i].redline != None:
-                        if self._transducers[i].pressure > self._transducers[i].redline:
-                            self.perform_shutdown()
+        """Update pressure readings from all transducers if LabJack is connected"""
+        if not self.labjack.connection_status:
+            print("Warning: Cannot update pressure - LabJack not connected")
+            return
+            
+        for i in range(len(self._transducers)):
+            try:
+                # Update pressure
+                self._transducers[i].update_pressure(self.labjack.handle)
+                if self._transducers[i].redline is not None:
+                    if self._transducers[i].pressure > self._transducers[i].redline:
+                        print(f"CRITICAL: {self._transducers[i].name} exceeded redline value! Initiating shutdown.")
+                        self.perform_shutdown()
 
-                    if self._transducers[i].name == "PT-TI-01":
-                        if self.sequencer.running:
-                            # Update Graphs
-                            self.sequencer.pressure_data.append(self._transducers[i].pressure)
-                            self._graphs[0].plot(self.sequencer.pressure_data, pen=pg.mkPen(color='b', width=3), clear=True)
-                except Exception as e:
-                    print(f"LabJack disconnected: {e}")
-                    self.connection_status = False
-                    self.labjack.update_connection_status(self.connection_status)
-                    print(f"FluidPanel.py: Error reading pressure from {self._transducers[i].input_channel_1}: {e}")
-
-            self.data_logger.log_data()
-        else:
-            self.labjack.update_connection_status(False)
+                if self._transducers[i].name == "PT-TI-01":
+                    if self.sequencer.running:
+                        # Update Graphs
+                        self.sequencer.pressure_data.append(self._transducers[i].pressure)
+                        self._graphs[0].plot(self.sequencer.pressure_data, pen=pg.mkPen(color='b', width=3), clear=True)
+            except Exception as e:
+                print(f"CRITICAL ERROR: Failed reading pressure from {self._transducers[i].name} ({self._transducers[i].input_channel_1}): {e}")
+                # Log the error more prominently for rocket test infrastructure
+        self.data_logger.log_data()
 
     def update_border_color(self, high_speed_mode):
         """Update the border color based on the button state"""
@@ -181,12 +177,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Turn off all devices
         for device in self._solenoids:
             try:
-                # Ensure connection to LabJack
-                if not device.device_connected:
-                    device.connect_to_labjack()
-                
                 # Force the valve closed regardless of UI state
-                if device.device_connected and device.handle:
+                if self.labjack.connection_status and self.labjack.handle:
                     # Update the UI state to match
                     device.update_button_style()
                     device.toggle_valve_off()

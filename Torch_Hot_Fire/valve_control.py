@@ -2,7 +2,8 @@ from PyQt5 import QtWidgets
 from labjack import ljm
 import datetime as dt
 
-# TODO: Fix connect_to_labjack redundancies. Many try catches
+# TODO: Fix connect_to_labjack redundancies. Many try catches - device_connected doesn't even get 
+# updated anywhere except shitty hardcode in update_labjack_output
 class ValveControl(QtWidgets.QPushButton):
     def __init__(self, name, labjack_output, x, y, parent=None):
         super(ValveControl, self).__init__(parent)
@@ -125,7 +126,16 @@ class ValveControl(QtWidgets.QPushButton):
                 ljm.eWriteName(self.handle, self.labjack_output, output_value)
                 print(f"{self.labjack_output} set to {output_value} for {'open' if self.valve_open else 'closed'} valve state at {dt.datetime.now()}")
             except Exception as e:
-                print(f"Error writing to {self.labjack_output}: {e}")
+                print(f"Error writing to {self.labjack_output}: {e}, Attempting Reconnect")
+                self.device_connected = False
+                self.connect_to_labjack()
+                if self.device_connected and self.handle:
+                    output_value = 0 if self.valve_open else 1
+                    try:
+                        ljm.eWriteName(self.handle, self.labjack_output, output_value)
+                        print(f"{self.labjack_output} set to {output_value} for {'open' if self.valve_open else 'closed'} valve state at {dt.datetime.now()}")
+                    except Exception as e:
+                        print(f"Confirm Error writing to {self.labjack_output}: {e}")
 
     def update_button_style(self):
         """Update the button's text and style based on the valve state."""
