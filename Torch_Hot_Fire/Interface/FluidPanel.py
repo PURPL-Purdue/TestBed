@@ -76,15 +76,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label.setAlignment(Qt.AlignCenter)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN91", 10, 1500, 445, 290, self.torch_window))
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 540, 332, self))
-        self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 210, 463, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 265, 25, self.torch_window))
-        self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
-        self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 5.8, 445, 290, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 540, 332, self))
+        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 17, 265, 25, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
+        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
         # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
         # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 210, 623, self))
-        self._transducers.append(PressureTransducer("PT-H2-03", "AIN90", 10, 1500, 375, 25, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 10.1, 375, 25, self.torch_window))
 
         # Device Mapping
         self.device_map = {}
