@@ -9,6 +9,7 @@ from PyQt5.QtCore import QTimer
 import pyqtgraph as pg
 from Interface.SolenoidPanel import SolenoidWindow
 from Interface.IcecubePanel import TorchWindow
+import statistics
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -76,8 +77,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Pressure Transducers
         self._transducers.append(PressureTransducer("PT-TI-01", "AIN91", 10, 1500, 445, 290, self.torch_window))
-        self._transducers.append(PressureTransducer("PT-O2-01", "AIN84", 5, 10000, 540, 332, self))
-        self._transducers.append(PressureTransducer("PT-O2-03", "AIN116", 5, 10000, 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 540, 332, self))
+        self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 210, 463, self))
         self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 265, 25, self.torch_window))
         self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
         self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
@@ -138,8 +139,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 # Update pressure
                 self._transducers[i].update_pressure(self.labjack.handle)
                 if self._transducers[i].redline is not None:
-                    if self._transducers[i].pressure > self._transducers[i].redline:
+                    if statistics.median(self._transducers[i].data) > self._transducers[i].redline:
                         print(f"CRITICAL: {self._transducers[i].name} exceeded redline value! Initiating shutdown.")
+                        print(self._transducers[i].data)
                         self.perform_shutdown()
 
                 if self._transducers[i].name == "PT-TI-01":
