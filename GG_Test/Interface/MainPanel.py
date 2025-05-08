@@ -7,21 +7,21 @@ from data_logger import DataLogger
 from sequencer import Sequencer
 from PyQt5.QtCore import QTimer
 import pyqtgraph as pg
-from Interface.SolenoidPanel import SolenoidWindow
-from Interface.IcecubePanel import TorchWindow
 import statistics
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.windim_x, self.windim_y = 900, 680
-        self.setWindowTitle("TeenyK P&ID")
         desktop = QtWidgets.QApplication.desktop()
-        screen_rect = desktop.screenGeometry()
+        screen_rect = desktop.availableGeometry()
         screen_width = screen_rect.width()
+        screen_height = screen_rect.height()
+        margin = 30
+        self.windim_x, self.windim_y = screen_width, screen_height - margin
+        self.setWindowTitle("TeenyK P&ID")
         
-        window_x = screen_width - self.windim_x - 100
-        window_y = 100 
+        window_x = 0
+        window_y = 0
         
         self.setGeometry(window_x, window_y, self.windim_x, self.windim_y)
         
@@ -30,17 +30,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self._solenoids = []
         self.is_closing = False
         
-        # Store a reference to the solenoid window 
-        # (will be set by main.py after both windows are created)
-        self.valve_window = SolenoidWindow(self)
-        self.torch_window = TorchWindow(self)
+        # # Store a reference to the solenoid window 
+        # # (will be set by main.py after both windows are created)
+        # self.valve_window = SolenoidWindow(self)
+        # self.torch_window = TorchWindow(self)
 
         # Background
         bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/torch_bk_bg.png")
+        bg_pixmap = QtGui.QPixmap("GG_Test/P&ID.png")
         scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
         bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, scaled_pixmap.width(), self.windim_y)
+
+        # Get dimensions of the scaled pixmap
+        self.scaled_width = scaled_pixmap.width()
 
         # Set border
         self.border_frame = QtWidgets.QFrame(self)
@@ -50,7 +53,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Connection Status Label
         self.connection_status = QtWidgets.QLabel("LabJack T7: Connection Missing", self)
-        self.connection_status.setGeometry(640, 20, 240, 25)
+        self.connection_status.setGeometry(self.windim_x - 260, 20, 240, 25)
         self.connection_status.setAlignment(Qt.AlignCenter)
         self.connection_status.setStyleSheet("background-color: red; color: white; font-weight: bold;")
 
@@ -59,32 +62,41 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labjack.connect_to_labjack()  # Initial connection attempt
 
         self.shutdown_button = QtWidgets.QPushButton("Emergency Shutdown", self)
-        self.shutdown_button.setGeometry(10, self.windim_y-110, 194, 100)  # Position below connection status
+        self.shutdown_button.setGeometry(10, self.windim_y-110, self.windim_x - self.scaled_width - 15, 100)  # Position below connection status
         self.shutdown_button.setStyleSheet("background-color: red; color: white; font-weight: bold;")
         self.shutdown_button.clicked.connect(self.perform_shutdown)
 
-        # Create the valve controls in the main window but don't display them
-        # These will serve as the "backend" for the solenoid panel
-        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 465, 117, parent=self.valve_window))
-        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 271, 117, parent=self.valve_window))
-        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 369, 52, parent=self.valve_window))
-        self._solenoids.append(ValveControl("Spark Plug", "EIO4", 490, 230, parent=self.torch_window))
-        # Label Spark Plug
-        self.label = QtWidgets.QLabel("Spark Plug", self.torch_window)
-        self.label.setGeometry(445, 210, 100, 25)
-        self.label.setStyleSheet("background-color: #FFFFFF; color: black; font-size: 12pt")
-        self.label.setAlignment(Qt.AlignCenter)
+        # Hydrogen Valves
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 751, 401, parent=self))
+        # Oxygen valves
+        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 640, 397, parent=self))
+        self._solenoids.append(ValveControl("SN-O2-02", "", 593, 402, parent=self))
+        # Nitrogen Valves
+        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 696, 364, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-02", "", 527, 364, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-03", "", 400, 418, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-04", "", 544, 68, horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-05", "", 804, 531, horizontal=True, parent=self))
+        # Fuel Valves
+        self._solenoids.append(ValveControl("SN-FU-01", "", 474, 402, parent=self))
+        # Spark plug
+        self._solenoids.append(ValveControl("Spark Plug", "EIO4", 542, 593, parent=self))
+        # # Label Spark Plug
+        # self.label = QtWidgets.QLabel("Spark Plug", self)
+        # self.label.setGeometry(445, 210, 100, 25)
+        # self.label.setStyleSheet("background-color: #FFFFFF; color: black; font-size: 12pt")
+        # self.label.setAlignment(Qt.AlignCenter)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, 445, 290, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, 530, 554, self))
         # self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 540, 332, self))
         # self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 210, 463, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 0, 265, 25, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 0, 530, 465, self))
         # self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
         # self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
         # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
         # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 210, 623, self))
-        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, 375, 25, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, 638, 481, self))
 
         # Device Mapping
         self.device_map = {}
@@ -95,23 +107,39 @@ class MainWindow(QtWidgets.QMainWindow):
             self.device_map[self._transducers[i].name] = self._transducers[i]
 
         # Data Logger
-        self.data_logger = DataLogger(self._transducers, self._solenoids, parent=self)
+        self.data_logger = DataLogger(self._transducers, self._solenoids, width = self.windim_x - self.scaled_width - 15, height = 100, parent=self)
         self.data_logger.move(10, 10) 
 
         # Connect the state_changed signal to update the main window border
         self.data_logger.state_changed.connect(self.update_border_color)
-        self.data_logger.state_changed.connect(self.valve_window.update_border_color)
-        self.data_logger.state_changed.connect(self.torch_window.update_border_color)
+        # self.data_logger.state_changed.connect(self.valve_window.update_border_color)
+        # self.data_logger.state_changed.connect(self.torch_window.update_border_color)
         
         # Set initial border style
         self.update_border_color(self.data_logger.high_speed_mode)
 
         # Graphs for pressure readings
+        self._graph_number = 3
+        self._graph_height = int((self.windim_y - 325 - (self._graph_number + 1) * 5)/3)
+        # Torch graph
         self._graphs.append(pg.PlotWidget(self))
-        self._graphs[0].setGeometry(10, 220, 194, 200)
+        self._graphs[0].setGeometry(10, 220, self.windim_x - self.scaled_width - 15, self._graph_height)
         self._graphs[0].setYRange(0, 200)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
+        # GG graph
+        self._graphs.append(pg.PlotWidget(self))
+        self._graphs[1].setGeometry(10, 225 + self._graph_height, self.windim_x - self.scaled_width - 15, self._graph_height)
+        self._graphs[1].setYRange(0, 200)
+        self._graphs[1].setBackground('w')
+        self._graphs[1].setTitle("PT-GG-01 Pressure")
+        # OF graph
+        self._graphs.append(pg.PlotWidget(self))
+        self._graphs[2].setGeometry(10, 230 + 2 * self._graph_height, self.windim_x - self.scaled_width - 15, self._graph_height)
+        self._graphs[2].setYRange(0, 200)
+        self._graphs[2].setBackground('w')
+        self._graphs[2].setTitle("OF Graph")
+
 
         # Timer for updating pressure value
         self.pressure_timer = QTimer(self)
@@ -122,11 +150,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_logger.set_timer(self.pressure_timer)
 
         # Create the sequencer with the events and devices
-        self.sequencer = Sequencer(self.device_map, self.data_logger, parent=self)
+        self.sequencer = Sequencer(self.device_map, self.data_logger, width = self.windim_x - self.scaled_width - 15, height = 100, parent=self)
         self.sequencer.move(10, 115)
 
-        self.valve_window.show()
-        self.torch_window.show()
+        # self.valve_window.show()
+        # self.torch_window.show()
 
     def update_pressure(self):
         """Update pressure readings from all transducers if LabJack is connected"""
@@ -149,6 +177,11 @@ class MainWindow(QtWidgets.QMainWindow):
                         # Update Graphs
                         self.sequencer.pressure_data.append(self._transducers[i].pressure)
                         self._graphs[0].plot(self.sequencer.pressure_data, pen=pg.mkPen(color='b', width=3), clear=True)
+                elif self._transducers[i].name == "PT-GG-01":
+                    if self.sequencer.running:
+                        # Update Graphs
+                        self.sequencer.pressure_data.append(self._transducers[i].pressure)
+                        self._graphs[1].plot(self.sequencer.pressure_data, pen=pg.mkPen(color='r', width=3), clear=True)
             except Exception as e:
                 print(f"CRITICAL ERROR: Failed reading pressure from {self._transducers[i].name} ({self._transducers[i].input_channel_1}): {e}")
                 # Log the error more prominently for rocket test infrastructure

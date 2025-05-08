@@ -1,0 +1,8 @@
+Limits
+"Device,Limit (psi)"
+PT-O2-01, 80
+Sequence
+"Device,Timing (ms)"
+SN-N2-01,100
+SN-N2-01,8000
+

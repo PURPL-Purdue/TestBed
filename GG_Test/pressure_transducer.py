@@ -9,10 +9,10 @@ class PressureTransducer:
         self.input_channel_1 = input_channel_1
         self.max_voltage = max_voltage
         self.max_psi = max_psi
-        self.label = QtWidgets.QLabel("0000.0 psi", parent)
-        self.label.setGeometry(x, y, 100, 25)
+        self.label = QtWidgets.QLabel("0000.0", parent)
+        self.label.setGeometry(x, y, 45, 12)
         self.label.setStyleSheet("background-color: #00baff; color: white; font-size: 12pt; font-weight: bold; font-family: 'Courier New', monospace;")
-        self.label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self.label.setAlignment(Qt.AlignCenter)
         self.pressure = 0.0
         self.data = Buffer(5)
         self.redline = None
@@ -23,7 +23,7 @@ class PressureTransducer:
             voltage_1 = ljm.eReadName(handle, self.input_channel_1)
             print(voltage_1)
             self.pressure = voltage_1 / self.max_voltage * self.max_psi - self.offset
-            self.label.setText(f"{self.pressure:08.1f} psi")
+            self.label.setText(f"{self.pressure:.1f} psi")
             self.data.append(self.pressure)
         except Exception as e:
             self.pressure = float('nan')
