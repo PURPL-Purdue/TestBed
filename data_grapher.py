@@ -8,19 +8,27 @@ import os
 # ────────────────────────────────────────────────
 # Load all matching CSVs in the current folder
 # ────────────────────────────────────────────────
-file_paths = sorted(glob.glob("torch_hot_fire_*_high_*.csv"))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+search_pattern = os.path.join(script_dir, "Torch_Hot_Fire", "torch_hot_fire_*_high_*.csv")
+file_paths = sorted(glob.glob(search_pattern))
+
+print("CSV Files Found:", file_paths)
+
 dataframes = []
 test_names = []
 
 for path in file_paths:
     df = pd.read_csv(path)
     df['Elapsed (ms)'] = df.index
+    max_pressure = df['PT-TI-01 Pressure'].max()
+    print(f"{path} – Max Chamber Pressure: {max_pressure:.2f} psi")
+
     test_name = os.path.splitext(os.path.basename(path))[0].replace("_", " ").title()
     dataframes.append(df)
     test_names.append(test_name)
 
 # ────────────────────────────────────────────────
-# Define event sequence
+# Define event sequences
 # ────────────────────────────────────────────────
 events_default = {
     'SN-O2-01': [1000, 4500],
@@ -38,7 +46,7 @@ events_first = {
 # ────────────────────────────────────────────────
 # Prep function
 # ────────────────────────────────────────────────
-def prepare_df(df, threshold=10):
+def prepare_df(df, threshold=0):  # lowered threshold for debugging
     active = df[df['PT-TI-01 Pressure'] > threshold]
     if active.empty:
         return df.copy(), 0, len(df)
@@ -62,9 +70,16 @@ height_ratios = []
 for i, df in enumerate(dataframes):
     dfc, tmin, tmax = prepare_df(df)
     duration = tmax - tmin
+    if duration == 0:
+        continue  # Skip empty datasets
     events = scale_events(events_first if i == 0 else events_default, duration)
     height_ratios.append(duration)
     processed.append((dfc, tmin, tmax, events, test_names[i]))
+
+# Exit if no data
+if not processed:
+    print("No valid datasets found. Check CSV files and thresholds.")
+    exit()
 
 # Shared formatter
 formatter = ticker.FuncFormatter(lambda x, pos: f"{int(x * 10)}")
