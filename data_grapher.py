@@ -9,7 +9,7 @@ import os
 # Load all matching CSVs in the current folder
 # ────────────────────────────────────────────────
 script_dir = os.path.dirname(os.path.abspath(__file__))
-search_pattern = os.path.join(script_dir, "Torch_Hot_Fire", "torch_hot_fire_*_high_*.csv")
+search_pattern = os.path.join(script_dir, "Torch_Hot_Fire/Torch_Hot_Fire/data", "torch_hot_fire_*_high_*.csv")
 file_paths = sorted(glob.glob(search_pattern))
 
 print("CSV Files Found:", file_paths)
