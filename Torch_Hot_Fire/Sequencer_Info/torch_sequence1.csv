@@ -1,6 +1,6 @@
 Limits
 Device,Limit (psi)
-PT-TI-01, 10
+PT-TI-01, 300
 Sequence
 Device,Timestamp (ms)
 SN-O2-01,1000

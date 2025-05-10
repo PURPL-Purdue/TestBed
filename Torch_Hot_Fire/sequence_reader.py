@@ -16,7 +16,7 @@ def load_data_from_csv(device_map):
     """
     devices = []
     events = []
-    filename = 'Torch_Hot_Fire/Sequencer_Info/sequence.csv'
+    filename = 'Torch_Hot_Fire/Sequencer_Info/torch_sequence2.csv'
     
     try:
         with open(filename, "r") as file:

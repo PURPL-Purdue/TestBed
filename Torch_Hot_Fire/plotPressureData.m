@@ -12,6 +12,8 @@ end
 % Read the CSV file
 fullPath = fullfile(filePath, fileName);
 data = readtable(fullPath);
+columnNames = data.Properties.VariableNames;
+
 
 % Find PT columns (columns with "Pressure" in the name)
 ptColumns = find(contains(columnNames, 'Pressure'));

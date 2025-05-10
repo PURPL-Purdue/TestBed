@@ -16,10 +16,11 @@ class MainWindow(QtWidgets.QMainWindow):
         screen_rect = desktop.availableGeometry()
         screen_width = screen_rect.width()
         screen_height = screen_rect.height()
-        margin = 30
-        self.windim_x, self.windim_y = screen_width, screen_height - margin
+        # print(screen_height, screen_width)
+        # margin = 30
+        self.windim_x, self.windim_y = 1728, 973
         self.setWindowTitle("TeenyK P&ID")
-        
+        1003, 1728
         window_x = 0
         window_y = 0
         
@@ -67,20 +68,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.shutdown_button.clicked.connect(self.perform_shutdown)
 
         # Hydrogen Valves
-        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 751, 401, parent=self))
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 749, 402, parent=self))
         # Oxygen valves
-        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 640, 397, parent=self))
-        self._solenoids.append(ValveControl("SN-O2-02", "", 593, 402, parent=self))
+        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 638, 398, parent=self))
+        self._solenoids.append(ValveControl("SN-O2-02", "", 591, 403, parent=self))
         # Nitrogen Valves
-        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 696, 364, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-02", "", 527, 364, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-03", "", 400, 418, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-04", "", 544, 68, horizontal=True, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-05", "", 804, 531, horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 694, 365, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-02", "", 525, 365, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-03", "", 398, 419, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-04", "", 541, 68, horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-05", "", 802, 532, horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-06", "", 802, 627, horizontal=True, parent=self))
         # Fuel Valves
-        self._solenoids.append(ValveControl("SN-FU-01", "", 474, 402, parent=self))
+        self._solenoids.append(ValveControl("SN-FU-01", "", 472, 403, parent=self))
         # Spark plug
-        self._solenoids.append(ValveControl("Spark Plug", "EIO4", 542, 593, parent=self))
+        self._solenoids.append(ValveControl("Spark Plug", "EIO4", 540, 594, parent=self))
         # # Label Spark Plug
         # self.label = QtWidgets.QLabel("Spark Plug", self)
         # self.label.setGeometry(445, 210, 100, 25)
@@ -88,15 +90,26 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.label.setAlignment(Qt.AlignCenter)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, 530, 554, self))
-        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 540, 332, self))
-        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 210, 463, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 0, 530, 465, self))
-        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
-        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
-        # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
-        # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 210, 623, self))
-        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, 638, 481, self))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, 528, 553, self))
+        self._transducers.append(PressureTransducer("PT-GG-01", "", 10, 1500, 0, 528, 627, self))
+        self._transducers.append(PressureTransducer("PT-H2-01", "", 10, 1500, 0, 1383, 410, self))
+        self._transducers.append(PressureTransducer("PT-H2-02", "", 10, 1500, 0, 1123, 480, self))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, 634, 482, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "", 5, 7500, 0, 1300, 281, self))
+        self._transducers.append(PressureTransducer("PT-O2-02", "", 5, 10000, 0, 1317, 373, self))
+        self._transducers.append(PressureTransducer("PT-O2-03", "", 5, 7500, 0, 1123, 374, self))
+        self._transducers.append(PressureTransducer("PT-O2-04", "", 5, 7500, 0,  654, 515, self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 0, 528, 465, self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "", 5, 10000, 0, 1254, 215, self))
+        self._transducers.append(PressureTransducer("PT-N2-02", "", 5, 10000, 0, 1392, 228, self))
+        self._transducers.append(PressureTransducer("PT-N2-03", "", 5, 10000, 0, 1391, 382, self))
+        self._transducers.append(PressureTransducer("PT-N2-04", "", 5, 10000, 0, 1121, 218, self))
+        self._transducers.append(PressureTransducer("PT-N2-05", "", 5, 10000, 0, 1121, 238, self))
+        self._transducers.append(PressureTransducer("PT-N2-06", "", 5, 10000, 0, 1121, 259, self))
+        self._transducers.append(PressureTransducer("PT-N2-07", "", 5, 10000, 0, 414, 76, self))
+        self._transducers.append(PressureTransducer("PT-N2-08", "", 5, 10000, 0, 389, 454, self))
+        self._transducers.append(PressureTransducer("PT-N2-09", "", 5, 10000, 0, 640, 541, self))
+        # self._transducers.append(PressureTransducer("PT-FU-01", "", 5, 10000, 0, 640, 541, self))
 
         # Device Mapping
         self.device_map = {}
@@ -127,18 +140,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self._graphs[0].setYRange(0, 200)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
+        self._graphs[0].showGrid(y=True) 
         # GG graph
         self._graphs.append(pg.PlotWidget(self))
         self._graphs[1].setGeometry(10, 225 + self._graph_height, self.windim_x - self.scaled_width - 15, self._graph_height)
         self._graphs[1].setYRange(0, 200)
         self._graphs[1].setBackground('w')
         self._graphs[1].setTitle("PT-GG-01 Pressure")
+        self._graphs[1].showGrid(y=True) 
         # OF graph
         self._graphs.append(pg.PlotWidget(self))
         self._graphs[2].setGeometry(10, 230 + 2 * self._graph_height, self.windim_x - self.scaled_width - 15, self._graph_height)
         self._graphs[2].setYRange(0, 200)
         self._graphs[2].setBackground('w')
         self._graphs[2].setTitle("OF Graph")
+        self._graphs[2].showGrid(y=True) 
 
 
         # Timer for updating pressure value

@@ -76,15 +76,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label.setAlignment(Qt.AlignCenter)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, 445, 290, self.torch_window))
-        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 540, 332, self))
-        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 210, 463, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN88", 10, 1500, 0, 265, 25, self.torch_window))
-        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 439, 188, self))
-        # self._transducers.append(PressureTransducer("PT-N2-04", "AIN118", 5, 10000, 210, 231, self))
-        # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 607, 530, self))
-        # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 210, 623, self))
-        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, 375, 25, self.torch_window))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 1.0219, 5.6, 445, 290, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 1, 540, 332, self))
+        # self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 1, 210, 463, self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 1, 8.3, 265, 25, self.torch_window))
+        # self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 1. 439, 188, self))
+        self._transducers.append(PressureTransducer("PT-N2-04", "AIN72", 5, 7500, 1, 30.5, 210, 231, self))
+        # self._transducers.append(PressureTransducer("PT-H2-01", "AIN90", 10, 1500, 1, 607, 530, self))
+        # self._transducers.append(PressureTransducer("PT-H2-02", "AIN72", 10, 1500, 1, 210, 623, self))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 1, 10.3, 375, 25, self.torch_window))
 
         # Device Mapping
         self.device_map = {}
@@ -112,6 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._graphs[0].setYRange(0, 200)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
+        self._graphs[0].showGrid(y=True) 
 
         # Timer for updating pressure value
         self.pressure_timer = QTimer(self)
@@ -165,11 +166,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
         # Update main window border
         self.border_frame.setStyleSheet(border_style)
-
-        # # Update solenoid window border if it exists
-        # if hasattr(self, 'valve_window') and self.valve_window:
-        #     self.valve_window.border_frame.setStyleSheet(border_style)
-        #     print(f"Updated solenoid window border: {'green' if high_speed_mode else 'red'}")
     
     def perform_shutdown(self):
         print("Shutting down")
