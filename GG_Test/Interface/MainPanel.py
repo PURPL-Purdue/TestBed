@@ -16,8 +16,8 @@ class MainWindow(QtWidgets.QMainWindow):
         screen_rect = desktop.availableGeometry()
         screen_width = screen_rect.width()
         screen_height = screen_rect.height()
-        screen_width  = 1200
-        screen_height = 700
+        # screen_width  = 1200
+        # screen_height = 700
         # Original dimensions used to build UI
         static_x, static_y = 1728, 973
         # print(screen_height, screen_width)
@@ -43,9 +43,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # Background
         bg_label = QtWidgets.QLabel(self)
         bg_pixmap = QtGui.QPixmap("GG_Test/P&ID.png")
-        scaled_pixmap = bg_pixmap.scaled(self.windim_x - 165, self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        print(scaled_pixmap.width())
+        print(self.windim_x)
         bg_label.setPixmap(scaled_pixmap)
-        bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, scaled_pixmap.width(), self.windim_y)
+        bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, self.windim_x, self.windim_y)
 
         # Get dimensions of the scaled pixmap
         self.scaled_width = scaled_pixmap.width()
