@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 from labjack import ljm
-from AdaptiveData import Buffer
+from backend.AdaptiveData import Buffer
 
 class PressureTransducer:
     def __init__(self, name, input_channel_1, max_voltage, max_psi, scalar_offset, linear_offset, x, y, parent):

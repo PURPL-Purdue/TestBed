@@ -1,4 +1,4 @@
-from sequence_reader import load_data_from_csv
+from Sequencer.sequence_reader import load_data_from_csv
 from PyQt5.QtWidgets import QPushButton, QMessageBox
 from PyQt5.QtCore import QTimer, Qt
 

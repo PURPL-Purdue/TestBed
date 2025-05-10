@@ -1,10 +1,10 @@
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
-from valve_control import ValveControl
-from pressure_transducer import PressureTransducer
-from labjack_connection import LabJackConnection
-from data_logger import DataLogger
-from sequencer import Sequencer
+from Devices.valve_control import ValveControl
+from Devices.pressure_transducer import PressureTransducer
+from backend.labjack_connection import LabJackConnection
+from backend.data_logger import DataLogger
+from Sequencer.sequencer import Sequencer
 from PyQt5.QtCore import QTimer
 import pyqtgraph as pg
 from Interface.SolenoidPanel import SolenoidWindow
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Background
         bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/torch_bk_bg.png")
+        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/backgrounds/torch_bk_bg.png")
         scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
         bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, scaled_pixmap.width(), self.windim_y)

@@ -25,7 +25,7 @@ class SolenoidWindow(QtWidgets.QWidget):
         
         # Background
         bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/solenoid_bg.png")
+        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/backgrounds/solenoid_bg.png")
         
         # Handle image alignment to right side of window
         if bg_pixmap.width() > self.windim_x:

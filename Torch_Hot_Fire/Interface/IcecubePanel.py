@@ -26,7 +26,7 @@ class TorchWindow(QtWidgets.QWidget):
         
         # Background
         bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/icecubebg.png")
+        bg_pixmap = QtGui.QPixmap("Torch_Hot_Fire/backgrounds/icecubebg.png")
         scaled_pixmap = bg_pixmap.scaled(self.windim_x, self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
         bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, scaled_pixmap.width(), self.windim_y)
