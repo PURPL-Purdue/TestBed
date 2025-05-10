@@ -16,11 +16,13 @@ class MainWindow(QtWidgets.QMainWindow):
         screen_rect = desktop.availableGeometry()
         screen_width = screen_rect.width()
         screen_height = screen_rect.height()
+        # Original dimensions used to build UI
+        static_x, static_y = 1728, 973
         # print(screen_height, screen_width)
-        # margin = 30
-        self.windim_x, self.windim_y = 1728, 973
+        margin = 30
+        self.windim_x, self.windim_y = screen_width, screen_height - margin
         self.setWindowTitle("TeenyK P&ID")
-        1003, 1728
+        # 1003, 1728
         window_x = 0
         window_y = 0
         
@@ -68,19 +70,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.shutdown_button.clicked.connect(self.perform_shutdown)
 
         # Hydrogen Valves
-        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", 749, 402, parent=self))
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", int(749 * self.windim_x/1728), int(402 * self.windim_y/973), parent=self))
         # Oxygen valves
-        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", 638, 398, parent=self))
-        self._solenoids.append(ValveControl("SN-O2-02", "", 591, 403, parent=self))
+        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", int(638 * self.windim_x/1728), int(398 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-O2-02", "", int(591 * self.windim_x/1728), int(403 * self.windim_y/973), parent=self))
         # Nitrogen Valves
-        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", 694, 365, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-02", "", 525, 365, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-03", "", 398, 419, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-04", "", 541, 68, horizontal=True, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-05", "", 802, 532, horizontal=True, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-06", "", 802, 627, horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", int(694 * self.windim_x/1728), int(365 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-N2-02", "", int(525 * self.windim_x/1728), int(365 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-N2-03", "", int(398 * self.windim_x/1728), int(419 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-N2-04", "", int(541 * self.windim_x/1728), int(68 * self.windim_y/973), horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-05", "", int(802 * self.windim_x/1728), int(532 * self.windim_y/973), horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-06", "", int(802 * self.windim_x/1728), int(627 * self.windim_y/973), horizontal=True, parent=self))
         # Fuel Valves
-        self._solenoids.append(ValveControl("SN-FU-01", "", 472, 403, parent=self))
+        self._solenoids.append(ValveControl("SN-FU-01", "", int(472 * self.windim_x/1728), int(403 * self.windim_y/973), parent=self))
         # Spark plug
         self._solenoids.append(ValveControl("Spark Plug", "EIO4", 540, 594, parent=self))
         # # Label Spark Plug
@@ -90,25 +92,25 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.label.setAlignment(Qt.AlignCenter)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, 528, 553, self))
-        self._transducers.append(PressureTransducer("PT-GG-01", "", 10, 1500, 0, 528, 627, self))
-        self._transducers.append(PressureTransducer("PT-H2-01", "", 10, 1500, 0, 1383, 410, self))
-        self._transducers.append(PressureTransducer("PT-H2-02", "", 10, 1500, 0, 1123, 480, self))
-        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, 634, 482, self))
-        self._transducers.append(PressureTransducer("PT-O2-01", "", 5, 7500, 0, 1300, 281, self))
-        self._transducers.append(PressureTransducer("PT-O2-02", "", 5, 10000, 0, 1317, 373, self))
-        self._transducers.append(PressureTransducer("PT-O2-03", "", 5, 7500, 0, 1123, 374, self))
-        self._transducers.append(PressureTransducer("PT-O2-04", "", 5, 7500, 0,  654, 515, self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 0, 528, 465, self))
-        self._transducers.append(PressureTransducer("PT-N2-01", "", 5, 10000, 0, 1254, 215, self))
-        self._transducers.append(PressureTransducer("PT-N2-02", "", 5, 10000, 0, 1392, 228, self))
-        self._transducers.append(PressureTransducer("PT-N2-03", "", 5, 10000, 0, 1391, 382, self))
-        self._transducers.append(PressureTransducer("PT-N2-04", "", 5, 10000, 0, 1121, 218, self))
-        self._transducers.append(PressureTransducer("PT-N2-05", "", 5, 10000, 0, 1121, 238, self))
-        self._transducers.append(PressureTransducer("PT-N2-06", "", 5, 10000, 0, 1121, 259, self))
-        self._transducers.append(PressureTransducer("PT-N2-07", "", 5, 10000, 0, 414, 76, self))
-        self._transducers.append(PressureTransducer("PT-N2-08", "", 5, 10000, 0, 389, 454, self))
-        self._transducers.append(PressureTransducer("PT-N2-09", "", 5, 10000, 0, 640, 541, self))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, int(528 * self.windim_x/1728), int(553 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-GG-01", "", 10, 1500, 0, int(528 * self.windim_x/1728), int(627 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-H2-01", "", 10, 1500, 0,int(1383 * self.windim_x/1728), int(410 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-H2-02", "", 10, 1500, 0, int(1123 * self.windim_x/1728), int(480 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, int(634 * self.windim_x/1728), int(482 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "", 5, 7500, 0, int(1300 * self.windim_x/1728), int(281 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-02", "", 5, 10000, 0, int(1317 * self.windim_x/1728), int(373 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-03", "", 5, 7500, 0, int(1123 * self.windim_x/1728), int(374 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-04", "", 5, 7500, 0,  int(654 * self.windim_x/1728), int(515 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 0, int(528 * self.windim_x/1728), int(465 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "", 5, 10000, 0, int(1254 * self.windim_x/1728), int(215 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-02", "", 5, 10000, 0, int(1392 * self.windim_x/1728), int(228 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-03", "", 5, 10000, 0, int(1391 * self.windim_x/1728), int(382 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-04", "", 5, 10000, 0, int(1121 * self.windim_x/1728), int(218 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-05", "", 5, 10000, 0, int(1121 * self.windim_x/1728), int(238 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-06", "", 5, 10000, 0, int(1121 * self.windim_x/1728), int(259 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-07", "", 5, 10000, 0, int(414 * self.windim_x/1728), int(76 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-08", "", 5, 10000, 0, int(389 * self.windim_x/1728), int(454 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-09", "", 5, 10000, 0, int(640 * self.windim_x/1728), int(541 * self.windim_y/973), self))
         # self._transducers.append(PressureTransducer("PT-FU-01", "", 5, 10000, 0, 640, 541, self))
 
         # Device Mapping

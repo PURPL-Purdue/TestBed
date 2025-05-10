@@ -109,7 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Graphs for pressure readings
         self._graphs.append(pg.PlotWidget(self))
         self._graphs[0].setGeometry(10, 220, 194, 200)
-        self._graphs[0].setYRange(0, 200)
+        self._graphs[0].setYRange(0, 250)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
         self._graphs[0].showGrid(y=True) 
