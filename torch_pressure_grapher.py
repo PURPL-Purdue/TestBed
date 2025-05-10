@@ -14,14 +14,15 @@ from matplotlib.widgets import TextBox
 # ──────────────────────────────────────────────────────────────
 gamma = 1.4
 R_ox, R_h2 = 260.0, 4124.0             # J/(kg·K)
-C_star     = 2018.2                    # m/s  (CEA)
+C_star     = 2500                    # m/s  (CEA)
+C_star_actual = C_star * 0.8         # Adjusted for imperfect mixing
 T0         = 300.0                     # K
 crit_ratio = (2/(gamma+1))**(gamma/(gamma-1))
 psi_to_pa  = 6894.76
 
 # feed-pressure grid
-Pox_psi = np.linspace(0, 500, 200)
-Ph2_psi = np.linspace(0, 500, 200)
+Pox_psi = np.linspace(0, 1200, 200)
+Ph2_psi = np.linspace(0, 1200, 200)
 P_ox_pa, P_h2_pa = Pox_psi*psi_to_pa, Ph2_psi*psi_to_pa
 X, Y = np.meshgrid(Pox_psi, Ph2_psi)
 
@@ -38,7 +39,7 @@ def compute_fields(d_fuel, d_ox, d_exit):
     Ao = math.pi*(d_ox  *inch/2)**2
     Ae = math.pi*(d_exit*inch/2)**2
 
-    Pc_pa = (Ao*P_ox_pa[None,:]*K_o + Ah*P_h2_pa[:,None]*K_h) / (Ae/C_star)
+    Pc_pa = (Ao*P_ox_pa[None,:]*K_o + Ah*P_h2_pa[:,None]*K_h) / (Ae/C_star_actual)
     Pc    = Pc_pa / psi_to_pa
     OF    = (P_ox_pa[None,:]*Ao/np.sqrt(R_ox)) / (P_h2_pa[:,None]*Ah/np.sqrt(R_h2))
     mask  = (Pc/X >= crit_ratio) | (Pc/Y >= crit_ratio)
@@ -50,7 +51,7 @@ def pick_levels(arr):
 # ──────────────────────────────────────────────────────────────
 #  INITIAL VALUES
 # ──────────────────────────────────────────────────────────────
-d_fuel0, d_ox0, d_exit0 = 0.028, 0.032, 0.118
+d_fuel0, d_ox0, d_exit0 = 0.032, 0.028, 0.147
 Pc0, OF0, mask0 = compute_fields(d_fuel0, d_ox0, d_exit0)
 
 # ──────────────────────────────────────────────────────────────
@@ -66,7 +67,7 @@ cont_pc   = main_ax.contour(X, Y, Pc0, levels=pick_levels(Pc0),
                             colors='k', linewidths=1)
 pc_labels = main_ax.clabel(cont_pc, fmt='%d psi', inline=True, fontsize=8)
 
-cont_of   = main_ax.contour(X, Y, OF0, levels=[3,4,5],
+cont_of   = main_ax.contour(X, Y, OF0, levels=[1,2,3,4,5],
                             colors='k', linewidths=1)
 of_labels = main_ax.clabel(cont_of, fmt='OF: %d', inline=True, fontsize=8)
 
@@ -75,7 +76,7 @@ hat = main_ax.contourf(X, Y, mask0, levels=[0.5,1], colors=['none'],
 for coll in hat.collections:
     coll.set(edgecolor='red', linewidth=0.5)
 
-main_ax.set(xlim=(0,500), ylim=(0,500), aspect='equal',
+main_ax.set(xlim=(0,1200), ylim=(0,1200), aspect='equal',
             xlabel='Oxidizer Feed Pressure (psi)',
             ylabel='Fuel Feed Pressure (psi)',
             title='Injector Choking Map  &  Chamber-Pressure Contours')
@@ -130,13 +131,13 @@ def compute_inlet(_):
 
     # solve for the missing pressure
     if pf is not None and po is not None:
-        pc = (Ao*K_o*po + Ah*K_h*pf) * (C_star/Ae)
+        pc = (Ao*K_o*po + Ah*K_h*pf) * (C_star_actual/Ae)
         pc_box.set_val(f'{pc:.2f}')
     elif pf is not None and pc is not None:
-        po = (pc*(Ae/C_star) - Ah*K_h*pf) / (Ao*K_o)
+        po = (pc*(Ae/C_star_actual) - Ah*K_h*pf) / (Ao*K_o)
         po_box.set_val(f'{po:.2f}')
     elif po is not None and pc is not None:
-        pf = (pc*(Ae/C_star) - Ao*K_o*po) / (Ah*K_h)
+        pf = (pc*(Ae/C_star_actual) - Ao*K_o*po) / (Ah*K_h)
         pf_box.set_val(f'{pf:.2f}')
 
     # plot the operating point
@@ -183,7 +184,7 @@ def update(_):
                                 colors='k', linewidths=1)
     pc_labels = main_ax.clabel(cont_pc, fmt='%d psi', inline=True, fontsize=8)
 
-    cont_of   = main_ax.contour(X, Y, OF, levels=[3,4,5],
+    cont_of   = main_ax.contour(X, Y, OF, levels=[1,2,3,4,5],
                                 colors='k', linewidths=1)
     of_labels = main_ax.clabel(cont_of, fmt='OF: %d', inline=True, fontsize=8)
 
