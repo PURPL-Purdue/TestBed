@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Background
         bg_label = QtWidgets.QLabel(self)
         bg_pixmap = QtGui.QPixmap("GG_Test/P&ID.png")
-        scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        scaled_pixmap = bg_pixmap.scaled(self.windim_x, self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         bg_label.setPixmap(scaled_pixmap)
         bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, scaled_pixmap.width(), self.windim_y)
 
