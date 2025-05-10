@@ -16,6 +16,8 @@ class MainWindow(QtWidgets.QMainWindow):
         screen_rect = desktop.availableGeometry()
         screen_width = screen_rect.width()
         screen_height = screen_rect.height()
+        screen_width  = 1200
+        screen_height = 700
         # Original dimensions used to build UI
         static_x, static_y = 1728, 973
         # print(screen_height, screen_width)
