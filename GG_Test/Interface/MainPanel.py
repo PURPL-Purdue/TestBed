@@ -85,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._solenoids.append(ValveControl("SN-N2-01", "CIO3", int(side_panel_width + (694-side_panel_width) * self.scaled_width/static_width), int(365 * self.windim_y/973), parent=self))
         self._solenoids.append(ValveControl("SN-N2-02", "", int(side_panel_width + (525-side_panel_width) * self.scaled_width/static_width), int(365 * self.windim_y/973), parent=self))
         self._solenoids.append(ValveControl("SN-N2-03", "", int(side_panel_width + (398-side_panel_width) * self.scaled_width/static_width), int(419 * self.windim_y/973), parent=self))
+        print(f"x,y = {int(side_panel_width + (398-side_panel_width) * self.scaled_width/static_width)}, {int(419 * self.windim_y/973)}")
         self._solenoids.append(ValveControl("SN-N2-04", "", int(side_panel_width + (541-side_panel_width) * self.scaled_width/static_width), int(68 * self.windim_y/973), horizontal=True, parent=self))
         self._solenoids.append(ValveControl("SN-N2-05", "", int(side_panel_width + (802-side_panel_width) * self.scaled_width/static_width), int(532 * self.windim_y/973), horizontal=True, parent=self))
         self._solenoids.append(ValveControl("SN-N2-06", "", int(side_panel_width + (802-side_panel_width) * self.scaled_width/static_width), int(627 * self.windim_y/973), horizontal=True, parent=self))
