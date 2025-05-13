@@ -1,10 +1,10 @@
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
-from valve_control import ValveControl
-from pressure_transducer import PressureTransducer
-from labjack_connection import LabJackConnection
-from data_logger import DataLogger
-from sequencer import Sequencer
+from Devices.valve_control import ValveControl
+from Devices.pressure_transducer import PressureTransducer
+from backend.labjack_connection import LabJackConnection
+from backend.data_logger import DataLogger
+from Sequencer.sequencer import Sequencer
 from PyQt5.QtCore import QTimer
 import pyqtgraph as pg
 import statistics
@@ -18,11 +18,26 @@ class MainWindow(QtWidgets.QMainWindow):
         screen_height = screen_rect.height()
         # screen_width  = 1200
         # screen_height = 700
-        # Original dimensions used to build UI
-        static_x, static_y = 1728, 973
-        # print(screen_height, screen_width)
         margin = 30
         self.windim_x, self.windim_y = screen_width, screen_height - margin
+        # Original dimensions used to build UI
+        static_x, static_y = 1728, 973
+
+        # Background
+        bg_label = QtWidgets.QLabel(self)
+        bg_pixmap = QtGui.QPixmap("GG_Test/P&ID.png")
+        scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        print(scaled_pixmap.width())
+        print(self.windim_x)
+        bg_label.setPixmap(scaled_pixmap)
+        bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, self.windim_x, self.windim_y)
+
+        # Get dimensions of the scaled pixmap
+        self.scaled_width = scaled_pixmap.width()
+        side_panel_width = self.windim_x - self.scaled_width
+        static_width = 1510
+        print(side_panel_width)
+        # print(screen_height, screen_width)
         self.setWindowTitle("TeenyK P&ID")
         # 1003, 1728
         window_x = 0
@@ -39,18 +54,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # # (will be set by main.py after both windows are created)
         # self.valve_window = SolenoidWindow(self)
         # self.torch_window = TorchWindow(self)
-
-        # Background
-        bg_label = QtWidgets.QLabel(self)
-        bg_pixmap = QtGui.QPixmap("GG_Test/P&ID.png")
-        scaled_pixmap = bg_pixmap.scaled(bg_pixmap.width(), self.windim_y, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        print(scaled_pixmap.width())
-        print(self.windim_x)
-        bg_label.setPixmap(scaled_pixmap)
-        bg_label.setGeometry(self.windim_x - scaled_pixmap.width(), 0, self.windim_x, self.windim_y)
-
-        # Get dimensions of the scaled pixmap
-        self.scaled_width = scaled_pixmap.width()
 
         # Set border
         self.border_frame = QtWidgets.QFrame(self)
@@ -74,21 +77,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.shutdown_button.clicked.connect(self.perform_shutdown)
 
         # Hydrogen Valves
-        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", int(749 * self.windim_x/1728), int(402 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-H2-01", "CIO0", int(side_panel_width + (749-side_panel_width) * self.scaled_width/static_width), int(402 * self.windim_y/973), parent=self))
         # Oxygen valves
-        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", int(638 * self.windim_x/1728), int(398 * self.windim_y/973), parent=self))
-        self._solenoids.append(ValveControl("SN-O2-02", "", int(591 * self.windim_x/1728), int(403 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-O2-01", "CIO1", int(side_panel_width +(638-side_panel_width) * self.scaled_width/static_width), int(398 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-O2-02", "", int(side_panel_width + (591-side_panel_width) * self.scaled_width/static_width), int(403 * self.windim_y/973), parent=self))
         # Nitrogen Valves
-        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", int(694 * self.windim_x/1728), int(365 * self.windim_y/973), parent=self))
-        self._solenoids.append(ValveControl("SN-N2-02", "", int(525 * self.windim_x/1728), int(365 * self.windim_y/973), parent=self))
-        self._solenoids.append(ValveControl("SN-N2-03", "", int(398 * self.windim_x/1728), int(419 * self.windim_y/973), parent=self))
-        self._solenoids.append(ValveControl("SN-N2-04", "", int(541 * self.windim_x/1728), int(68 * self.windim_y/973), horizontal=True, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-05", "", int(802 * self.windim_x/1728), int(532 * self.windim_y/973), horizontal=True, parent=self))
-        self._solenoids.append(ValveControl("SN-N2-06", "", int(802 * self.windim_x/1728), int(627 * self.windim_y/973), horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-01", "CIO3", int(side_panel_width + (694-side_panel_width) * self.scaled_width/static_width), int(365 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-N2-02", "", int(side_panel_width + (525-side_panel_width) * self.scaled_width/static_width), int(365 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-N2-03", "", int(side_panel_width + (398-side_panel_width) * self.scaled_width/static_width), int(419 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-N2-04", "", int(side_panel_width + (541-side_panel_width) * self.scaled_width/static_width), int(68 * self.windim_y/973), horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-05", "", int(side_panel_width + (802-side_panel_width) * self.scaled_width/static_width), int(532 * self.windim_y/973), horizontal=True, parent=self))
+        self._solenoids.append(ValveControl("SN-N2-06", "", int(side_panel_width + (802-side_panel_width) * self.scaled_width/static_width), int(627 * self.windim_y/973), horizontal=True, parent=self))
         # Fuel Valves
-        self._solenoids.append(ValveControl("SN-FU-01", "", int(472 * self.windim_x/1728), int(403 * self.windim_y/973), parent=self))
+        self._solenoids.append(ValveControl("SN-FU-01", "", int(side_panel_width + (472-side_panel_width) * self.scaled_width/static_width), int(403 * self.windim_y/973), parent=self))
         # Spark plug
-        self._solenoids.append(ValveControl("Spark Plug", "EIO4", 540, 594, parent=self))
+        self._solenoids.append(ValveControl("Spark Plug", "EIO4", int(side_panel_width + (540-side_panel_width) * self.scaled_width/static_width), int(594* self.windim_y/973), parent=self))
         # # Label Spark Plug
         # self.label = QtWidgets.QLabel("Spark Plug", self)
         # self.label.setGeometry(445, 210, 100, 25)
@@ -96,26 +99,26 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.label.setAlignment(Qt.AlignCenter)
 
         # Pressure Transducers
-        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 0, int(528 * self.windim_x/1728), int(553 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-GG-01", "", 10, 1500, 0, int(528 * self.windim_x/1728), int(627 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-H2-01", "", 10, 1500, 0,int(1383 * self.windim_x/1728), int(410 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-H2-02", "", 10, 1500, 0, int(1123 * self.windim_x/1728), int(480 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 0, int(634 * self.windim_x/1728), int(482 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-O2-01", "", 5, 7500, 0, int(1300 * self.windim_x/1728), int(281 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-O2-02", "", 5, 10000, 0, int(1317 * self.windim_x/1728), int(373 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-O2-03", "", 5, 7500, 0, int(1123 * self.windim_x/1728), int(374 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-O2-04", "", 5, 7500, 0,  int(654 * self.windim_x/1728), int(515 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 0, int(528 * self.windim_x/1728), int(465 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-01", "", 5, 10000, 0, int(1254 * self.windim_x/1728), int(215 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-02", "", 5, 10000, 0, int(1392 * self.windim_x/1728), int(228 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-03", "", 5, 10000, 0, int(1391 * self.windim_x/1728), int(382 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-04", "", 5, 10000, 0, int(1121 * self.windim_x/1728), int(218 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-05", "", 5, 10000, 0, int(1121 * self.windim_x/1728), int(238 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-06", "", 5, 10000, 0, int(1121 * self.windim_x/1728), int(259 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-07", "", 5, 10000, 0, int(414 * self.windim_x/1728), int(76 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-08", "", 5, 10000, 0, int(389 * self.windim_x/1728), int(454 * self.windim_y/973), self))
-        self._transducers.append(PressureTransducer("PT-N2-09", "", 5, 10000, 0, int(640 * self.windim_x/1728), int(541 * self.windim_y/973), self))
-        # self._transducers.append(PressureTransducer("PT-FU-01", "", 5, 10000, 0, 640, 541, self))
+        self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 1, 0, int(side_panel_width + (528-side_panel_width) * self.scaled_width/static_width), int(553 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-GG-01", "", 10, 1500, 1, 0, int(side_panel_width + (528-side_panel_width) * self.scaled_width/static_width), int(627 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-H2-01", "", 10, 1500, 1, 0,int(side_panel_width + (1383-side_panel_width) * self.scaled_width/static_width), int(410 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-H2-02", "", 10, 1500, 1, 0, int(side_panel_width + (1123-side_panel_width) * self.scaled_width/static_width), int(480 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-H2-03", "AIN91", 10, 1500, 1, 0, int(side_panel_width + (634-side_panel_width) * self.scaled_width/static_width), int(482 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "", 5, 7500, 1, 0, int(side_panel_width + (1300-side_panel_width) * self.scaled_width/static_width), int(281 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-02", "", 5, 10000, 1, 0, int(side_panel_width + (1317-side_panel_width) * self.scaled_width/static_width), int(373 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-03", "", 5, 7500, 1, 0, int(side_panel_width + (1123-side_panel_width) * self.scaled_width/static_width), int(374 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-04", "", 5, 7500, 1, 0,  int(side_panel_width + (654-side_panel_width) * self.scaled_width/static_width), int(515 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 1, 0, int(side_panel_width + (528-side_panel_width) * self.scaled_width/static_width), int(465 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-01", "", 5, 10000, 1, 0, int(side_panel_width + (1254-side_panel_width) * self.scaled_width/static_width), int(215 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-02", "", 5, 10000, 1, 0, int(side_panel_width + (1392-side_panel_width) * self.scaled_width/static_width), int(228 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-03", "", 5, 10000, 1, 0, int(side_panel_width + (1391-side_panel_width) * self.scaled_width/static_width), int(382 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-04", "", 5, 10000, 1, 0, int(side_panel_width + (1121-side_panel_width) * self.scaled_width/static_width), int(218 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-05", "", 5, 10000, 1, 0, int(side_panel_width + (1121-side_panel_width) * self.scaled_width/static_width), int(238 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-06", "", 5, 10000, 1, 0, int(side_panel_width + (1121-side_panel_width) * self.scaled_width/static_width), int(259 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-07", "", 5, 10000, 1, 0, int(side_panel_width + (414-side_panel_width) * self.scaled_width/static_width), int(76 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-08", "", 5, 10000, 1, 0, int(side_panel_width + (389-side_panel_width) * self.scaled_width/static_width), int(454 * self.windim_y/973), self))
+        self._transducers.append(PressureTransducer("PT-N2-09", "", 5, 10000, 1, 0, int(side_panel_width + (640-side_panel_width) * self.scaled_width/static_width), int(541 * self.windim_y/973), self))
+        # self._transducers.append(PressureTransducer("PT-FU-01", "", 5, 10000, 1, 0, 640, 541, self))
 
         # Device Mapping
         self.device_map = {}
@@ -126,7 +129,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.device_map[self._transducers[i].name] = self._transducers[i]
 
         # Data Logger
-        self.data_logger = DataLogger(self._transducers, self._solenoids, width = self.windim_x - self.scaled_width - 15, height = 100, parent=self)
+        self.data_logger = DataLogger(self._transducers, self._solenoids, width = side_panel_width - 15, height = 100, parent=self)
         self.data_logger.move(10, 10) 
 
         # Connect the state_changed signal to update the main window border
@@ -172,7 +175,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_logger.set_timer(self.pressure_timer)
 
         # Create the sequencer with the events and devices
-        self.sequencer = Sequencer(self.device_map, self.data_logger, width = self.windim_x - self.scaled_width - 15, height = 100, parent=self)
+        self.sequencer = Sequencer(self.device_map, self.data_logger, width = side_panel_width-15, height = 100, parent=self)
         self.sequencer.move(10, 115)
 
         # self.valve_window.show()
