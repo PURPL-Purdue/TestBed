@@ -20,11 +20,11 @@ class ValveControl(QtWidgets.QPushButton):
         self.move(x, y)
         # self.adjustSize()
         if horizontal:
-            self.setFixedHeight(20)
-            self.setFixedWidth(21)
+            self.setFixedHeight(int(20 * parent.scaled_width/parent.static_width))
+            self.setFixedWidth(int(21 * parent.windim_y/parent.static_y))
         else: 
-            self.setFixedHeight(21)
-            self.setFixedWidth(20)
+            self.setFixedHeight(int(21 * parent.windim_y/parent.static_y))
+            self.setFixedWidth(int(20 * parent.scaled_width/parent.static_width))
 
         # Initialize a connection and read initial values
         self.connect_to_labjack()

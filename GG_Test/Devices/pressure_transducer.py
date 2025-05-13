@@ -10,7 +10,7 @@ class PressureTransducer:
         self.max_voltage = max_voltage
         self.max_psi = max_psi
         self.label = QtWidgets.QLabel("0000.0", parent)
-        self.label.setGeometry(x, y, 47, 14)
+        self.label.setGeometry(x, y, int(47 * parent.scaled_width/parent.static_width), int(14*parent.windim_y/parent.static_y))
         self.label.setStyleSheet("background-color: #00baff; color: white; font-size: 12pt; font-weight: bold; font-family: 'Courier New', monospace;")
         self.label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self.label.setContentsMargins(2, 1, 2, 1)
