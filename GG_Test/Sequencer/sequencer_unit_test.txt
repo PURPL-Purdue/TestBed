@@ -1,0 +1,8 @@
+1. Run sequencer with correct setup and inputs
+2. Verify timings and actions work correctly
+3. Run sequencer with negative delay error
+4. Verify error in terminal
+5. Run sequencer with invalid inputs in one or more valve states
+6. Verify error in terminal
+5. Run sequencer with invalid initial state in one or more valve states
+6. Verify error in terminal

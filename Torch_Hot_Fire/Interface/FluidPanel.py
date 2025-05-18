@@ -77,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Pressure Transducers
         self._transducers.append(PressureTransducer("PT-TI-01", "AIN90", 10, 1500, 1.0219, 5.6, 445, 290, self.torch_window))
-        # self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 7500, 1, 540, 332, self))
+        self._transducers.append(PressureTransducer("PT-O2-01", "AIN76", 5, 2500, 1, 0, 540, 332, self))
         # self._transducers.append(PressureTransducer("PT-O2-03", "AIN72", 5, 10000, 1, 210, 463, self))
         self._transducers.append(PressureTransducer("PT-O2-05", "AIN89", 10, 1500, 1, 8.3, 265, 25, self.torch_window))
         # self._transducers.append(PressureTransducer("PT-N2-01", "AIN114", 5, 10000, 1. 439, 188, self))
@@ -109,7 +109,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Graphs for pressure readings
         self._graphs.append(pg.PlotWidget(self))
         self._graphs[0].setGeometry(10, 220, 194, 200)
-        self._graphs[0].setYRange(0, 200)
+        self._graphs[0].setYRange(0, 250)
         self._graphs[0].setBackground('w')
         self._graphs[0].setTitle("PT-TI-01 Pressure")
         self._graphs[0].showGrid(y=True) 

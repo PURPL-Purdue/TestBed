@@ -1,62 +1,52 @@
-% Script to read CSV file and plot multiple pressure transducer readings
-% The first column (Timestamp) will be the x-axis
-% Usage: Simply run this script and select your CSV file when prompted
-
-% Prompt user to select a CSV file
-[fileName, filePath] = uigetfile('*.csv', 'Select the CSV file');
-if fileName == 0
-    disp('No file selected. Exiting script.');
-    return;
-end
-
-% Read the CSV file
-fullPath = fullfile(filePath, fileName);
-data = readtable(fullPath);
-
-% Find PT columns (columns with "Pressure" in the name)
-ptColumns = find(contains(columnNames, 'Pressure'));
-disp(['Found ', num2str(length(ptColumns)), ' pressure transducer columns:']);
-for i = 1:length(ptColumns)
-    disp(['  ', num2str(i), '. ', columnNames{ptColumns(i)}]);
-end
-
-numPTsToPlot = length(ptColumns);
-
-% Get the timestamp column (first column)
-timestampCol = columnNames{1};
-timestamps = data.(timestampCol);
-
-% Create a figure
-figure;
-hold on;
-
-% Color map for multiple lines
-colors = lines(numPTsToPlot);
-
-% Plot each selected PT column
-legendEntries = cell(numPTsToPlot, 1);
-for i = 1:numPTsToPlot
-    colIdx = ptColumns(i);
-    colName = columnNames{colIdx};
-    plot(timestamps, data.(colName), 'LineWidth', 1.5, 'Color', colors(i,:));
-    legendEntries{i} = colName;
-end
-
-% Add labels and legend
-xlabel('Timestamp', 'Interpreter', 'none');
-ylabel('Pressure', 'Interpreter', 'none');
-title('Pressure Transducer Readings vs Time', 'Interpreter', 'none');
-legend(legendEntries, 'Location', 'best', 'Interpreter', 'none');
-grid on;
-
-% % Adjust figure appearance
-% set(gcf, 'Position', [100, 100, 1200, 800]);
-% set(gca, 'FontSize', 12);
-
-% If timestamps are datetime objects, rotate x-axis labels for better readability
-if isdatetime(timestamps)
+function plotPressureData(csvFilePath)
+    % Function to plot pressure data from a CSV file
+    % Usage: plotPressureData('your_pressure_data.csv')
+    
+    % Read the CSV file
+    data = readtable(csvFilePath);
+    
+    % Extract the timestamp column and convert to datetime
+    timestamps = datetime(data.Timestamp);
+    
+    % Extract the pressure columns we want to plot (excluding PT-N2-04)
+    pressureColumns = {'PT_TI_01 Pressure', 'PT_O2_05 Pressure', 'PT_H2_03 Pressure'};
+    
+    % Create column names with underscores instead of hyphens for MATLAB compatibility
+    columnNames = strrep(data.Properties.VariableNames, '-', '_');
+    data.Properties.VariableNames = columnNames;
+    
+    % Create the figure
+    figure('Name', 'Pressure Sensor Data', 'Position', [100, 100, 900, 500]);
+    
+    % Plot the data
+    hold on;
+    
+    % Plot PT-TI-01 Pressure in blue
+    plot(timestamps, data.PT_TI_01_Pressure, 'b-', 'LineWidth', 2, 'DisplayName', 'PT-TI-01 Pressure');
+    
+    % Plot PT-O2-05 Pressure in red
+    plot(timestamps, data.PT_O2_05_Pressure, 'r-', 'LineWidth', 2, 'DisplayName', 'PT-O2-05 Pressure');
+    
+    % Plot PT-H2-03 Pressure in green
+    plot(timestamps, data.PT_H2_03_Pressure, 'g-', 'LineWidth', 2, 'DisplayName', 'PT-H2-03 Pressure');
+    
+    % Add title and labels
+    title('Pressure Sensors Over Time', 'FontSize', 14);
+    xlabel('Time', 'FontSize', 12);
+    ylabel('Pressure', 'FontSize', 12);
+    
+    % Add legend
+    legend('Location', 'best');
+    
+    % Add grid
+    grid on;
+    
+    % Format plot
+    ax = gca;
+    ax.FontSize = 11;
+    
+    % Rotate x-axis labels if needed for better readability
     xtickangle(45);
+    
+    hold off;
 end
-
-hold off;
-disp('Plot created successfully!');
