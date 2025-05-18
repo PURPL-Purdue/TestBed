@@ -51,7 +51,7 @@ def pick_levels(arr):
 # ──────────────────────────────────────────────────────────────
 #  INITIAL VALUES
 # ──────────────────────────────────────────────────────────────
-d_fuel0, d_ox0, d_exit0 = 0.032, 0.028, 0.147
+d_fuel0, d_ox0, d_exit0 = 0.032, 0.028, 0.118
 Pc0, OF0, mask0 = compute_fields(d_fuel0, d_ox0, d_exit0)
 
 # ──────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ point_handle = None     # placeholder for marker
 # ──────────────────────────────────────────────────────────────
 #  TEXT-BOX LAYOUT
 # ──────────────────────────────────────────────────────────────
-BOX_W, BOX_H = 0.18, 0.06
+BOX_W, BOX_H = 0.1, 0.06
 H_SP         = 0.07
 ROW1_Y, ROW2_Y = 0.25, 0.10            # ← widened vertical gap
 
@@ -94,7 +94,7 @@ ROW1_Y, ROW2_Y = 0.25, 0.10            # ← widened vertical gap
 fig.canvas.draw()
 left  = min(main_ax.get_position().x0, cbar.ax.get_position().x0)
 right = max(main_ax.get_position().x1, cbar.ax.get_position().x1)
-X_START = (left + right - (3*BOX_W + 2*H_SP)) / 2
+X_START = (left + right - (3*BOX_W + 2*H_SP)) / 2 - 0.1
 
 def make_box(x, y, label, init=''):
     ax_box = fig.add_axes([x, y, BOX_W, BOX_H])
@@ -111,6 +111,7 @@ tb_e = make_box(X_START+2*(BOX_W+H_SP),   ROW1_Y, 'Throat Diameter (in)',  str(d
 pf_box = make_box(X_START,                  ROW2_Y, 'Fuel Line Pressure (psi)')
 po_box = make_box(X_START+BOX_W+H_SP,       ROW2_Y, 'Oxidizer Line Pressure (psi)')
 pc_box = make_box(X_START+2*(BOX_W+H_SP),   ROW2_Y, 'Chamber Pressure (psi)')
+of_box = make_box(X_START+3*(BOX_W+H_SP),   ROW2_Y, 'OF Ratio (N/A)')
 
 # OF read-out (bottom-most)
 of_text = fig.text(X_START+BOX_W,0.04,'OF = ', va='center', fontsize=12, weight='bold')
@@ -128,17 +129,33 @@ def compute_inlet(_):
     pf = float(pf_box.text) if pf_box.text else None
     po = float(po_box.text) if po_box.text else None
     pc = float(pc_box.text) if pc_box.text else None
+    of = float(of_box.text) if of_box.text else None
 
     # solve for the missing pressure
     if pf is not None and po is not None:
         pc = (Ao*K_o*po + Ah*K_h*pf) * (C_star_actual/Ae)
+        of_val = (po*Ao/np.sqrt(R_ox)) / (pf*Ah/np.sqrt(R_h2))
         pc_box.set_val(f'{pc:.2f}')
+        of_box.set_val(f'{of_val:.2f}')
+
     elif pf is not None and pc is not None:
         po = (pc*(Ae/C_star_actual) - Ah*K_h*pf) / (Ao*K_o)
+        of_val = (po*Ao/np.sqrt(R_ox)) / (pf*Ah/np.sqrt(R_h2))
+        of_box.set_val(f'{of_val:.2f}')
         po_box.set_val(f'{po:.2f}')
+
     elif po is not None and pc is not None:
         pf = (pc*(Ae/C_star_actual) - Ao*K_o*po) / (Ah*K_h)
+        of_val = (po*Ao/np.sqrt(R_ox)) / (pf*Ah/np.sqrt(R_h2))
         pf_box.set_val(f'{pf:.2f}')
+        of_box.set_val(f'{of_val:.2f}')
+
+    elif of is not None and pc is not None:
+        po = (pc * (Ae / C_star_actual)) / (Ao * K_o * ((of + 1) / of)) 
+        pf = (Ao * K_o * po) / (Ah * K_h * of)
+        pf_box.set_val(f'{pf:.2f}')
+        po_box.set_val(f'{po:.2f}')
+
 
     # plot the operating point
     if pf is not None and po is not None:
@@ -198,7 +215,7 @@ def update(_):
 # hook up callbacks
 for box in (tb_h, tb_o, tb_e):
     box.on_submit(update)
-for box in (pf_box, po_box, pc_box):
+for box in (pf_box, po_box, pc_box, of_box):
     box.on_submit(compute_inlet)
 
 update(None)       # first draw
