@@ -19,10 +19,11 @@ C_star_actual = C_star * 0.8         # Adjusted for imperfect mixing
 T0         = 300.0                     # K
 crit_ratio = (2/(gamma+1))**(gamma/(gamma-1))
 psi_to_pa  = 6894.76
+max_feed = 500
 
 # feed-pressure grid
-Pox_psi = np.linspace(0, 1200, 200)
-Ph2_psi = np.linspace(0, 1200, 200)
+Pox_psi = np.linspace(1, max_feed, 50)
+Ph2_psi = np.linspace(1, max_feed, 50)
 P_ox_pa, P_h2_pa = Pox_psi*psi_to_pa, Ph2_psi*psi_to_pa
 X, Y = np.meshgrid(Pox_psi, Ph2_psi)
 
@@ -76,7 +77,7 @@ hat = main_ax.contourf(X, Y, mask0, levels=[0.5,1], colors=['none'],
 for coll in hat.collections:
     coll.set(edgecolor='red', linewidth=0.5)
 
-main_ax.set(xlim=(0,1200), ylim=(0,1200), aspect='equal',
+main_ax.set(xlim=(0,max_feed), ylim=(0,max_feed), aspect='equal',
             xlabel='Oxidizer Feed Pressure (psi)',
             ylabel='Fuel Feed Pressure (psi)',
             title='Injector Choking Map  &  Chamber-Pressure Contours')
