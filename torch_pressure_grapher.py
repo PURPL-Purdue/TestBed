@@ -7,6 +7,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import CEA_Wrap as CEA
 from matplotlib.widgets import TextBox
 
 # ──────────────────────────────────────────────────────────────
@@ -14,16 +15,19 @@ from matplotlib.widgets import TextBox
 # ──────────────────────────────────────────────────────────────
 gamma = 1.4
 R_ox, R_h2 = 260.0, 4124.0             # J/(kg·K)
+fuel = CEA.Fuel("H2")
+oxidizer = CEA.Oxidizer("O2")
 C_star     = 2500                    # m/s  (CEA)
-C_star_actual = C_star * 0.8         # Adjusted for imperfect mixing
+C_star_eff = 0.8
+C_star_actual = C_star * C_star_eff         # Adjusted for imperfect mixing
 T0         = 300.0                     # K
 crit_ratio = (2/(gamma+1))**(gamma/(gamma-1))
 psi_to_pa  = 6894.76
 max_feed = 500
 
 # feed-pressure grid
-Pox_psi = np.linspace(1, max_feed, 50)
-Ph2_psi = np.linspace(1, max_feed, 50)
+Pox_psi = np.linspace(1, max_feed, 25)
+Ph2_psi = np.linspace(1, max_feed, 25)
 P_ox_pa, P_h2_pa = Pox_psi*psi_to_pa, Ph2_psi*psi_to_pa
 X, Y = np.meshgrid(Pox_psi, Ph2_psi)
 
@@ -36,14 +40,27 @@ K_o = math.sqrt(gamma/(R_ox*T0)) * (2/(gamma+1))**((gamma+1)/(2*(gamma-1)))
 # ──────────────────────────────────────────────────────────────
 def compute_fields(d_fuel, d_ox, d_exit):
     inch = 0.0254
-    Ah = math.pi*(d_fuel*inch/2)**2
-    Ao = math.pi*(d_ox  *inch/2)**2
-    Ae = math.pi*(d_exit*inch/2)**2
+    Ah = math.pi * (d_fuel * inch / 2)**2
+    Ao = math.pi * (d_ox   * inch / 2)**2
+    Ae = math.pi * (d_exit * inch / 2)**2
 
-    Pc_pa = (Ao*P_ox_pa[None,:]*K_o + Ah*P_h2_pa[:,None]*K_h) / (Ae/C_star_actual)
-    Pc    = Pc_pa / psi_to_pa
-    OF    = (P_ox_pa[None,:]*Ao/np.sqrt(R_ox)) / (P_h2_pa[:,None]*Ah/np.sqrt(R_h2))
-    mask  = (Pc/X >= crit_ratio) | (Pc/Y >= crit_ratio)
+    OF = (P_ox_pa[None, :] * Ao / np.sqrt(R_ox)) / (P_h2_pa[:, None] * Ah / np.sqrt(R_h2))
+    C_star = np.zeros_like(OF)
+
+    for i in range(OF.shape[0]):
+        for j in range(OF.shape[1]):
+            result = CEA.RocketProblem(
+                materials=[fuel, oxidizer],
+                pressure=350,
+                o_f=OF[i, j],
+                analysis_type="frozen"
+            ).run_cea()
+            C_star[i, j] = result.cstar
+
+    C_star_actual = C_star * C_star_eff
+    Pc_pa = (Ao * P_ox_pa[None, :] * K_o + Ah * P_h2_pa[:, None] * K_h) / (Ae / C_star_actual)
+    Pc = Pc_pa / psi_to_pa
+    mask = (Pc / X >= crit_ratio) | (Pc / Y >= crit_ratio)
     return Pc, OF, mask
 
 def pick_levels(arr):
