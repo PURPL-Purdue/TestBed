@@ -18,12 +18,12 @@ R_ox, R_h2 = 260.0, 4124.0             # J/(kg·K)
 fuel = CEA.Fuel("H2")
 oxidizer = CEA.Oxidizer("O2")
 C_star     = 2500                    # m/s  (CEA)
-C_star_eff = 0.8
+C_star_eff = 0.75
 C_star_actual = C_star * C_star_eff         # Adjusted for imperfect mixing
 T0         = 300.0                     # K
 crit_ratio = (2/(gamma+1))**(gamma/(gamma-1))
 psi_to_pa  = 6894.76
-max_feed = 500
+max_feed = 850
 
 # feed-pressure grid
 Pox_psi = np.linspace(1, max_feed, 25)
@@ -69,7 +69,7 @@ def pick_levels(arr):
 # ──────────────────────────────────────────────────────────────
 #  INITIAL VALUES
 # ──────────────────────────────────────────────────────────────
-d_fuel0, d_ox0, d_exit0 = 0.032, 0.028, 0.118
+d_fuel0, d_ox0, d_exit0 = 0.028, 0.016, 0.118
 Pc0, OF0, mask0 = compute_fields(d_fuel0, d_ox0, d_exit0)
 
 # ──────────────────────────────────────────────────────────────
