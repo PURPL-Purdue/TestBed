@@ -17,21 +17,16 @@ from pyfluids import Fluid, FluidsList, Input
 # rho = pyfluids.Fluid(FluidsList) # Water density at ambient pressure and temp
 C_d_vent = 0.905 # Discharge coefficient guess (based on PSP Liquids' testing)
 # https://purdue-space-program.atlassian.net/wiki/spaces/PL/pages/936903267/Successful+Water+Flow+1
-C_d_inj = 0.7 # Injector discharge coefficient guess
-m_dot = 0.58875 # Desired fuel mass flow (lb/s)
-p_1 = 650 # Pressure upstream of cavitating venturi (psi)
-p_c = 500 # Nominal chamber pressure (psi)
-A_f = 6 * 3 * np.pi * (0.034 / 2) ** 2 # Combined fuel injection area (in^2)
-# TODO: Need to calculate the actual line pressure given the mass flow in from the sonic nozzle and out the injectro assuming steady state
+C_d_inj = 0.8 # Injector discharge coefficient guess
+p_1 = 680 # Pressure upstream of cavitating venturi (psi)
 
 # ──────────────────────────────────────────────────────────────
 #  UNIT CONVERSIONS
 # ──────────────────────────────────────────────────────────────
 
 p_1_pa = p_1 * 6894.76 # Pressure upstream of cavitating venturi (Pa)
-p_c_pa = p_c * 6894.76
-m_dot_kg = m_dot * 0.453592 # Desired mass flow (kg/s)
-A_f_m2 = A_f * 0.00064516 # Combined fuel injection area (m^2)
+m_dot_kg = 0.961 # Desired mass flow (kg/s)
+A_f_m2 = 3.2e-05 # Combined fuel injection area (m^2)
 
 # ──────────────────────────────────────────────────────────────
 #  CALCULATIONS
@@ -45,14 +40,7 @@ A_m2 = m_dot_kg / (C_d_vent * np.sqrt(2 * rho * (p_1_pa - p_sat_pa))) # Throat a
 d_m = 2 * np.sqrt(A_m2 / np.pi) # Venturi throat diameter (m)
 
 K = ((C_d_vent * A_m2) / (C_d_inj * A_f_m2)) ** 2
-
-p_line = (K * p_1 + p_c)/(1 + K)
-
-# mass flow without the venturi:
-
-m_dot_orig = 0.8 * A_f_m2 * np.sqrt(2 * rho * p_1_pa - p_c_pa)
-
-print(m_dot_orig / 0.453592)
+p_line = (K * p_1 + 625)/(1 + K)
 
 # ──────────────────────────────────────────────────────────────
 #  RESULTS
@@ -62,7 +50,5 @@ d = d_m * 39.3701 # Venturi throat diameter (in)
 
 print(f"Anticipated C_d: {C_d_vent}")
 print(f"Upstream venturi pressure: {p_1} psi\n")
-print(f"Line pressure: {p_line} psi\n")
-print(f"Chamber pressure: {p_c} psi\n")
-
-print(f"Venturi throat diameter: {d} in")
+print(f"Downstream venturi pressure: {p_line} psi\n")
+print(f"Venturi throat diameter: {round(d,3)} in")
