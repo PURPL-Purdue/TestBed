@@ -2,3 +2,6 @@
 __pycache__/
 .DS_Store
 *.lib
+*.inp
+*.out
+*.plt
