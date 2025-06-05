@@ -21,6 +21,7 @@ def clc():
 
 fuel = CEA.Fuel("Jet-A(L)")
 oxidizer = CEA.Oxidizer("O2")
+gamma = 1.4 # GOx specific heat ratio
 C_d_ox = 0.8 # Oxidizer orifice anticipated C_d (N/A)
 C_d_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 F = 500 # Desired thrust of the engine (lbf)
@@ -64,20 +65,28 @@ rho_ox = oxygen.density # Oxygen density at manifold pressure and ambient temper
 
 rho_fu = 810 # RP-1 density at ambient temp and pressure (may want to update this to match manifold press), (kg/m^3)
 
+# Compressible flow equation
 A_fu = m_dot_fu / (C_d_fu * np.sqrt(2 * rho_fu * dp_pa)) # Total fuel injection area (m^2)
-
 d_fu = 2 * np.sqrt((A_fu / fuel_orifice_num) / np.pi) # Fuel orifice diameter (m)
-
 d_fu_in = d_fu * 39.3701 # Fuel orifice diameter (in)
+
+# Incompressible flow equation (Choked condition)
+A_ox = m_dot_ox / (C_d_ox * np.sqrt(2 * rho_ox * p_m_pa * (gamma / (gamma - 1))
+* ((p_c_pa / p_m_pa) ** (2 / gamma) - (p_c_pa / p_m_pa) ** ((gamma + 1) / gamma)))) # Total ox injection area (m^2)
+d_ox = 2 * np.sqrt((A_ox / ox_orifice_num) / np.pi) # Ox orifice diameter (m)
+d_ox_in = d_ox * 39.3701 # Ox orifice diameter (in)
 
 # ──────────────────────────────────────────────────────────────
 #  RESULTS
 # ──────────────────────────────────────────────────────────────
 
-print(f"Isp: {math.floor(Isp)}")
-print(f"Total mass flow: {round(m_dot,3)} kg/s")
-print(f"Fuel mass flow: {round(m_dot_fu,3)} kg/s")
-print(f"Ox mass flow: {round(m_dot_ox,3)} kg/s")
+print(f"Specific: {math.floor(Isp)} s")
+print(f"Total mass flow: {m_dot:.3f} kg/s")
+print(f"Fuel mass flow: {m_dot_fu:.3f} kg/s")
+print(f"Ox mass flow: {m_dot_ox:.3f} kg/s")
 
-print(f"\nTotal fuel injection area: {round(A_fu,6)} m^2")
-print(f"Fuel orifice diameter: {round(d_fu_in,3)} in")
+print(f"\nTotal fuel injection area: {A_fu:.6f} m^2")
+print(f"Fuel orifice diameter: {d_fu_in:.3f} in")
+print(f"\nTotal oxidizer injection area: {A_ox:.6f} m^2")
+print(f"Oxidizer orifice diameter: {d_ox_in:.3f} in")
+print("")
