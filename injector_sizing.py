@@ -27,7 +27,7 @@ C_d_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 F = 500 # Desired thrust of the engine (lbf)
 p_c = 500 # Optimal chamber pressure (psi)
 OF = 1.2 # Nominal OF Ratio
-K = 0.25 # Desired injector stiffness (N/A)
+K = 0.35 # Desired injector stiffness (N/A)
 g = 9.81 # Gravitational constan (m/s^2)
 ox_orifice_num = 12 # Number of oxidizer orifices
 fuel_orifice_num = 2 * ox_orifice_num # Number of fuel orifices
@@ -55,13 +55,13 @@ m_dot_ox = m_dot - m_dot_fu # Oxidizer mass flow (kg/s)
 
 dp = K * p_c # Desired pressure drop across injector (psi)
 
-p_m = p_c + dp # Manifold pressure
+p_m = p_c + dp # Manifold pressure (psi)
 
 p_m_pa = p_m * 6894.76 # Manifold pressure (Pa)
 dp_pa = dp * 6894.76 # Pressure drop (Pa)
 
 oxygen = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_m_pa), Input.temperature(20))
-rho_ox = oxygen.density # Oxygen density at manifold pressure and ambient temperature(kg/m^3)
+rho_ox = oxygen.density # Oxygen density at manifold pressure and ambient temperature (kg/m^3)
 
 rho_fu = 810 # RP-1 density at ambient temp and pressure (may want to update this to match manifold press), (kg/m^3)
 
@@ -80,7 +80,7 @@ d_ox_in = d_ox * 39.3701 # Ox orifice diameter (in)
 #  RESULTS
 # ──────────────────────────────────────────────────────────────
 
-print(f"Specific: {math.floor(Isp)} s")
+print(f"Specific impulse: {math.floor(Isp)} s")
 print(f"Total mass flow: {m_dot:.3f} kg/s")
 print(f"Fuel mass flow: {m_dot_fu:.3f} kg/s")
 print(f"Ox mass flow: {m_dot_ox:.3f} kg/s")

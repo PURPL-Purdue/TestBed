@@ -31,13 +31,13 @@ R = 8.314                               # J /(mol·K)
 mm_ox, mm_eth = 32.00, 46.07            # g/mol
 R_ox = R / (mm_ox/1000)                # J/(kg·K)
 R_eth = R / (mm_eth/1000)              # J/(kg·K)
-C_star_raw = 1143.1                   # 0.8 * CEA @ 0.1 OF
+C_star_raw = 1048.6                  # 0.8 * CEA @ 0.1 OF
 C_star_eff = 0.9 # C Star efficiency
 C_star = C_star_raw * C_star_eff
 crit_ratio_ox = (2/(gamma_ox+1))**(gamma_ox/(gamma_ox-1))
-fuel = CEA.Fuel("C2H5OH")
+fuel = CEA.Fuel("Jet-A(L)")
 ox = CEA.Oxidizer("O2")
-rho_fu = 789 #kg/m^3
+rho_fu = 810 #kg/m^3
 
 relaxation = 0.05
 psi_to_pa  = 6894.76
@@ -49,19 +49,20 @@ hat = None
 hat2 = None
 pc_labels = []
 of_labels = []
-num_orifices = 8
+num_orifices_ox = 12
+num_orifices_fu = 24
 global T0
 T0 = 298 #
 
 # feed-pressure grid
-Pox_psi = np.linspace(1, 600, num=200)
-Prp_psi = np.linspace(1, 600, num=200)
+Pox_psi = np.linspace(1, 800, num=200)
+Prp_psi = np.linspace(1, 800, num=200)
 P_ox_pa, P_rp_pa = Pox_psi*psi_to_pa, Prp_psi*psi_to_pa
 X, Y = np.meshgrid(Pox_psi, Prp_psi)
 
 # choking coefficients
-Cd_rp = 0.7   # estimate
-Cd_ox = 0.6   #estimate
+Cd_rp = 0.8   # estimate
+Cd_ox = 0.8   #estimate
 #K_rp = math.sqrt(gamma_rp/(R_rp*T0)) * (2/(gamma_rp+1))**((gamma_rp+1)/(2*(gamma_rp-1)))
 K_o = math.sqrt(gamma_ox/(R_ox*T0)) * (2/(gamma_ox+1))**((gamma_ox+1)/(2*(gamma_ox-1)))
 
@@ -120,11 +121,11 @@ def pick_levels(arr):
 # ──────────────────────────────────────────────────────────────
 #  INITIAL VALUES
 # ──────────────────────────────────────────────────────────────
-d_fuel0, d_ox0, d_exit0 = 0.057245, 0.07398, 0.565       # in
+d_fuel0, d_ox0, d_exit0 = 0.047, 0.150, 0.93       # in
 inch = 0.0254
 Ae = math.pi * (d_exit0 * inch / 2) ** 2
-Afu = num_orifices * (math.pi * (d_fuel0 * inch / 2) ** 2)
-Ao = num_orifices * (math.pi * ((d_ox0 * inch / 2) ** 2))
+Afu = num_orifices_fu * (math.pi * (d_fuel0 * inch / 2) ** 2)
+Ao = num_orifices_ox * (math.pi * ((d_ox0 * inch / 2) ** 2))
 Pc0, OF0, mask0, mask_error = compute_fields(Afu, Ao, Ae)
 
 
@@ -141,7 +142,7 @@ cont_pc   = main_ax.contour(X, Y, Pc0, levels = [150, 250, 350],
                             colors='k', linewidths=1)
 pc_labels = main_ax.clabel(cont_pc, fmt='%d psi', inline=True, fontsize=14)
 
-cont_of   = main_ax.contour(X, Y, OF0, levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+cont_of   = main_ax.contour(X, Y, OF0, levels = [1, 1.5, 2, 2.5],
                             colors='k', linewidths=1)
 of_labels = main_ax.clabel(cont_of, fmt='OF: %.2f', inline=True, fontsize=14)
 
@@ -158,7 +159,7 @@ if hasattr(hat, 'collections'):
     for coll in hat.collections:
        coll.set(edgecolor='red', linewidth=0.5)
 
-main_ax.set(xlim=(0,600), ylim=(0,600), aspect='equal',
+main_ax.set(xlim=(0,800), ylim=(0,800), aspect='equal',
             xlabel='Oxidizer Feed Pressure (psi)',
             ylabel='Fuel Feed Pressure (psi)',
             title='Injector Choking Map  &  Chamber-Pressure Contours')
@@ -210,7 +211,7 @@ def compute_inlet(_):
     po = float(po_box.text) if po_box.text else None
 
     if pf is not None and po is not None:
-        pc = Pc0[int(pf/3), int(po/3)]
+        pc = Pc0[int(pf/4), int(po/4)]
         pc_box.set_val(f'{pc:.2f}')
 
         if point_handle:
@@ -219,7 +220,7 @@ def compute_inlet(_):
         point_handle = main_ax.plot(po, pf, 'o', ms=10,
                                      color='white', mec='black', zorder=5)[0]
 
-        of_val = OF0[int(pf/3), int(po/3)]
+        of_val = OF0[int(pf/4), int(po/4)]
 
         thresh_ox = po * crit_ratio_ox
         of_text.set_text(
@@ -251,7 +252,7 @@ def update(_):
                                 colors='k', linewidths=1)
     pc_labels = main_ax.clabel(cont_pc, fmt='%d psi', inline=True, fontsize=10)
 
-    cont_of   = main_ax.contour(X, Y, OF, levels=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+    cont_of   = main_ax.contour(X, Y, OF, levels=[1, 1.5, 2, 2.5],
                                 colors='k', linewidths=1)
     of_labels = main_ax.clabel(cont_of, fmt='OF: %.2f', inline=True, fontsize=10)
 
