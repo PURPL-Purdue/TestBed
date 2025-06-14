@@ -18,7 +18,7 @@ C_d = 0.905 # Discharge coefficient guess (based on PSP Liquids' testing) https:
 p_1 = 650 # Pressure downstream of cavitating venturi (psi)
 x = 0.9 # Anticipated pressure recovery across the venturi
 m_dot_kg = 0.961 # Desired mass flow (kg/s)
-rho = 810 # RP-1 density (from internet :) )
+rho = 810 # RP-1 density
 p_0 = p_1 / x # Pressure upstream of the cavitating venturi (psi)
 p_0_pa = p_0 * 6894.76 # Pressure upstream of cavitating venturi (Pa)
 d = 0.426 # Line inner diameter (in)
@@ -37,10 +37,10 @@ p_sat_pa = Fluid(FluidsList.Water).with_state(Input.quality(0.0), Input.temperat
 A_star_m2 = m_dot_kg / (C_d * np.sqrt(2 * rho * (p_0_pa - p_sat_pa))) # Throat area (m^2)
 
 # Modified bernoulli equation used to calculate throat area
-# A_star_m2 = 1 / np.sqrt( (1 / A_m2**2) - (2 * rho * (p_sat_pa - p_0_pa)) / m_dot_kg**2 )
+A_star_m2 = 1 / np.sqrt( (1 / A_m2**2) - (2 * rho * (p_sat_pa - p_0_pa)) / m_dot_kg**2 )
 
 d_star_m = 2 * np.sqrt(A_star_m2 / np.pi) # Venturi throat diameter (m)
-d_star_in = d_star_m * 39.3701 # Venturi throat diameter (in)
+d_star_in = d_star_m * 39.3701 # Venturi  diameter (in)
 
 # ──────────────────────────────────────────────────────────────
 #  RESULTS
