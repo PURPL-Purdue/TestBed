@@ -6,10 +6,12 @@ figure(2);
 clf;
 figure(3);
 clf;
+pause(0.1)
 
 %% Inputs and Variable Definitions
 config = (readmatrix("Config_Hot_Wall_Heat_Flux.xlsx")); %Config file for ease of change
 config = config(:,2); 
+fast = 1; %Specifies fast or slow algorithum
 
 %Config and value imports
 safetyFactor = config(1); %Safety Factor
@@ -31,9 +33,9 @@ engineContour = engineContourTemp;
 
 targetTemps = readmatrix("HotWall Temperature Distribution.xlsx"); %Imports target temperature distribution
 targetTemps = targetTemps(:,2);
-targetQDots = readmatrix("HotWall QDot Distribution.xlsx");
-%targetQDots = readmatrix("testone.csv");
-%targetQDots = readmatrix("testtwo.csv");
+
+%targetQDots = readmatrix("HotWall QDot Distribution.xlsx"); %Optional Qdot read in to refine output with smaller Qdot steps
+targetQDots = zeros(998); %Initializes an empty initial Qdot distribution
 targetQDots = targetQDots(:,2);
 
 wallThickness = 0.002; %Meters !!!To be replaced by stress calcs!!!
@@ -41,9 +43,11 @@ wallThickness = 0.002; %Meters !!!To be replaced by stress calcs!!!
 %Output instantiation
 steadyStateHsubGDistribution = zeros(length(engineContour(:,1))); %Heat transfer coeffecient matrix
 
-%CEA Wrapper to import properties
-fluidProperties = readmatrix("Fluid Info Frozen Composition.csv"); %Stand in fluid properties
-
+%CEA Wrapper output read in
+fluidProperties = readmatrix("CEAOutFrozen.xlsx");
+%fluidProperties = readmatrix("CEAOutEquilibriumFAC.xlsx");
+fluidProperties = fluidProperties(3:end,:);
+fluidProperties = double(fluidProperties);
 
 %% Iteration Control
 SSSF = 0;
@@ -56,15 +60,12 @@ while SSSF ~= 1
         e = e + 1;
     end
 %% Convirgance Structure
-        axialNum = 1;
-        bigArray = zeros(time / deltaT, wallThickness / radialSliceThickness);
-        convirgenceNums = [];
-        while axialNum <= length(engineContour(:,1))
-            if axialNum == 500
-                pause(5)
-            end
-
-
+    maxTemps = [];
+    axialNum = 1;
+    bigArray = zeros(time / deltaT, wallThickness / radialSliceThickness);
+    convirgenceNums = [];
+    while axialNum <= length(engineContour(:,1))
+        if loops == 1 || incompliance(axialNum) == 1 
             currentRadius = engineContour(axialNum,2);
             currentTemperature = hotwallTemps(axialNum);
             axialPosition = engineContour(axialNum);
@@ -74,11 +75,14 @@ while SSSF ~= 1
             else
                 length_thickness = engineContour(axialNum + 1,1) - engineContour(axialNum,1);
             end
+            if axialNum == 700
+                pause(0.1)
+            end
             %Fluid property recall
             hit = 1;
             i=1;
-            while i < length(fluidProperties(:,1))
-               if fluidProperties(i,1) > axialPosition
+            while i <= length(fluidProperties(:,1))
+               if fluidProperties(i,1) >= axialPosition
                    hit = i;
                    break;
                end 
@@ -88,7 +92,7 @@ while SSSF ~= 1
             gasTemperature = currentProperties(6);
    
             %Layer volumes initialization and calculation (m^3)
-            radialAngle = 1;
+            radialAngle = 2 * 3.14159;
             numLayers = wallThickness / radialSliceThickness; %Calcs Number of layers
             layers = [currentRadius:radialSliceThickness:(wallThickness + currentRadius)]; %Makes vector of layers/diams of layers
             layer_vols = [(radialAngle/2) * (((currentRadius + radialSliceThickness)^2 - (currentRadius)^2)) * length_thickness]; %Calcs first layer volume
@@ -111,7 +115,6 @@ while SSSF ~= 1
             time_num = 1;
             convergence = 0;
             %while time > time_num * deltaT
-            %fprintf("Start")
             while convergence == 0  %Convirgance based analysis
                 layer_num = 2;
                 
@@ -144,9 +147,7 @@ while SSSF ~= 1
                 if all(abs((previousTemperatures-newTemperatures)./previousTemperatures) < convirganceThreshold) && minimumIterations < time_num
                     convergence = 1;
                     convirgenceNums(end + 1) = time_num;
-                    fprintf("\nConvirgence Num: %f", axialNum)
                 end
-           %     fprintf("\nIterations before convirgance: %f",time_num)
                 time_num = time_num + 1; %Increment time number
             end
 
@@ -167,47 +168,75 @@ while SSSF ~= 1
 
             % Final Output
             z = 1;
-            while z < length(final_temperatures(:,1))
+            while z <= length(final_temperatures(:,1))
                 bigArray(z,:,axialNum) = final_temperatures(z,:);
                 z = z + 1;
             end
             steadyStateHsubGDistribution(axialNum,loops) = h_g;
-            
-
-
-            axialNum = axialNum + 1;
+        else
+            bigArray(:,:,axialNum) = ones(length(bigArray(:,1,1)),length(layers)-1,1);
+            steadyStateHsubGDistribution(axialNum,loops) = steadyStateHsubGDistribution(axialNum,loops-1);
+            convirgenceNums(end + 1) = 1;
         end
-%% QDot Alterations
+        axialNum = axialNum + 1;
+    end
     %Search for convergence temp dist
     s = 1;
-    maxTemps = [];
+    
     while s <= length(bigArray(1,1,:))
-                maxTemps = [maxTemps bigArray(convirgenceNums(s),1,s)];
+        if loops ~= 1 && not(incompliance(s))
+            maxTemps = [maxTemps tempMaxtemps(s)];
+        else
+            maxTemps = [maxTemps bigArray(convirgenceNums(s),1,s)];
+        end
         s = s + 1;
     end
-    tempArray = (maxTemps > targetMaxTemp);
-    tempArray = tempArray(:);
-    alterations = (tempArray).* QDotStep;
-    targetQDots = targetQDots + alterations;
-    
+
+    incompliance = (maxTemps > targetTemps');
+    incompliance = incompliance(:)';
+    if fast == 0
+        alterations = (incompliance).* QDotStep;
+        targetQDots = targetQDots + alterations;
+    else
+        fastChanges = (3/1000).*(maxTemps - targetTemps') + 0.1;%8./(1+2.71828.^-(((1/100).*(maxTemps - targetTemps'))-22))+1+(1/1000).*(maxTemps - targetTemps');
+        alterations = (incompliance .* fastChanges).* QDotStep;
+        targetQDots = targetQDots + alterations';
+    end
     %Test for 
     if all(alterations == 0)
         SSSF = 1;
     end
     writematrix([engineContour(:,1), targetQDots], "testtwo.csv")
-    
-    grid on;
-    hold on;
+    tempMaxtemps = maxTemps .* not(incompliance);
+
     figure(1)
+    hold on;
+    grid on;
     plot(engineContour(:,1),targetQDots)
-    
+    title("Heat Flux")
+    xlabel("Axial Position (m)")
+    ylabel("QDot (J/s)")
+
     figure(2)
     plot(engineContour(:,1), maxTemps,"Color","red")
-  %  figure(3)
-   % plot(engineContour(:,1), steadyStateHsubGDistribution(:,loops))
- 
+    hold off;
+    grid on;
+    title("Current Temperature Distribution")
+    xlabel("Axial Position (m)")
+    ylabel("Temperature (K)")
+    
+    figure(3)
+    plot(engineContour(:,1), steadyStateHsubGDistribution(:,loops))
+    hold off;
+    grid on;
+    title("Heat Transfer Coeffecient")
+    xlabel("Axial Position (m)")
+    ylabel("Heat Transfer Coeffecient (W/m^2K)")
+    
+    
 
-
+    fprintf("\n Num Loops: %f", loops)
+    pause(0.1)
     loops = loops + 1;
+    fprintf("\n")
 end
-
