@@ -3,6 +3,7 @@ import numpy as np
 import os
 from glob import glob
 import matplotlib.pyplot as plt
+from pyfluids import Fluid, FluidsList, Input
 from scipy.stats import linregress
 
 # Constants
@@ -17,8 +18,13 @@ throat_area = np.pi * (orifice_dia_m / 2) ** 2
 expected_cda = expected_cd * throat_area
 print(f"Expected CdA (m²): {expected_cda:.6e}")
 
-timestep_1 = 1.8
-timestep_2 = 0.9
+p_sat_pa = Fluid(FluidsList.Water).with_state(Input.quality(0.0), Input.temperature(20)).pressure 
+# Water saturation pressure at 20 degrees celsius (Pa absolute)
+p_sat_atm = p_sat_pa - 101325
+# Water saturation pressure at 20 degrees celsius (Pa atmospheric)
+
+timestep_1 = 2 # Length of first set of water flow tests (s)
+timestep_2 = 1 # Length of second set of water flow tests (s)
 
 # Test-specific mass collected (g) and fixed durations (s)
 mass_data = {
@@ -31,44 +37,39 @@ mass_data = {
 
 data_dir = "/Users/dominiksloup/Desktop/Test raw"
 files = sorted(glob(os.path.join(data_dir, "VENTURI_test_low_*.csv")))
-
 results = []
 
+def get_dp(file_name):
+
+    sdf = pd.read_csv(file_name)
+    sdf.columns = sdf.columns.str.strip()
+
+    mask = (sdf["SN-N2-04 State"] == True) & \
+            (sdf["SN-N2-07 State"] == False) & \
+            (sdf["SN-FU-01 State"] == True)
+        
+    filtered = sdf[mask]
+
+    filtered = filtered.iloc[1:-1]
+
+    delta_p_Pa = filtered["PT-VT-01 Pressure"] * psi_to_Pa - p_sat_atm
+    delta_p_mean = delta_p_Pa.mean()
+
+    return delta_p_mean
+    
 for i, file in enumerate(files, start=1):
     if i not in mass_data:
         continue
 
-    try:
-        df = pd.read_csv(file)
-        df.columns = df.columns.str.strip()
+    delta_p_mean = get_dp(file)
+    m_grams, duration = mass_data[i]
+    m_dot = (m_grams / 1000) / duration  # kg/s
 
-        # Filter valve states: True, False, True
-        mask = (df["SN-N2-04 State"] == True) & \
-               (df["SN-N2-07 State"] == False) & \
-               (df["SN-FU-01 State"] == True)
-        filtered = df[mask]
-
-        if len(filtered) < 4:
-            print(f"Test {i}: not enough valid rows in valve state window")
-            continue
-
-        filtered = filtered.iloc[1:-1]
-
-        delta_p_psi = filtered["PT-VT-01 Pressure"] - filtered["PT-VT-02 Pressure"]
-        delta_p_Pa = delta_p_psi.mean() * psi_to_Pa
-
-        m_grams, duration = mass_data[i]
-        m_dot = (m_grams / 1000) / duration  # kg/s
-
-        results.append({
-            "Test": i,
-            "Avg ΔP (Pa)": delta_p_Pa,
-            "Mass Flow Rate (kg/s)": m_dot
-        })
-
-    except Exception as e:
-        print(f"Error in test {i}: {e}")
-        continue
+    results.append({
+        "Test": i,
+        "Avg ΔP (Pa)": delta_p_mean,
+        "Mass Flow Rate (kg/s)": m_dot
+    })
     
 result_df = pd.DataFrame(results)
 
@@ -90,6 +91,10 @@ print(f"Actual CdA (m²): {regressed_cda:.6e}")
 print(f"Expected Cd: {expected_cd:.3f}")
 print(f"Actual Cd: {regressed_cd:.3f}")
 
+dp = get_dp("/Users/dominiksloup/Documents/GitHub/Testing/VI Software/GG_Test/data/swirler_waterflow_high_20250629_115106.csv")
+print(f"Pressure drop: {dp} Pa")
+m_dot = 0.00037 * np.sqrt(dp) + 0.075
+print(f"Mass flow rate: {m_dot} kg/s")
 
 plt.figure(figsize=(10, 6))
 
