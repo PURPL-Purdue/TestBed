@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import os
+from pathlib import Path
 from glob import glob
 import matplotlib.pyplot as plt
 from pyfluids import Fluid, FluidsList, Input
@@ -35,8 +35,10 @@ mass_data = {
     17: (350, timestep_2), 18: (434, timestep_2)
 }
 
-data_dir = "/Users/dominiksloup/Desktop/Test raw"
-files = sorted(glob(os.path.join(data_dir, "VENTURI_test_low_*.csv")))
+repo_root = Path(__file__).resolve().parents[1]  # adjust as needed
+data_dir = repo_root / "Injector" / "Waterflow Data"
+files = sorted(glob(str(data_dir / "*.csv")))
+
 results = []
 
 def get_dp(file_name):
