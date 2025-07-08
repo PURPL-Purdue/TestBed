@@ -93,10 +93,10 @@ print(f"Actual CdA (m²): {regressed_cda:.6e}")
 print(f"Expected Cd: {expected_cd:.3f}")
 print(f"Actual Cd: {regressed_cd:.3f}")
 
-dp = get_dp("/Users/dominiksloup/Documents/GitHub/Testing/VI Software/GG_Test/data/swirler_waterflow_high_20250629_115106.csv")
-print(f"Pressure drop: {dp} Pa")
-m_dot = 0.00037 * np.sqrt(dp) + 0.075
-print(f"Mass flow rate: {m_dot} kg/s")
+# dp = get_dp("/Users/dominiksloup/Documents/GitHub/Testing/VI Software/GG_Test/data/swirler_waterflow_high_20250629_115106.csv")
+# print(f"Pressure drop: {dp} Pa")
+# m_dot = 0.00037 * np.sqrt(dp) + 0.075
+# print(f"Mass flow rate: {m_dot} kg/s")
 
 plt.figure(figsize=(10, 6))
 
