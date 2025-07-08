@@ -37,7 +37,7 @@ mass_data = {
 
 repo_root = Path(__file__).resolve().parents[1]  # adjust as needed
 data_dir = repo_root / "Injector" / "Waterflow Data"
-files = sorted(glob(str(data_dir / "*.csv")))
+files = sorted(glob(str(data_dir / "VENTURI_test_low*.csv")))
 
 results = []
 
