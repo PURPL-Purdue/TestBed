@@ -1,20 +1,27 @@
-function [flowTemp, flowVel] = calculateWallTemp(heightStepNumber, heatFluxArray, wallTempArray, hotwallSurfaceAreaArray, flowTempMatrix, heightArray, widthArray)
+function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, heatTransferArray, wallTempArray, hotwallSurfaceAreaArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
     
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 3447000; % Pa
-    v_start = 0;
-    rho_start = 0;
+    v_start = 0; %m/s
+    rho_start = 0; %kg/m^3
+    m_flow_total = 0.26716591; %kg/s
+    channel_number = numChannels;
+    mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
+    
+
+    wall_thickness = 0; % thickness of hotwall (m)
+    chamberDiameter = 0.0762; % diameter of chamber (m)
+    k_w = 0; % thermal conductivity of the wall (W/m*K)
 
 
+    % initialize/re-define matrices & arrays
+    flowTemp = flowTempMatrix;
+    flowVel = flowVelocityMatrix;
+    flowPressure = flowPressureMatrix;
+    height_steps = heightStepArray;
+    Q_dot = heatTransferArray;
 
-
-    flowTemp = zeros([length(widthArray), length(heightArray)]); %Preallocate array sizes
-    flowVel = flowTemp; %Preallocate array sizes
-    flowPressure = flowTemp;
-
-
-    MASS_FLOW; % Precalcuated mass flow based on # of channels in Malestrom
     wInd = 0;
     hInd = 0;
     htCoeff = % heat transfer coefficient (calculated using bartz equation)
@@ -49,7 +56,7 @@ function [flowTemp, flowVel] = calculateWallTemp(heightStepNumber, heatFluxArray
             end
 
             % Calculate Reynolds number
-            Re = (rho * velocity * hyd_diam) / dyn_visc;
+            Re = (density * velocity * hyd_diam) / dyn_visc;
             
 
 
@@ -79,7 +86,37 @@ function [flowTemp, flowVel] = calculateWallTemp(heightStepNumber, heatFluxArray
             
 
 
-            %%
+            %% Calculate Required flow temperature
+            % Area of Fin (m^2)
+            A_fin = height_steps(heightStepNumber)*2*height;
+
+            % Area of Wall on Coolant side (m^2)
+            A_wallL = height_steps(heightStepNumber)*width;
+
+            % Area of Wall on Hotwall side (m^2)
+            A_wallG = height_steps(heightStepNumber) *(width+fin_width);
+
+            % Calculate fin width at start of channels (m)
+            fin_width = ((pi*(chamberDiameter+2*(wall_thickness))) - (channel_number*width))/channel_number;
+            
+            % Finning Parameter- measure of convection from fins
+            fin_param = sqrt((2*h_l*(fin_width+height_steps(heightStepNumber)))/(k_w*height_steps(heightStepNumber)*fin_width));
+
+            % Fin Efficiency- fin convection efficiency
+            fin_efficiency = tanh(fin_param*height)/(fin_param*height);
+
+            % Calculate angle of channel slice
+            angle_channel = (width/(pi*(chamberDiameter+2*(wall_thickness))))*360;
+
+            % Calculate mass of coolant in height step, m_coolant (kg)
+            m_coolant = density*height_steps(heightStepNumber)*((pi*((chamberDiameter+wall_thickness*2)/2)^2)-(pi*((chamberDiameter/2)^2)))*(angle_channel/360);
+
+            % Calculate required heat transfer rate, q_l_total
+            
+
+            % Calculate required coolant temp, T_L_req (K)
+
+
 
             flowVel(wInd, hIn, heightStepNumber) = 1; % Flow velocity
             flowTemp(wInd, hIn, heightStepNumber) = 1; %Flow temp
