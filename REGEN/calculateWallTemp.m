@@ -1,4 +1,4 @@
-function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, heatTransferArray, wallTempArray, hotwallSurfaceAreaArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
+function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, heatFluxMatrix, wallTempArray, hotwallSurfaceAreaArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
     
     %% Inlet Condition Values
     T_start= 298; % K
@@ -20,11 +20,12 @@ function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, 
     flowVel = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
-    Q_dot = heatTransferArray;
+    Q_dot = heatFluxMatrix;
+    T_wallL = wallTempArray;
 
     wInd = 0;
     hInd = 0;
-    htCoeff = % heat transfer coefficient (calculated using bartz equation)
+
     for width = widthArray
         wInd = wInd + 1;
         for height = heightArray
@@ -76,7 +77,7 @@ function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, 
 
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = CoolProp.PropsSI('V', 'T', T_wall, 'P', P_coolant, coolant);
+            mu_wall = CoolProp.PropsSI('V', 'T', T_wallL, 'P', P_coolant, coolant);
 
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
@@ -111,19 +112,33 @@ function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, 
             % Calculate mass of coolant in height step, m_coolant (kg)
             m_coolant = density*height_steps(heightStepNumber)*((pi*((chamberDiameter+wall_thickness*2)/2)^2)-(pi*((chamberDiameter/2)^2)))*(angle_channel/360);
 
-            % Calculate required heat transfer rate, q_l_total
-            
+            % Calculate required specific heat transfer rate, qdotL_total (J/kg*s)
+            qdotL_total = Q_dot(wInd,hInm, heightStepNumber)*((pi*(chamberDiameter)*(angle_channel/360))*height_steps(heightStepNumber))/m_coolant;
 
             % Calculate required coolant temp, T_L_req (K)
+            T_L_req =  -((qdotL_total*A_wallG)/(h_l*((fin_efficiency*A_fin)+A_wallL)))+T_wallL;
 
 
 
-            flowVel(wInd, hIn, heightStepNumber) = 1; % Flow velocity
-            flowTemp(wInd, hIn, heightStepNumber) = 1; %Flow temp
+            %% Calculate Coolant Temp increase, delta_T (K)
+            delta_T = qdotL_total*height_steps(heightStepNumber)*(width+(2*height*fin_efficiency))/(mass_flow*cp);
+
+            if (heightStepNumber == 1)
+                flowTemp(wInd, hIn, heightStepNumber) = T_start + delta_T; % initial flow temp plus deltaT
+
+            else
+                flowTemp(wInd, hIn, heightStepNumber) = flowTemp(wInd, hIn, heightStepNumber-1)+delta_T; % Previous step flow temp plus deltaT
+
+            end
+
+            if (flowTemp(wInd, hIn, heightStepNumber) > T_L_req)
+                flowTemp(wInd, hIn, heightStepNumber) = 999999999999999999999999999999999999999999; % if coolant temp is too high, nullify
+
+            end
+
             flowPressure(wInd, hIn, heightStepNumber) = 1; %Flow pressure
-            coolentMass; %%Calculated from volume and denisty
-            fluidConactArea;
-            convtCoeff;
+            flowVel(wInd, hIn, heightStepNumber) = 1; % Flow velocity
+            
         end
     end
 
