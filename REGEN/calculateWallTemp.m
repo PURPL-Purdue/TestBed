@@ -1,4 +1,8 @@
-function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, heatFluxMatrix, wallTempArray, hotwallSurfaceAreaArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
+function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, heatFluxMatrix, wallTempArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
+    
+    %% Height Step Initialization (PUT INTO OVERALL CODE)
+    syms x;
+    steps = piecewise(x >= 0 & x <= 0.50777934936*pi,(-2*sin(x+(0.192*pi)))+3.14856,)
     
     %% Inlet Condition Values
     T_start= 298; % K
@@ -44,7 +48,7 @@ function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, 
 
             % Density (kg/m^3)
             if(heightStepNumber == 1)
-                density = rho_start
+                density = rho_start;
             else
                 density = CoolProp.PropsSI('D', 'T', flowTemp(wInd, hIn, heightStepNumber-1), 'P', flowPressure(wInd, hIn, heightStepNumber-1), coolant);
             end
@@ -135,6 +139,10 @@ function [flowTemp, flowVel] = calculateWallTemp(numChannels, heightStepNumber, 
                 flowTemp(wInd, hIn, heightStepNumber) = 999999999999999999999999999999999999999999; % if coolant temp is too high, nullify
 
             end
+
+
+            %% Calculate Coolant Pressure Drop
+            delta_P = 
 
             flowPressure(wInd, hIn, heightStepNumber) = 1; %Flow pressure
             flowVel(wInd, hIn, heightStepNumber) = 1; % Flow velocity
