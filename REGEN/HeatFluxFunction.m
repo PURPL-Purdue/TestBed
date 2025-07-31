@@ -29,17 +29,16 @@ Wmin = -1;
 Tsubc = -1;
 %Searches and finds coolant wall temperature and Wmin that *just* meets the
 %strength requirements.
-a = 1;
-while a <=length(OMaxs) 1
+a = 0;
+while a < length(OMaxs) 1
+    a = a + 1;
     if OEffectives(a) >= OMaxs(a)
         Wmin = wallThicknesses(a);
         Tsubc = Tc(a);
         break
     end
-    a = a + 1;
 end
 
 %Outputs
 QDot = flux;
-Tsubc = Tc(a);
 
