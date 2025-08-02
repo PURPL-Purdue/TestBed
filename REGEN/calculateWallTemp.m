@@ -1,4 +1,4 @@
-function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, heatFluxMatrix, hotwallTempArray, fluidInfoArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
+function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, hotwallTempArray, fluidInfoArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 3447000; % Pa
@@ -33,9 +33,15 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
         for height = heightArray
             hInd = hInd + 1;
             
+            if (heightStepNumber==1)
 
-            hotWall_dP = flowPressure(wInd, hInd, heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
+                hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)
 
+            else
+
+                hotWall_dP = flowPressure(wInd, hInd, heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
+
+            end
             %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
             [Q_dot, T_wallL, wall_thicknesses] = HeatFlux(width, hotwall_dP, currentHeightStep, k_w, T_target, fluidInformation);
             
@@ -59,16 +65,16 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
 
             % Density (kg/m^3)
             if(heightStepNumber == 1)
-                density = rho_start
+                density = rho_start;
             else
-                density = 287.67129 .* .53365016 .^(-(1+(1-flowTemp(wInd, hInd, heightStepNumber-1)/574.262).^.628866));
+                density = 287.67129 * .53365016^(-(1+(1-flowTemp(wInd, hInd, heightStepNumber-1)/574.262)^.628866));
             end 
 
             % Dynamic viscosity [Pa·s]
             if(heightStepNumber == 1)
-                  dyn_visc = 94.544*exp.^(-.014*T_start);
+                  dyn_visc = 94.544*exp(-.014*T_start);
             else
-                dyn_visc = 94.544*exp.^(-.014*flowTemp(wInd, hInd, heightStepNumber-1));
+                dyn_visc = 94.544*exp(-.014*flowTemp(wInd, hInd, heightStepNumber-1));
             end
     
     
@@ -79,11 +85,11 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
 
             %% Calculate Prandtl Number
            % Thermal conductivity [W/(m·K)]
-            kf = .000005.*flowTemp(wInd, hInd, heightStepNumber-1).+.105;
+            kf = .000005*flowTemp(wInd, hInd, heightStepNumber-1) + .105;
             %^Use empirical data/curves found from papers in regen channel
-            
+        
             % Specific heat capacity [J/(kg·K)]
-            cp = 32.068.*exp.^(.0023.*flowTemp(wInd, hInd, heightStepNumber-1));
+            cp = 32.068*exp(.0023*flowTemp(wInd, hInd, heightStepNumber-1));
             %^Use empirical data/curves found from papers in regen channel
 
             % Prandtl number [-]
@@ -93,7 +99,7 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
 
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = 88.748 .*exp.^(-.013.*flowTemp(wInd, hInd, heightStepNumber-1))
+            mu_wall = 88.748 *exp(-.013*flowTemp(wInd, hInd, heightStepNumber-1));
 
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
