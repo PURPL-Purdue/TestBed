@@ -59,30 +59,31 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
 
             % Density (kg/m^3)
             if(heightStepNumber == 1)
-                density = rho_start;
+                density = rho_start
             else
-                density = CoolProp.PropsSI('D', 'T', flowTemp(wInd, hInd, heightStepNumber-1), 'P', flowPressure(wInd, hInd, heightStepNumber-1), coolant);
-            end
+                density = 287.67129 .* .53365016 .^(-(1+(1-flowTemp(wInd, hInd, heightStepNumber-1)/574.262).^.628866));
+            end 
 
             % Dynamic viscosity [Pa·s]
             if(heightStepNumber == 1)
-                dyn_visc = CoolProp.PropsSI('V', 'T', T_start, 'P', P_start, coolant);
+                  dyn_visc = 94.544*exp.^(-.014*T_start);
             else
-                dyn_visc = CoolProp.PropsSI('V', 'T', flowTemp(wInd, hInd, heightStepNumber-1), 'P', flowPressure(wInd, hInd, heightStepNumber-1), coolant);
+                dyn_visc = 94.544*exp.^(-.014*flowTemp(wInd, hInd, heightStepNumber-1));
             end
-
+    
+    
             % Calculate Reynolds number
             Re = (density * velocity * hyd_diam) / dyn_visc;
             
 
 
             %% Calculate Prandtl Number
-            % Thermal conductivity [W/(m·K)]
-            kf = CoolProp.PropsSI('L', 'T', T_bulk, 'P', P_coolant, coolant);
+           % Thermal conductivity [W/(m·K)]
+            kf = .000005.*flowTemp(wInd, hInd, heightStepNumber-1).+.105;
             %^Use empirical data/curves found from papers in regen channel
             
             % Specific heat capacity [J/(kg·K)]
-            cp = CoolProp.PropsSI('C', 'T', T_bulk, 'P', P_coolant, coolant);
+            cp = 32.068.*exp.^(.0023.*flowTemp(wInd, hInd, heightStepNumber-1));
             %^Use empirical data/curves found from papers in regen channel
 
             % Prandtl number [-]
@@ -92,7 +93,7 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
 
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = CoolProp.PropsSI('V', 'T', T_wallL, 'P', P_coolant, coolant);
+            mu_wall = 88.748 .*exp.^(-.013.*flowTemp(wInd, hInd, heightStepNumber-1))
 
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
