@@ -8,7 +8,7 @@ import math
 import numpy as np # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 from matplotlib.widgets import TextBox # type: ignore
-import CEA_Wrap as CEA
+import CEA_Wrap as CEA # type: ignore
 
 # cstar = CEA.RocketProblem(materials=[CEA.Fuel("C2H5OH"), CEA.Oxidizer("O2")], pressure = 350, o_f = 0.28, analysis_type = "frozen").run_cea().cstar
 # import matlab.engine as m
