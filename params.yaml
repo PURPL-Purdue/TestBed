@@ -1,5 +1,5 @@
 ###################################################################################################
-#                        Welcome to the Marlin Project's source of truth!                         #
+#                        Welcome to the Testbed Project's source of truth!                         #
 #                                                                                                 #
 # Why are we doing this?:                                                                         #
 #   As our project grows, it gets hard to keep track of the values on everyone's subsystems as    #
@@ -31,72 +31,29 @@
 
 
 ######################################
-###### TURBOPUMP SYSTEMS DESIGN ######
+###### MAELSTROM ENGINE DESIGN #######
 ######################################
 
-# High level performance (INPUTS)
+# Chamber performance (INPUTS)
 
-lox_inlet_design_pressure: 50 #(psi) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-lox_inlet_design_temperature: 162.27 #(R) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-lox_outlet_design_pressure: 1000 #(psi) Alejandro Diaz Contreras
-lox_design_mdot: 15.4 #(lbm/s) Alejandro Diaz Contreras
+thrust: 500 #(lbf) Dominik Sloup
+chamber_pressure: 500 #(psi) Dominik Sloup
+of_ratio: 2.2 #(N/A) Dominik Sloup
 
-kero_inlet_design_pressure: 50 #(psi) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-kero_outlet_design_pressure: 1000 #(psi) Alejandro Diaz Contreras
-kero_inlet_design_temperature: 536.67 #(R) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-kero_design_mdot: 7.4 #(lbm/s) Alejandro Diaz Contreras
+# Chamber performance (OUTPUTS)
 
+kero_design_mdot: 
+lox_design_mdot:
+throat_diameter: 
 
-# Performance dispersion (INPUTS)
+# Swirl injector design (OUTPUTS)
 
-min_ambient_temperature: 491.67 #(R) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-max_ambient_temperature: 563.67 #(R) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
+element_number: 6
 
-min_lox_tank_press: 14.7 #(psi) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-max_lox_tank_press: 14.7 #(psi) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
+kero_inlet_number: 3
+kero_total_injection_area: #(in^2)
+kero_inlet_diameter: #(in)
 
-min_kero_tank_press: 75 #(psi) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-max_kero_tank_press: 75 #(psi) Alejandro Diaz Contreras NOT FINALIZED, ASK BEFORE USING
-
-
-# High level systems (OUTPUTS)
-
-
-
-
-########################
-###### SUBSYSTEMS ######
-########################
-
-# Rotor (INPUTS)
-
-shaft_speed: 50000 #(RPM) Alejandro Diaz Contreras
-#rotor_moment_of_inertia: -------------------------------------------------- #(lbm*in^2) Daniel Bennet
-
-
-# Rotor (OUTPUTS)
-
-#lox_coolant_rate: --------------------------------------------------------- #(lb/s) James Nida
-#fuel_coolant_rate: -------------------------------------------------------- #(lb/s) James Nida
-
-
-# IPS (INPUTS)
-
-#IPS_gap_width: ------------------------------------------------------------ #(in) Chris Suffredini
-
-
-# Gas generator (INPUTS)
-
-GG_chamber_design_pressure: 390 #(psi) Miles Cohen
-GG_chamber_OF: 0.28 #(Unitless) Miles Cohen
-
-
-# Turbine (INPUTS)
-
-design_power_output: 180 #(HP) Amanjyoti Mridha
-
-
-# Turbine (OUTPUTS)
-
-#turbine_efficiency: ------------------------------------------------------- #(Unitless) Amanjyoti Mridha
-
+lox_inlet_number: 3
+lox_total_injection_area: #(in^2)
+lox_inlet_diameter: #(in)
