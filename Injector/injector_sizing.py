@@ -8,6 +8,7 @@ import os
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from rocketcea.cea_obj import CEA_Obj
 import CEA_Wrap as CEA
 from matplotlib.widgets import TextBox
 from pyfluids import Fluid, FluidsList, Input
@@ -19,19 +20,19 @@ def clc():
 #  CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-fuel = CEA.Fuel("Jet-A(L)")
-oxidizer = CEA.Oxidizer("O2")
 gamma = 1.4 # GOx specific heat ratio
 C_d_ox = 0.8 # Oxidizer orifice anticipated C_d (N/A)
 C_d_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 F = 500 # Desired thrust of the engine (lbf)
 p_c = 500 # Optimal chamber pressure (psi)
-OF = 0.3 # Nominal OF Ratio
-K_fu = 1.2 # Desired Fuel injector stiffness (N/A)
-K_ox = 1 # Desired Ox injector stiffness (N/A)
+OF = 1 # Nominal OF Ratio
+K_fu = 0.5 # Desired Fuel injector stiffness (N/A)
+K_ox = 1.2 # Desired Ox injector stiffness (N/A)
 g = 9.81 # Gravitational constant (m/s^2)
+g0 = 32.174 # Gravitational constant (ft/s^2)
 fu_orifice_num = 24 # Number of fuel orifices
 ox_orifice_num = 24 # * fu_orifice_num # Number of oxidizer orifices
+Isp_eff = 0.9 # Mixing efficiency factor (N/A)
 
 # ──────────────────────────────────────────────────────────────
 #  UNIT CONVERSIONS
@@ -48,12 +49,29 @@ F_N = F * 4.44822 # Desired thrust (N)
 
 clc()
 # Specific impulse of engine at ambient pressure
-Isp = CEA.RocketProblem(materials=[fuel,oxidizer], pressure=p_c, o_f=OF, analysis_type="frozen").run_cea().isp
 
-m_dot_lb = F / Isp # Total combined mass flow (kg/s)
+engine = CEA_Obj(oxName='GOX', fuelName='JetA')
+
+cstar = engine.get_Cstar(Pc = p_c, MR = OF)
+Cf, IspVac, IspSL = engine.get_PambCf(Pamb=14.7, Pc=p_c, MR=OF, eps=4.43)
+Isp = (cstar * Cf / g0)
+
+Isp_real = Isp * Isp_eff
+
+# print(engine.get_full_cea_output(Pc = p_c, MR = OF, eps = 4.43))
+
+cstar_m = cstar * 0.3048
+
+m_dot_lb = F / Isp_real # Total combined mass flow (lb/s)
 m_dot = m_dot_lb * 0.453592
 m_dot_fu = m_dot / (1 + OF) # Fuel mass flow (kg/s)
 m_dot_ox = m_dot - m_dot_fu # Oxidizer mass flow (kg/s)
+
+A_t = m_dot * cstar_m / p_c_pa
+
+d_t = np.pow(4 * A_t / np.pi ,0.5) 
+
+d_t_in = d_t * 39.3701
 
 dp_fu = K_fu * p_c # Desired pressure drop across injector (psi)
 dp_ox = K_ox * p_c
@@ -86,14 +104,18 @@ d_ox = 2 * np.sqrt((A_ox / ox_orifice_num) / np.pi) # Ox orifice diameter (m)
 d_ox_min_in = 2 * np.sqrt(A_ox / np.pi) * 39.3701 # Minimum ox inlet diameter (in)
 d_ox_in = d_ox * 39.3701 # Ox orifice diameter (in)
 
-d_line = 0.652 # Line diameter (in)
-d_line_m = d_line * 0.0254
+d_line_fu = 0.4 # Line diameter (in)
+d_line_ox = 0.652
+d_line_fu_m = d_line_fu * 0.0254
+d_line_ox_m = d_line_ox * 0.0254
 
-A_line = np.pi * (d_line_m/2) ** 2 
+A_line_fu = np.pi * (d_line_fu_m/2) ** 2 
+
+A_line_ox = np.pi * (d_line_ox_m/2) ** 2 
 
 # Line velocity calculations:
-v_fu = m_dot_fu / (A_line * rho_fu)
-v_ox = m_dot_ox / (A_line * rho_ox)
+v_fu = m_dot_fu / (A_line_fu * rho_fu)
+v_ox = m_dot_ox / (A_line_ox * rho_ox)
 
 v_ox_ft = v_ox * 3.28084
 v_fu_ft = v_fu * 3.28084
@@ -102,11 +124,12 @@ v_fu_ft = v_fu * 3.28084
 #  RESULTS
 # ──────────────────────────────────────────────────────────────
 
-print(f"Specific impulse: {math.floor(Isp)} s")
+print(f"Specific impulse ({Isp_eff} efficiency): {math.floor(Isp_real)} s")
 print(f"Total mass flow: {m_dot:.3f} kg/s")
 print(f"Fuel mass flow: {m_dot_fu:.3f} kg/s")
 print(f"Ox mass flow: {m_dot_ox:.3f} kg/s")
 
+print(f"\nThroat diameter: {d_t_in:.2f} in")
 print(f"\nTotal fuel injection area: {A_fu:.6f} m^2")
 print(f"Fuel orifice diameter: {d_fu_in:.3f} in")
 print(f"Fuel feed pressure: {p_m_fu:.2f} psi")
