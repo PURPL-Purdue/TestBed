@@ -141,10 +141,9 @@ v_ox_ft = v_ox / ft_to_m
 v_fu_ft = v_fu / ft_to_m
 
 rho_ox_amb = Fluid(FluidsList.Oxygen).with_state(Input.pressure(101325), Input.temperature(20)).density
-rho_n2_amb = Fluid(FluidsList.Nitrogen).with_state(Input.pressure(101325), Input.temperature(20)).density
 
 V_dot_ox = m_dot_ox / rho_ox_amb # Oxygen volumetric flow at STP (m^3/s)
-V_dot_n2 = m_dot_fu / rho_n2_amb # Nitrogen tank press volumetric flow at STP (m^3/s)
+V_dot_n2 = m_dot_fu / rho_fu  # Nitrogen tank press volumetric flow at STP (m^3/s)
 
 SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
 SCFM_n2 =  V_dot_n2 / np.pow(ft_to_m, 3) * 60

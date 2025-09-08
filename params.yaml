@@ -46,7 +46,7 @@ throat_diameter: 0.95 # (in) Dominik Sloup
 # GOX/RP-1 Injector parameters (INPUTS)
 
 of_ratio: 1 # (N/A) Dominik Sloup
-gox_stiffness: 1.4  # (N/A) Dominik Sloup
+gox_stiffness: 1.2  # (N/A) Dominik Sloup
 rp_stiffness: 0.5  # (N/A) Dominik Sloup
 
 rp_tube_inner_dia: 0.4  # (in) Dominik Sloup 
@@ -57,14 +57,14 @@ gox_tube_inner_dia: 0.65  # (in) Dominik Sloup
 rp_design_mdot: 1.344 # (lb/s) Dominik Sloup
 gox_design_mdot: 1.344 # (lb/s) Dominik Sloup
 
-gox_feed_pressure: 1200.0 # (psi) Dominik Sloup
+gox_feed_pressure: 1100.0 # (psi) Dominik Sloup
 rp_feed_pressure: 750.0 # (psi) Dominik Sloup
 
-gox_line_velocity: 81.93 # (ft/s) Dominik Sloup
+gox_line_velocity: 89.66 # (ft/s) Dominik Sloup
 rp_line_velocity: 30.45  # (ft/s) Dominik Sloup
 
 gox_SCFM: 970.05 # (ft^3/min) Dominik Sloup
-n2_SCFM: 1108.59 # (ft^3/min) Dominik Sloup
+n2_SCFM: 1.59 # (ft^3/min) Dominik Sloup
 
 # Swirl injector design (OUTPUTS)
 
