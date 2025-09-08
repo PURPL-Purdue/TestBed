@@ -36,24 +36,28 @@
 
 # Chamber performance (INPUTS)
 
-thrust: 500 #(lbf) Dominik Sloup
-chamber_pressure: 500 #(psi) Dominik Sloup
-of_ratio: 2.2 #(N/A) Dominik Sloup
+thrust: 500 # (lbf) Dominik Sloup
+chamber_pressure: 500 # (psi) Dominik Sloup
+of_ratio: 1 # (N/A) Dominik Sloup
 
 # Chamber performance (OUTPUTS)
 
 kero_design_mdot:
 lox_design_mdot:
-throat_diameter:
+throat_diameter: 0.95 # (in) Dominik Sloup
 
 # GOX/RP-1 Injector performance (INPUTS)
 
-gox_stiffness: null # (N/A) Dominik Sloup
-rp_stiffness: null # (N/A) Dominik Sloup
+gox_stiffness: 1.2  # (N/A) Dominik Sloup
+rp_stiffness: 0.5  # (N/A) Dominik Sloup
 
 # GOX/RP-1 Injector performance (OUTPUTS)
 
-# gox_mdot: 0.6094322299469637 # (lb/s)
+rp_design_mdot: 1.344 # (lb/s) Dominik Sloup
+gox_design_mdot: 1.344 # (lb/s) Dominik Sloup
+
+gox_feed_pressure: 1100.0 # (psi) Dominik Sloup
+rp_feed_pressure: 750.0 # (psi) Dominik Sloup
 
 # Swirl injector design (OUTPUTS)
 
