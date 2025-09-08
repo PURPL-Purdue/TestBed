@@ -12,10 +12,27 @@ from rocketcea.cea_obj import CEA_Obj
 import CEA_Wrap as CEA
 from matplotlib.widgets import TextBox
 from pyfluids import Fluid, FluidsList, Input
+from pathlib import Path
+from ruamel.yaml import YAML
+import yaml
 
 def clc():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+def find_yaml(filename="params.yaml", start_dir=None):
+    start_dir = Path(start_dir or Path.cwd())
+    for path in start_dir.rglob(filename):
+        return path
+    raise FileNotFoundError(f"{filename} not found starting from {start_dir}")
+
+yaml_path = find_yaml()
+
+# Load YAML with formatting preserved
+yaml = YAML()
+yaml.preserve_quotes = True
+
+with open(yaml_path, "r") as f:
+    data = yaml.load(f)
 # ──────────────────────────────────────────────────────────────
 #  CONSTANTS
 # ──────────────────────────────────────────────────────────────
@@ -27,21 +44,27 @@ F = 500 # Desired thrust of the engine (lbf)
 p_c = 500 # Optimal chamber pressure (psi)
 OF = 1 # Nominal OF Ratio
 K_fu = 0.5 # Desired Fuel injector stiffness (N/A)
-K_ox = 1.2 # Desired Ox injector stiffness (N/A)
+K_ox = 1.4 # Desired Ox injector stiffness (N/A)
 g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
+d_line_fu = 0.4 # Fuel Line diameter (in)
+d_line_ox = 0.65 # Oxidizer line diameter (in)
 fu_orifice_num = 24 # Number of fuel orifices
-ox_orifice_num = 24 # * fu_orifice_num # Number of oxidizer orifices
+ox_orifice_num = 24 # Number of oxidizer orifices
 Isp_eff = 0.9 # Mixing efficiency factor (N/A)
 
 # ──────────────────────────────────────────────────────────────
 #  UNIT CONVERSIONS
 # ──────────────────────────────────────────────────────────────
 
-p_c_pa = p_c * 6894.76
-F_N = F * 4.44822 # Desired thrust (N)
-# m_dot_kg = m_dot * 0.453592 Desired mass flow (kg/s)
-# A_f_m2 = A_f * 0.00064516 # Combined fuel injection area (m^2)
+lbf_to_N = 4.44822
+psi_to_pa = 6894.76
+ft_to_m = 0.3048
+lb_to_kg = 0.453592
+m_to_in = 39.3701
+
+p_c_pa = p_c * psi_to_pa # Chamber pressure (Pa)
+F_N = F * lbf_to_N # Desired thrust (N)
 
 # ──────────────────────────────────────────────────────────────
 #  CALCULATIONS
@@ -60,21 +83,16 @@ Isp_real = Isp * Isp_eff
 
 # print(engine.get_full_cea_output(Pc = p_c, MR = OF, eps = 4.43))
 
-cstar_m = cstar * 0.3048
+cstar_m = cstar * ft_to_m
 
 m_dot_lb = F / Isp_real # Total combined mass flow (lb/s)
-m_dot = m_dot_lb * 0.453592
+m_dot = m_dot_lb * lb_to_kg # Total combined mass flow (kg/s)
+
 m_dot_fu = m_dot / (1 + OF) # Fuel mass flow (kg/s)
 m_dot_ox = m_dot - m_dot_fu # Oxidizer mass flow (kg/s)
 
-A_t = m_dot * cstar_m / p_c_pa
-
-d_t = np.pow(4 * A_t / np.pi ,0.5) 
-
-d_t_in = d_t * 39.3701
-
-dp_fu = K_fu * p_c # Desired pressure drop across injector (psi)
-dp_ox = K_ox * p_c
+dp_fu = K_fu * p_c # Desired pressure drop across fuel injector (psi)
+dp_ox = K_ox * p_c # Desired pressure drop across ox injector (psi)
 
 p_m_fu = p_c + dp_fu # Manifold pressure (psi)
 p_m_ox = p_c + dp_ox # Ox manifold pressure (psi)
@@ -97,28 +115,47 @@ d_fu_in = d_fu * 39.3701 # Fuel orifice diameter (in)
 
 A_ox = m_dot_ox / (C_d_ox * np.sqrt(rho_ox * p_m_ox_pa * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
 
+A_t = m_dot * cstar_m / p_c_pa
+
 #  Incompressible flow equation (Unchoked condition)
 # A_ox = m_dot_ox / (C_d_ox * np.sqrt(2 * rho_ox * p_m_ox_pa * (gamma / (gamma - 1))
 # * ((p_c_pa / p_m_ox_pa) ** (2 / gamma) - (p_c_pa / p_m_ox_pa) ** ((gamma + 1) / gamma)))) # Total ox injection area (m^2)
 d_ox = 2 * np.sqrt((A_ox / ox_orifice_num) / np.pi) # Ox orifice diameter (m)
 d_ox_min_in = 2 * np.sqrt(A_ox / np.pi) * 39.3701 # Minimum ox inlet diameter (in)
-d_ox_in = d_ox * 39.3701 # Ox orifice diameter (in)
 
-d_line_fu = 0.4 # Line diameter (in)
-d_line_ox = 0.652
+d_t = 2 * np.sqrt(A_t / np.pi)
+
+d_t_in = d_t * m_to_in
+d_ox_in = d_ox * m_to_in # Ox orifice diameter (in)
+
 d_line_fu_m = d_line_fu * 0.0254
 d_line_ox_m = d_line_ox * 0.0254
 
 A_line_fu = np.pi * (d_line_fu_m/2) ** 2 
-
 A_line_ox = np.pi * (d_line_ox_m/2) ** 2 
 
 # Line velocity calculations:
 v_fu = m_dot_fu / (A_line_fu * rho_fu)
 v_ox = m_dot_ox / (A_line_ox * rho_ox)
 
-v_ox_ft = v_ox * 3.28084
-v_fu_ft = v_fu * 3.28084
+v_ox_ft = v_ox / ft_to_m
+v_fu_ft = v_fu / ft_to_m
+
+data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
+data["rp_design_mdot"] = float(np.round(m_dot_fu / lb_to_kg, 3))
+data["gox_feed_pressure"] = p_m_ox
+data["rp_feed_pressure"] = p_m_fu
+data["gox_stiffness"] = K_ox
+data["rp_stiffness"] = K_fu
+data["gox_line_velocity"] = float(np.round(v_ox_ft, 2))
+data["rp_line_velocity"] = float(np.round(v_fu_ft, 2))
+data["gox_tube_inner_dia"] = d_line_ox
+data["rp_tube_inner_dia"] = d_line_fu
+
+
+# Write back without losing comments or spacing
+with open(yaml_path, "w") as f:
+    yaml.dump(data, f)
 
 # ──────────────────────────────────────────────────────────────
 #  RESULTS
