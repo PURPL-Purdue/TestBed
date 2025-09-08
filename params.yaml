@@ -61,16 +61,19 @@ gox_feed_pressure: 1200.0 # (psi) Dominik Sloup
 rp_feed_pressure: 750.0 # (psi) Dominik Sloup
 
 gox_line_velocity: 81.93 # (ft/s) Dominik Sloup
-rp_line_velocity: 30.45 # (ft/s) Dominik Sloup
+rp_line_velocity: 30.45  # (ft/s) Dominik Sloup
+
+gox_SCFM: 970.05 # (ft^3/min) Dominik Sloup
+n2_SCFM: 1108.59 # (ft^3/min) Dominik Sloup
 
 # Swirl injector design (OUTPUTS)
 
 element_number: 6
 
 kero_inlet_number: 3 # (N/A) Dominik Sloup
-kero_total_injection_area: null # (in^2) Dominik Sloup
-kero_inlet_diameter: null # (in) Dominik Sloup
+kero_total_injection_area:      # (in^2) Dominik Sloup
+kero_inlet_diameter:      # (in) Dominik Sloup
 
 lox_inlet_number: 3 # (N/A) Dominik Sloup
-lox_total_injection_area: null # (in^2) Dominik Sloup
-lox_inlet_diameter: null # (in) Dominik Sloup
+lox_total_injection_area:      # (in^2) Dominik Sloup
+lox_inlet_diameter:      # (in) Dominik Sloup

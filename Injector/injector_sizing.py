@@ -44,12 +44,12 @@ F = 500 # Desired thrust of the engine (lbf)
 p_c = 500 # Optimal chamber pressure (psi)
 OF = 1 # Nominal OF Ratio
 K_fu = 0.5 # Desired Fuel injector stiffness (N/A)
-K_ox = 1.4 # Desired Ox injector stiffness (N/A)
+K_ox = 1.2 # Desired Ox injector stiffness (N/A)
 g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
 d_line_fu = 0.4 # Fuel Line diameter (in)
 d_line_ox = 0.65 # Oxidizer line diameter (in)
-fu_orifice_num = 24 # Number of fuel orifices
+fu_orifice_num = 12 # Number of fuel orifices
 ox_orifice_num = 24 # Number of oxidizer orifices
 Isp_eff = 0.9 # Mixing efficiency factor (N/A)
 
@@ -114,7 +114,6 @@ d_fu_in = d_fu * 39.3701 # Fuel orifice diameter (in)
 # Incompressible flow equation (Choked condition)
 
 A_ox = m_dot_ox / (C_d_ox * np.sqrt(rho_ox * p_m_ox_pa * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
-
 A_t = m_dot * cstar_m / p_c_pa
 
 #  Incompressible flow equation (Unchoked condition)
@@ -141,6 +140,16 @@ v_ox = m_dot_ox / (A_line_ox * rho_ox)
 v_ox_ft = v_ox / ft_to_m
 v_fu_ft = v_fu / ft_to_m
 
+rho_ox_amb = Fluid(FluidsList.Oxygen).with_state(Input.pressure(101325), Input.temperature(20)).density
+rho_n2_amb = Fluid(FluidsList.Nitrogen).with_state(Input.pressure(101325), Input.temperature(20)).density
+
+V_dot_ox = m_dot_ox / rho_ox_amb # Oxygen volumetric flow at STP (m^3/s)
+V_dot_n2 = m_dot_fu / rho_n2_amb # Nitrogen tank press volumetric flow at STP (m^3/s)
+
+SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
+SCFM_n2 =  V_dot_n2 / np.pow(ft_to_m, 3) * 60
+
+data["of_ratio"] = OF
 data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
 data["rp_design_mdot"] = float(np.round(m_dot_fu / lb_to_kg, 3))
 data["gox_feed_pressure"] = p_m_ox
@@ -151,9 +160,10 @@ data["gox_line_velocity"] = float(np.round(v_ox_ft, 2))
 data["rp_line_velocity"] = float(np.round(v_fu_ft, 2))
 data["gox_tube_inner_dia"] = d_line_ox
 data["rp_tube_inner_dia"] = d_line_fu
+data["rp_tube_inner_dia"] = d_line_fu
+data["gox_SCFM"] = float(np.round(SCFM_ox, 2))
+data["n2_SCFM"] = float(np.round(SCFM_n2, 2))
 
-
-# Write back without losing comments or spacing
 with open(yaml_path, "w") as f:
     yaml.dump(data, f)
 
