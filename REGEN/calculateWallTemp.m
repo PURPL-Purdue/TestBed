@@ -2,8 +2,8 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 3447000; % Pa
-    v_start = 0; %m/s
-    rho_start = 0; %kg/m^3
+    v_start = 0; %m/s 
+    rho_start = 1,000; %kg/m^3 Changed water density to 1,000 kg/m^3 
     m_flow_total = 0.26716591; %kg/s
     channel_number = numChannels;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
