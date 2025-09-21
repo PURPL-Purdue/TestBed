@@ -14,10 +14,10 @@ from pyfluids import Fluid, FluidsList, Input
 #  CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-C_d = 0.905 # Discharge coefficient guess (based on PSP Liquids' testing) https://purdue-space-program.atlassian.net/wiki/spaces/PL/pages/936903267/Successful+Water+Flow+1
-p_1 = 650 # Pressure downstream of cavitating venturi (psi)
+C_d = 0.98 # Discharge coefficient guess (based on PSP Liquids' testing) https://purdue-space-program.atlassian.net/wiki/spaces/PL/pages/936903267/Successful+Water+Flow+1
+p_1 = 750 # Pressure downstream of cavitating venturi (psi)
 x = 0.9 # Anticipated pressure recovery across the venturi
-m_dot_kg = 0.961 # Desired mass flow (kg/s)
+m_dot_kg = 0.60962815 # Desired mass flow (kg/s)
 rho = 810 # RP-1 density
 p_0 = p_1 / x # Pressure upstream of the cavitating venturi (psi)
 p_0_pa = p_0 * 6894.76 # Pressure upstream of cavitating venturi (Pa)
@@ -37,7 +37,7 @@ p_sat_pa = Fluid(FluidsList.Water).with_state(Input.quality(0.0), Input.temperat
 A_star_m2 = m_dot_kg / (C_d * np.sqrt(2 * rho * (p_0_pa - p_sat_pa))) # Throat area (m^2)
 
 # Modified bernoulli equation used to calculate throat area
-A_star_m2 = 1 / np.sqrt( (1 / A_m2**2) - (2 * rho * (p_sat_pa - p_0_pa)) / m_dot_kg**2 )
+# A_star_m2 = 1 / np.sqrt( (1 / A_m2**2) - (2 * rho * (p_sat_pa - p_0_pa)) / m_dot_kg**2 )
 
 d_star_m = 2 * np.sqrt(A_star_m2 / np.pi) # Venturi throat diameter (m)
 d_star_in = d_star_m * 39.3701 # Venturi  diameter (in)
@@ -54,4 +54,5 @@ print(f"Expected throat pressure:        {(p_sat_pa / 6894.76):.1f} psi")
 print(f"Downstream venturi pressure:     {p_1:.0f} psi")
 
 print(f"Line inner diameter:             {0.426:.3f} in")  # assuming -8 tube ID
+print(f"Venturi throat area:             {A_star_m2:.6f} m^2")
 print(f"Venturi throat diameter:         {(d_star_m * 39.3701):.3f} in\n")
