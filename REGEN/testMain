@@ -17,7 +17,8 @@ wallTempArray = zeros(1, numSteps);
 
 %% Height Step initialization
 syms x;
-steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
+steps = piecewise();
+%steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
     n = pi/numSteps;
     step = 1;
     for i = 0:n:(pi-n)
