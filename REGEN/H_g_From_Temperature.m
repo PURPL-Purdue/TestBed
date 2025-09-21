@@ -1,7 +1,7 @@
 function h_out = H_g_From_Temperature(temperature, fluid_information)
 
+
     
-        
     %Input manipulation
     wall_temp = temperature * 1.8 + 491.67; %Conversion to Rankine
     info = fluid_information';
