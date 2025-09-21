@@ -1,17 +1,17 @@
 function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, hotwallTempArray, fluidInfoArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
     %% Inlet Condition Values
-    T_start= 298; % K
-    P_start = 3447000; % Pa
+    T_start= 292; % K
+    P_start = 4109519; % Pa
     v_start = 0; %m/s
-    rho_start = 1000; %kg/m^3, changed density to water density at standard temp
-    m_flow_total = 0.26716591; %kg/s
+    rho_start = 1000; %kg/m^3
+    m_flow_total = 2.26796; %kg/s
     channel_number = numChannels;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     
 
     chamberDiameter = 0.0762; % diameter of chamber (m)
-    chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
-    k_w = 0; % thermal conductivity of the wall (W/m*K)
+    chamberPressure = 1724000; % Chamber Pressure (Pa)
+    k_w = 162; % thermal conductivity of the wall (W/m*K)
     gravity = 9.81; %m/s^2
     
 
