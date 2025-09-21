@@ -8,7 +8,7 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
     channel_number = numChannels;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     
-
+fsdfdas
     chamberDiameter = 0.0762; % diameter of chamber (m)
     chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
     k_w = 0; % thermal conductivity of the wall (W/m*K)
