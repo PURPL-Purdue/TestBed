@@ -2,11 +2,11 @@
 
 widthArray = linspace(0.001, 0.005, 20); %m %channel width sweep %CHECK WITH LITERATURE
 heightArray = linspace(0.001, 0.005, 20); %m %channel height sweep %CHECK WITH LITERATURE
-
+%set width and height
 
 numWidth = length(widthArray);
 numHeight = length(heightArray);
-numSteps = 10;
+numSteps = 67; 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(numWidth, numHeight, numSteps); 
 geometryMap = zeros(numWidth, numHeight, numSteps);  
