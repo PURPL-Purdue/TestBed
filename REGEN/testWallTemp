@@ -1,7 +1,7 @@
 function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, hotwallTempArray, fluidInfoArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
     %% Inlet Condition Values
     T_start= 292; % K
-    P_start = 4109519; % Pa
+    P_start = 2517000; % Pa
     v_start = 6.44; %m/s
     rho_start = 1000; %kg/m^3
     m_flow_total = 2.26796; %kg/s
