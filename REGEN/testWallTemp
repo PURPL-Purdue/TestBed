@@ -1,19 +1,55 @@
-function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heightStepNumber, heightStepArray, hotwallTempArray, fluidInfoArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
+function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightStepNumber, heightStepArray, hotwallTempArray, fluidInfoArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, heightArray, widthArray)
+    % PSP dimensions
+    W1 = 0.1772;
+    H1 = 0.1181;
+    T1 = 0.0394;
+    W2 = 0.1772;
+    H2 = 0.1181;
+    T2 = 0.0394;
+    W3 = 0.0591;
+    H3 = 0.0787;
+    T3 = 0.0295;
+    W4 = 0.0894;
+    H4 = 0.0894;
+    T4 = 0.0394;
+
+    setWidth = [W1, W2, W3, W4];
+    setHeight = [H1, H2, H3, H4];
+    setThickness = [T1, T2, T3, T4];
+
+    heightStepArray = [];
+    numchannels = 62;
+
+    
     %% Inlet Condition Values
     T_start= 292; % K
     P_start = 2517000; % Pa
     v_start = 6.44; %m/s
     rho_start = 1000; %kg/m^3
     m_flow_total = 2.26796; %kg/s
+
+
+
     channel_number = numChannels; %Change
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
-    
+ 
 
     %%chamberDiameter = 0.0762; % diameter of chamber (m) (needs to be fixed to be an array or something)
     chamberPressure = 1724000; % Chamber Pressure (Pa)
     k_w = 162; % thermal conductivity of the wall (W/m*K)
     gravity = 9.81; %m/s^2
     
+    %% Height Step initialization
+    syms x;
+    steps = piecewise();
+    steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
+        n = pi/numSteps;
+        step = 1;
+        for i = 0:n:(pi-n)
+            heightStepArray(step) = int(steps,i,i+n);
+            step = step +1;
+        end
+
 
     % initialize/re-define matrices & arrays
     flowTemp = flowTempMatrix;
@@ -27,12 +63,13 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
     wInd = 0;
     hInd = 0;
 
-    for width = widthArray
-        wInd = wInd + 1;
+    %for width = widthArray
+     %   wInd = wInd + 1;
 
-        for height = heightArray
-            hInd = hInd + 1;
-            
+      %  for height = heightArray
+       %     hInd = hInd + 1;
+        
+       for i = 0:height_steps
             if (heightStepNumber==1)
 
                 hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)
@@ -177,6 +214,10 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
             flowVel(wInd, hInd, heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
             
         end
-    end
 
-end
+        print(flowTemp)
+        print(flowVel)
+        print(flowPressure)
+ %   end
+
+%end
