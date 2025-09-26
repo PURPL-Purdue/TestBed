@@ -69,13 +69,13 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
     
     %% Array initialization
     % initialize/re-define matrices & arrays
-    flowTemp = []];
+    flowTemp = [];
     flowVel = [];
     flowPressure = [];
-    currentHeightStep = height_steps(heightStepNumber);
+    currentHeightStep = heightStepArray(end)/heightStepNumber; % axial length of current height step
     T_target = hotwallTempArray ; % target gas-side hotwall temp
     fluidInformation = fluidInfoArray;
-
+    heightStepNumber = 0; % initialize height step number
     wInd = 0;
     hInd = 0;
 
@@ -85,14 +85,15 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
       %  for height = heightArray
        %     hInd = hInd + 1;
         
-       for i = 0:height_steps
+       for i = heightStepArray
+        heightStepNumber = heightStepNumber + 1; % iterate through each height step
             if (heightStepNumber==1)
 
                 hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)
 
             else
 
-                hotWall_dP = flowPressure(wInd, hInd, heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
+                hotWall_dP = flowPressure(heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
 
             end
             %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
@@ -100,8 +101,8 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
             
             wall_thickness = wall_thicknesses(heightStepNumber);
 
-            if(flowTemp(wInd,hInd,heightStepNumber-1) == 999999999999999999999999999999999999999999) % if channel dimension combo is already unsuccessful, do not let computation with it continue
-                flowTemp(wInd,hInd,heightStepNumber) = 999999999999999999999999999999999999999999;
+            if(flowTemp(heightStepNumber-1) == 999999999999999999999999999999999999999999) % if channel dimension combo is already unsuccessful, do not let computation with it continue
+                flowTemp(heightStepNumber) = 999999999999999999999999999999999999999999;
                 break
             end
 
@@ -113,21 +114,21 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
             if(heightStepNumber == 1)
                 velocity = v_start;
             else
-                velocity = flowVel(wInd, hInd, heightStepNumber-1);
+                velocity = flowVel(heightStepNumber-1);
             end
 
             % Density (kg/m^3)
             if(heightStepNumber == 1)
                 density = rho_start;
             else
-                density = 287.67129 * .53365016^(-(1+(1-flowTemp(wInd, hInd, heightStepNumber-1)/574.262)^.628866));
+                density = 287.67129 * .53365016^(-(1+(1-flowTemp(heightStepNumber-1)/574.262)^.628866));
             end 
 
             % Dynamic viscosity [Pa·s]
             if(heightStepNumber == 1)
                   dyn_visc = 94.544*exp(-.014*T_start);
             else
-                dyn_visc = 94.544*exp(-.014*flowTemp(wInd, hInd, heightStepNumber-1));
+                dyn_visc = 94.544*exp(-.014*flowTemp(heightStepNumber-1));
             end
     
     
@@ -138,11 +139,11 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
 
             %% Calculate Prandtl Number
            % Thermal conductivity [W/(m·K)]
-            kf = .000005*flowTemp(wInd, hInd, heightStepNumber-1) + .105;
+            kf = .000005*flowTemp(heightStepNumber-1) + .105;
             %^Use empirical data/curves found from papers in regen channel
         
             % Specific heat capacity [J/(kg·K)]
-            cp = 32.068*exp(.0023*flowTemp(wInd, hInd, heightStepNumber-1));
+            cp = 32.068*exp(.0023*flowTemp(heightStepNumber-1));
             %^Use empirical data/curves found from papers in regen channel
 
             % Prandtl number [-]
@@ -152,7 +153,7 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
 
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = 88.748 *exp(-.013*flowTemp(wInd, hInd, heightStepNumber-1));
+            mu_wall = 88.748 *exp(-.013*flowTemp(heightStepNumber-1));
 
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
@@ -188,7 +189,7 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
             m_coolant = density*currentHeightStep*((pi*((chamberDiameter+wall_thickness*2)/2)^2)-(pi*((chamberDiameter/2)^2)))*(angle_channel/360);
 
             % Calculate required specific heat transfer rate, qdotL_total (J/kg*s)
-            qdotL_total = Q_dot(wInd,hInm, heightStepNumber)*((pi*(chamberDiameter)*(angle_channel/360))*currentHeightStep)/m_coolant;
+            qdotL_total = Q_dot(heightStepNumber)*((pi*(chamberDiameter)*(angle_channel/360))*currentHeightStep)/m_coolant;
 
             % Calculate required coolant temp, T_L_req (K)
             T_L_req =  -((qdotL_total*A_wallG)/(h_l*((fin_efficiency*A_fin)+A_wallL)))+T_wallL;
@@ -199,15 +200,15 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
             delta_T = qdotL_total*currentHeightStep*(width+(2*height*fin_efficiency))/(mass_flow*cp);
 
             if (heightStepNumber == 1)
-                flowTemp(wInd, hInd, heightStepNumber) = T_start + delta_T; % initial flow temp plus deltaT
+                flowTemp(heightStepNumber) = T_start + delta_T; % initial flow temp plus deltaT
 
             else
-                flowTemp(wInd, hInd, heightStepNumber) = flowTemp(wInd, hInd, heightStepNumber-1)+delta_T; % Previous step flow temp plus deltaT
+                flowTemp(heightStepNumber) = flowTemp(heightStepNumber-1)+delta_T; % Previous step flow temp plus deltaT
 
             end
 
-            if (flowTemp(wInd, hInd, heightStepNumber) > T_L_req)
-                flowTemp(wInd, hInd, heightStepNumber) = 999999999999999999999999999999999999999999; % if coolant temp is too high, nullify
+            if (flowTemp(heightStepNumber) > T_L_req)
+                flowTemp(heightStepNumber) = 999999999999999999999999999999999999999999; % if coolant temp is too high, nullify
 
             end
 
@@ -224,10 +225,10 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
 
             delta_P = 2 * cf * currentHeightStep * density * (velocity^2)/ hyd_diam; %Frictional static pressure drop across the channel
             
-            flowPressure(wInd, hInd, heightStepNumber) = flowPressure(wInd, hInd, heightStepNumber-1) - delta_P; %Flow pressure
+            flowPressure(heightStepNumber) = flowPressure(heightStepNumber-1) - delta_P; %Flow pressure
             
             %% Calculate Coolant Velocity Increase via Bernoulli's
-            flowVel(wInd, hInd, heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
+            flowVel(heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
             
         end
 
