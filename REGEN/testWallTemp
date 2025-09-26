@@ -13,11 +13,39 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
     H4 = 0.0894;
     T4 = 0.0394;
 
-    setWidth = [W1, W2, W3, W4];
-    setHeight = [H1, H2, H3, H4];
-    setThickness = [T1, T2, T3, T4];
+    combo1 = [W1, H1, T1];
+    combo2 = [W2, H2, T2];
+    combo3 = [W3, H3, T3];
+    combo4 = [W4, H4, T4];
 
-    heightStepArray = [];
+    heightStepNumber = 67;
+    heightStepArray = 0:8.97/heightStepNumber:8.97;
+    channelMatrix = [];
+    i = 1;
+    for a = heightStepArray
+       
+        if(heightStepArray(i)<5.21)
+            
+            channelMatrix(i,:) = combo1;
+        
+        elseif(heightStepArray(i)<6.674)
+
+            channelMatrix(i,:) = combo2;
+        
+        elseif(heightStepArray(i)<7.04)
+
+            channelMatrix(i,:) = combo3;
+
+        else
+            channelMatrix(i,:) = combo4;   
+            
+        end
+
+        i=i+1;
+    end
+
+    
+
     numchannels = 62;
 
     
@@ -27,7 +55,7 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
     v_start = 6.44; %m/s
     rho_start = 1000; %kg/m^3
     m_flow_total = 2.26796; %kg/s
-
+    m_flow_channel = m_flow_total/numchannels;
 
 
     channel_number = numChannels; %Change
@@ -39,23 +67,11 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
     k_w = 162; % thermal conductivity of the wall (W/m*K)
     gravity = 9.81; %m/s^2
     
-    %% Height Step initialization
-    syms x;
-    steps = piecewise();
-    steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
-        n = pi/numSteps;
-        step = 1;
-        for i = 0:n:(pi-n)
-            heightStepArray(step) = int(steps,i,i+n);
-            step = step +1;
-        end
-
-
+    %% Array initialization
     % initialize/re-define matrices & arrays
-    flowTemp = flowTempMatrix;
-    flowVel = flowVelocityMatrix;
-    flowPressure = flowPressureMatrix;
-    height_steps = heightStepArray;
+    flowTemp = []];
+    flowVel = [];
+    flowPressure = [];
     currentHeightStep = height_steps(heightStepNumber);
     T_target = hotwallTempArray ; % target gas-side hotwall temp
     fluidInformation = fluidInfoArray;
