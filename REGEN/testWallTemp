@@ -68,7 +68,7 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
     flowVel = [];
     flowPressure = [];
     currentHeightStep = heightStepArray(end)/heightStepNumber; % axial length of current height step
-    T_target = 473.15 ; % K temp of 50%yield strength decrease in al6061 ram2 (https://www.elementum3d.com/wp-content/uploads/2024/02/A6061-RAM2-2-pg-Web-Event-Data-Sheets-2024-01-18.pdf). Setting max hotwall-gas side temp
+    targetTemp = 473.15 ; % K temp of 50%yield strength decrease in al6061 ram2 (https://www.elementum3d.com/wp-content/uploads/2024/02/A6061-RAM2-2-pg-Web-Event-Data-Sheets-2024-01-18.pdf). Setting max hotwall-gas side temp
     fluidInformation = fluidInfoArray;
     heightStepNumber = 0; % initialize height step number
     
@@ -94,9 +94,63 @@ function [flowTemp, flowVel, flowPressure] = testWallTemp(numChannels, heightSte
         
 
 
+                fluidProperties = readmatrix("CEAOutEquilibriumFAC.xlsx"); %pull all nasaCEA values into fluidProperties
+                y = 0;
+                r=1;
+                totalValues = 0;
+                axialDist = (fluidProperties(:,1) .*39.3701);
+                newFluidProperties = zeros(length(heightStepArray),10);
+                newFluidProperties(:,1) = heightStepArray;
+                while y<length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
+                    divFactor = r-a;
+                    a = r;
+                    c = r;
+                    sumAEAT = 0;
+                    sumPrandtl = 0;
+                    sumMach = 0;
+                    sumGamma = 0;
+                    sumT = 0;
+                    sumVisc = 0;
+                    sumCp = 0;
+                    sumP = 0;
+                    sumCstar = 0;                
+
+                    while a < length(axialDist)
+                        if a <= heightStepArray(y)
+                            sumAEAT = sumAEAT+fluidProperties(a,2);
+                            sumPrandtl = sumPrandtl+fluidProperties(a,3);
+                            sumMach = sumMach+fluidProperties(a,4);
+                            sumGamma = sumGamma+fluidProperties(a,5);
+                            sumT = sumT+fluidProperties(a,6);
+                            sumVisc = sumVisc+fluidProperties(a,7);
+                            sumCp = sumCp+fluidProperties(a,8);
+                            sumP = sumP+fluidProperties(a,9);
+                            sumCstar = sumCstar+fluidProperties(a,10);
+
+
+                            r = a;
+                            a=a+1;
+                        else
+                            newFluidProperties(y,2) = sumAEAT/divFactor;
+                            newFluidProperties(y,3) = sumPrandtl/divFactor;
+                            newFluidProperties(y,4) = sumMach/divFactor;
+                            newFluidProperties(y,5) = sumGamma/divFactor;
+                            newFluidProperties(y,6) = sumT/divFactor;
+                            newFluidProperties(y,7) = sumVisc/divFactor;
+                            newFluidProperties(y,8) = sumCp/divFactor;
+                            newFluidProperties(y,9) = sumP/divFactor;
+                            newFluidProperties(y,10) = sumCstar/divFactor;
+                            r = a;
+                            break; 
+                        
+                        end
+                    end
+                y=y+1;
+                end
+
 
                 wallThicknesses = 0.001:0.001:0.02; %Prospective wall thicknesses range in meters
-                gasTemps = fluidInfo(6); %Hot gas temperature in K
+                gasTemps = newFluidProperties(:,6); %Hot gas temperature in K
                 
                 flux = H_g_From_Temperature(targetTemp,fluidInfo) .* (gasTemp - targetTemp); %Calcs heat flux in W/m^2
                 Tc = -(wall_thickness .* flux ./ thermalConductivity - targetTemp); %Calcs prospective coolant wall temperatures
