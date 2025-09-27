@@ -98,7 +98,10 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
 
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = 88.748 *exp(-.013*flowTemp(wInd, hInd, heightStepNumber-1));
+            %mu_wall = 88.748 *exp(-.013*flowTemp(wInd, hInd, heightStepNumber-1));
+            %NEEDS CHANGING TO WALL LIQUID SIDE TEMP
+
+
 
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
