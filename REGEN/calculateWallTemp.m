@@ -107,7 +107,7 @@ function [flowTemp, flowVel, flowPressure] = calculateWallTemp(numChannels, heig
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
             
             % Calculate convective heat transfer coefficient [W/(m^2·K)]
-            h_l = Nu * kf / D_h;
+            h_l = Nu * kf / hyd_diam;
             
 
 
