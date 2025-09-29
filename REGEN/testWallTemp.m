@@ -19,25 +19,31 @@ combo4 = [W4, H4, T4];
 
 heightStepNumber = 67;
 chamberLength = 8.97*0.0254;
+
 heightStepArray = chamberLength/heightStepNumber:chamberLength/heightStepNumber:chamberLength;
 channelMatrix = [];
+
+throatInd = 1+ length(heightStepArray(heightStepArray < 0.178816));
+startConvInd = 1+length(heightStepArray(heightStepArray < 0.132334));
+
+
+channelMatrix(startConvInd:throatInd,1) = linspace(W3,W2,throatInd-startConvInd+1);
+channelMatrix(startConvInd:throatInd,2) = linspace(H3,H2,throatInd-startConvInd+1);
+channelMatrix(startConvInd:throatInd,3) = linspace(T3,T2,throatInd-startConvInd+1);
+
+channelMatrix(throatInd:heightStepNumber,1) = linspace(W4,W3,heightStepNumber-throatInd+1);
+channelMatrix(throatInd:heightStepNumber,2) = linspace(H4,H3,heightStepNumber-throatInd+1);
+channelMatrix(throatInd:heightStepNumber,3) = linspace(T4,T3,heightStepNumber-throatInd+1);
 i = 1;
+
 for a = heightStepArray
     
-    if(heightStepArray(i)<(5.21*0.0254))
-        
-        channelMatrix(i,1:3) = combo1; %set channel dimensions based on axial position in engine
+    if(heightStepArray(i)<=startConvInd)
         channelMatrix(i,4) = 0.09525; % set diameter in m
-    elseif(heightStepArray(i)<(6.674*0.0254))
-
-        channelMatrix(i,1:3) = combo2;
+        channelMatrix(i,1:3) = combo1;
+    elseif(heightStepArray(i)<=throatInd)
         channelMatrix(i,4) = (((heightStepArray(i)-0.132334)*-1.245) +0.09525);
-    elseif(heightStepArray(i)<(7.04*0.0254))
-
-        channelMatrix(i,1:3) = combo3;
-        channelMatrix(i,4) = ((-(heightStepArray(i)-0.132334)*1.245) +0.09525);
     else
-        channelMatrix(i,1:3) = combo4;   
         channelMatrix(i,4) = (((heightStepArray(i)-0.178816)*0.5129) +0.037338);
     end
 
@@ -68,7 +74,7 @@ flowTemp = [];
 flowVel = [];
 flowPressure = [];
 currentHeightStep = heightStepArray(end)/heightStepNumber; % axial length of current height step
-targetTemp = 473.15 ; % K temp of 50%yield strength decrease in al6061 ram2 (https://www.elementum3d.com/wp-content/uploads/2024/02/A6061-RAM2-2-pg-Web-Event-Data-Sheets-2024-01-18.pdf). Setting max hotwall-gas side temp
+targetTemp = 573 ; % K temp of 50%yield strength decrease in al6061 ram2 (https://www.elementum3d.com/wp-content/uploads/2024/02/A6061-RAM2-2-pg-Web-Event-Data-Sheets-2024-01-18.pdf). Setting max hotwall-gas side temp
 heightStepNumber = 0; % initialize height step number
 
 fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
@@ -119,7 +125,6 @@ fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into
                 newFluidProperties(y,8) = sumCp/divFactor;
                 newFluidProperties(y,9) = sumP/divFactor;
                 newFluidProperties(y,10) = sumCstar/divFactor;
-                display(divFactor)
                 r = a;
                 
                 break; 
@@ -131,13 +136,13 @@ fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into
 
 wallThicknesses = 0.001:0.001:0.02; %Prospective wall thicknesses range in meters
 gasTemps = newFluidProperties(:,6); %Hot gas temperature in K
+f = H_g_From_Temperature(targetTemp,newFluidProperties); % for debugging, delete when done  
+flux = f .* (gasTemps - targetTemp); %Calcs heat flux in W/m^2
 
-flux = H_g_From_Temperature(targetTemp,newFluidProperties) .* (gasTemps - targetTemp); %Calcs heat flux in W/m^2
-    Tc = -(wall_thickness * flux / k_w - (targetTemp)); %Calcs coolant wall temperature required to induce heat transfer
-    
+        
     %Outputs
     QDot = flux;
-    Tsubc = Tc;
+    
 
 %% Main Height Step Loop
 for i = heightStepArray
@@ -147,23 +152,27 @@ for i = heightStepArray
     height = channelMatrix(heightStepNumber,2);
     wall_thickness = channelMatrix(heightStepNumber,3);
     chamberDiameter = channelMatrix(heightStepNumber,4);
+    Tc = -(wall_thickness * flux / k_w - (targetTemp)); %Calcs coolant wall temperature required to induce heat transfer
+    Tsubc = Tc;
     if (heightStepNumber==1)
 
         hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)
-
+        pressure = P_start;
+        temp = T_start;
+        velocity = v_start;
     else
 
         hotWall_dP = flowPressure(heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
-
+        pressure = flowPressure(heightStepNumber-1);
+        temp = flowTemp(heightStepNumber-1);
+        velocity = flowVel(heightStepNumber-1);
     end
     %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
     bendMaxs = 3 * hotWall_dP* width ^ 2 / (4 * wall_thickness^ 2); %Calcs expected max bending stress in Pa
     TMaxs = 3 * hotWall_dP* width / (0.577 * 4 * wall_thickness); %Calcs expected tensile stress in Pa
 
 
-    if(heightStepNumber==1)
-
-    elseif(flowTemp(heightStepNumber-1) == 999999999999999999999999999999999999999999) % if channel dimension combo is already unsuccessful, do not let computation with it continue
+    if(temp == 999999999999999999999999999999999999999999) % if channel dimension combo is already unsuccessful, do not let computation with it continue
         flowTemp(heightStepNumber) = 999999999999999999999999999999999999999999;
         break
     end
@@ -172,28 +181,12 @@ for i = heightStepArray
     % Hydraulic Diameter (m)
     hyd_diam = (2*width*height)/(height+width);
     
-    % Velocity (m/s)
-    if(heightStepNumber == 1)
-        velocity = v_start;
-    else
-        velocity = flowVel(heightStepNumber-1);
-    end
 
     % Density (kg/m^3)
-    if(heightStepNumber == 1)
-        density = rho_start;
-    elseif (heightStepNumber == 2)
-        density = density-0.3455997235*((flowTemp(heightStepNumber-1) - T_start));
-    else
-        density = density-0.3455997235*((flowTemp(heightStepNumber-1) - flowTemp(heightStepNumber-2)));
-    end 
+    density = py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Water');
 
     % Dynamic viscosity [Pa·s]
-    if(heightStepNumber == 1)
-        dyn_visc = (1.74 + -0.0493*T_start + 6.98*(10^-4)*(T_start^2) -3.78*(10^-6)*(T_start^3))/1000;
-    else
-        dyn_visc = (1.74 + -0.0493*flowTemp(heightStepNumber-1) + 6.98*(10^-4)*(flowTemp(heightStepNumber-1)^2) -3.78*(10^-6)*(flowTemp(heightStepNumber-1)^3))/1000;
-    end
+    dyn_visc = py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Water');%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
 
 
     % Calculate Reynolds number
@@ -203,22 +196,11 @@ for i = heightStepArray
 
     %% Calculate Prandtl Number
     % Thermal conductivity [W/(m·K)]
-    if(heightStepNumber ==1)
-        refTemp = T_start/298.15;
-    else
-        refTemp = flowTemp(heightStepNumber-1)/298.15;
-    end
-    kf = -1.48445 + 4.12992*refTemp - 1.63866* (refTemp^2);
+    kf = py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Water');
     %^Use empirical data/curves found from papers in regen channel
 
     % Specific heat capacity [J/(kg·K)]
-    if(heightStepNumber == 1)
-        cp3 = -203.606 + 1523.29*T_start -3196.413*(T_start^2)+2474.455*(T_start^3) + 3.855/(T_start^2); % CHRIS PAAAAAUL
-        cp = cp3/0.018015; %convert to kg from mol    
-    else
-        cp3 = -203.606 + 1523.29*flowTemp(heightStepNumber-1) -3196.413*(flowTemp(heightStepNumber-1)^2)+2474.455*(flowTemp(heightStepNumber-1)^3) + 3.855/(flowTemp(heightStepNumber-1)^2); % CHRIS PAAAAAUL
-        cp = cp3/0.018015; %convert to kg from mol
-    end
+    cp = py.CoolProp.CoolProp.PropsSI('C','P',pressure,'T',temp,'Water');
     
     %^Use empirical data/curves found from papers in regen channel
 
@@ -229,11 +211,12 @@ for i = heightStepArray
 
     %% Sieder Tate Nusselt's Number
     % Get viscosity at wall temperature for Sieder-Tate correction
-    mu_wall = (1.74 + -0.0493*Tsubc(heightStepNumber) + 6.98*(10^-4)*(Tsubc(heightStepNumber)^2) -3.78*(10^-6)*(Tsubc(heightStepNumber)^3))/1000;
+    mu_wall = py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',Tsubc(heightStepNumber),'Water');
+    %(1.74 + -0.0493*Tsubc(heightStepNumber) + 6.98*(10^-4)*(Tsubc(heightStepNumber)^2) -3.78*(10^-6)*(Tsubc(heightStepNumber)^3))/1000;
 
     % Calculate Nusselt number using Sieder-Tate correlation
     Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
-    
+   
     % Calculate convective heat transfer coefficient [W/(m^2·K)]
     h_l = Nu * kf / hyd_diam;
     
@@ -268,7 +251,7 @@ for i = heightStepArray
     qdotL_total = QDot(heightStepNumber)*((pi*(chamberDiameter)*(angle_channel/360))*currentHeightStep)/m_coolant;
 
     % Calculate required coolant temp, T_L_req (K)
-    T_L_req =  -((qdotL_total*A_wallG)/(h_l*((fin_efficiency*A_fin)+A_wallL)))+ Tsubc;
+    T_L_req =  -((qdotL_total*A_wallG)/(h_l*((fin_efficiency*A_fin)+A_wallL)))+ Tsubc(heightStepNumber);
 
 
 
@@ -283,7 +266,7 @@ for i = heightStepArray
 
     end
 
-    if (flowTemp(heightStepNumber) > T_L_req)
+    if (temp > T_L_req)
         flowTemp(heightStepNumber) = 999999999999999999999999999999999999999999; % if coolant temp is too high, nullify
 
     end
@@ -305,10 +288,10 @@ for i = heightStepArray
         flowPressure(heightStepNumber) = P_start;
     else
         flowPressure(heightStepNumber) = flowPressure(heightStepNumber-1) - delta_P; %Flow pressure
-    end
+    end 
     %% Calculate Coolant Velocity Increase via Bernoulli's
     flowVel(heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
-    
+    display(T_L_req)
 end
 
 %display(flowTemp)
