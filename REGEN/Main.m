@@ -3,42 +3,99 @@
 widthArray = linspace(0.001, 0.005, 20); %m %channel width sweep %CHECK WITH LITERATURE
 heightArray = linspace(0.001, 0.005, 20); %m %channel height sweep %CHECK WITH LITERATURE
 
+heightStepNumber = 67;
 
-numWidth = length(widthArray);
-numHeight = length(heightArray);
-numSteps = 10;
 %% Initialize all arrays and matrices
-flowTempMatrix = zeros(numWidth, numHeight, numSteps); 
-geometryMap = zeros(numWidth, numHeight, numSteps);  
+flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
+flowVelocityMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
+flowPressureMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
+geometryMap = zeros(length(widthArray), length(heightArray), heightStepNumber); %will be used later on to see which channel dimension combos worked/failed
 
-flowVelocityMatrix = zeros(numWidth, numHeight, numSteps);
-flowPressureMatrix = zeros(numWidth, numHeight, numSteps);
-wallTempArray = zeros(1, numSteps);
-
-%% Height Step initialization
+%% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
 syms x;
 steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
-    n = pi/numSteps;
+    n = pi/heightStepNumber;
     step = 1;
     for i = 0:n:(pi-n)
         heightStepArray(step) = int(steps,i,i+n);
         step = step +1;
     end
+heightStepArray = heightStepArray/39.37; % change to meters
+
+
+%% Run NASA CEA and retrieve values
+fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties(1,:) = [];
+y = 1;
+r = 1;
+axialDist = (fluidProperties(:,1));
+newFluidProperties = zeros(length(heightStepArray),10);
+newFluidProperties(:,1) = heightStepArray;
+while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
+    
+    
+    a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
+
+    sumAEAT = 0;
+    sumPrandtl = 0;
+    sumMach = 0;
+    sumGamma = 0;
+    sumT = 0;
+    sumVisc = 0;
+    sumCp = 0;
+    sumP = 0;
+    sumCstar = 0;                
+
+    while a <= length(axialDist)
+        if axialDist(a) < heightStepArray(y)
+            sumAEAT = sumAEAT+fluidProperties(a,2);
+            sumPrandtl = sumPrandtl+fluidProperties(a,3);
+            sumMach = sumMach+fluidProperties(a,4);
+            sumGamma = sumGamma+fluidProperties(a,5);
+            sumT = sumT+fluidProperties(a,6);
+            sumVisc = sumVisc+fluidProperties(a,7);
+            sumCp = sumCp+fluidProperties(a,8);
+            sumP = sumP+fluidProperties(a,9);
+            sumCstar = sumCstar+fluidProperties(a,10);
+
+
+            
+            a=a+1;
+        else
+            divFactor = a-r;
+            newFluidProperties(y,2) = sumAEAT/divFactor;
+            newFluidProperties(y,3) = sumPrandtl/divFactor;
+            newFluidProperties(y,4) = sumMach/divFactor;
+            newFluidProperties(y,5) = sumGamma/divFactor;
+            newFluidProperties(y,6) = sumT/divFactor;
+            newFluidProperties(y,7) = sumVisc/divFactor;
+            newFluidProperties(y,8) = sumCp/divFactor;
+            newFluidProperties(y,9) = sumP/divFactor;
+            newFluidProperties(y,10) = sumCstar/divFactor;
+            r = a;
+            
+            break; 
+        
+        end
+    end
+    y=y+1;
+end
 
 %% Main Loop
-for step = 1:numSteps
-    for widthValue = 1:numWidth %width value sent to calculateWallTemp from width array
-        for heightValue = 1:numHeight %heigth value sent to calculateWallTemp from height array
-            width = widthArray(widthValue);
-            height = heightArray(heightValue);
+for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
+    for heightValue = 1:length(heightArray) %heigth value sent to calculateWallTemp from height array
+        width = widthArray(widthValue);
+        height = heightArray(heightValue);
 
-            flowTemp = calculateWallTemp(numChannels, step, heightStepArray, heatFluxMatrix, wallTempArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width);
-
-            %create geometry map
-            if flowTemp == 999999999999999999999999999999999999999999
-                geometryMap(widthValue, heightValue, step) = 0; %fail
+        [flowTemp,flowVelocity, flowPressure] = calculateWallTemp(numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
+        %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
+        
+        %create geometry map
+        for(x = 1:1:length(flowTemp))
+            if flowTemp(x) == 999999999999999999999999999999999999999999
+                geometryMap(widthValue, heightValue, x) = 0; %fail
             else
-                geometryMap(widthValue, heightValue, step) = 1; %pass
+                geometryMap(widthValue, heightValue, x) = 1; %pass
             end
         end
     end
