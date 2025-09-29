@@ -93,7 +93,7 @@ for heightStepNumber = 1:1:length(height_steps)
     % Get viscosity at wall temperature for Sieder-Tate correction
     %mu_wall = 88.748 *exp(-.013*flowTemp(wInd, hInd, heightStepNumber-1));
     %NEEDS CHANGING TO WALL LIQUID SIDE TEMP
-    mu_wall = XXX %relation using liquid side temp
+    mu_wall = 94.544*exp(-.014*T_wallL); %relation using liquid side temp
 
 
     % Calculate Nusselt number using Sieder-Tate correlation
