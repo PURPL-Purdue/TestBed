@@ -65,16 +65,15 @@ mass_flow = m_flow_total/numchannels;
 
 %% Engine values
 chamberPressure = 1379000; % Chamber Pressure (Pa)
-k_w = 162; % thermal conductivity of the wall (W/m*K)
+k_w = 130; % thermal conductivity of the wall using al7075-T6 (W/m*K) (https://www.sciencedirect.com/science/article/abs/pii/S0254058421005745#preview-section-abstract)
 gravity = 9.81; %m/s^2
-
 %% Array initialization
 % initialize/re-define matrices & arrays
 flowTemp = [];
 flowVel = [];
 flowPressure = [];
 currentHeightStep = heightStepArray(end)/heightStepNumber; % axial length of current height step
-targetTemp = 573 ; % K temp of 50%yield strength decrease in al6061 ram2 (https://www.elementum3d.com/wp-content/uploads/2024/02/A6061-RAM2-2-pg-Web-Event-Data-Sheets-2024-01-18.pdf). Setting max hotwall-gas side temp
+targetTemp = 513 ; % K temp of 50%yield strength decrease in al7075-T6 (https://www.sciencedirect.com/science/article/abs/pii/S0254058421005745#preview-section-abstract). Setting max hotwall-gas side temp
 heightStepNumber = 0; % initialize height step number
 
 fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
