@@ -6,7 +6,8 @@ heightArray = linspace(0.001, 0.005, 20); %m %channel height sweep %CHECK WITH L
 
 numWidth = length(widthArray);
 numHeight = length(heightArray);
-numSteps = 10;
+numSteps = 67;
+numChannels = 30;
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(numWidth, numHeight, numSteps); 
 geometryMap = zeros(numWidth, numHeight, numSteps);  
@@ -15,7 +16,11 @@ flowVelocityMatrix = zeros(numWidth, numHeight, numSteps);
 flowPressureMatrix = zeros(numWidth, numHeight, numSteps);
 wallTempArray = zeros(1, numSteps);
 
+heatFluxMatrix = zeros(1, numSteps);
+
 %% Height Step initialization
+heightStepArray = chamberLength/heightStepNumber:chamberLength/heightStepNumber:chamberLength;
+%{
 syms x;
 steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
     n = pi/numSteps;
@@ -24,6 +29,7 @@ steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.
         heightStepArray(step) = int(steps,i,i+n);
         step = step +1;
     end
+%}
 
 %% Main Loop
 for step = 1:numSteps
