@@ -43,13 +43,13 @@ C_d_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 F = 500 # Desired thrust of the engine (lbf)
 p_c = 500 # Optimal chamber pressure (psi)
 OF = 1 # Nominal OF Ratio
-K_fu = 0.5 # Desired Fuel injector stiffness (N/A)
+K_fu = 0.28 # Desired Fuel injector stiffness (N/A)
 K_ox = 1.2 # Desired Ox injector stiffness (N/A)
 g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
 d_line_fu = 0.4 # Fuel Line diameter (in)
 d_line_ox = 0.65 # Oxidizer line diameter (in)
-fu_orifice_num = 12 # Number of fuel orifices
+fu_orifice_num = 24 # Number of fuel orifices
 ox_orifice_num = 24 # Number of oxidizer orifices
 Isp_eff = 0.9 # Mixing efficiency factor (N/A)
 
@@ -86,6 +86,12 @@ Isp_real = Isp * Isp_eff
 cstar_m = cstar * ft_to_m
 
 m_dot_lb = F / Isp_real # Total combined mass flow (lb/s)
+
+m_dot_kg = F_N / Isp_real * g
+
+print(m_dot_lb)
+print(m_dot_kg)
+
 m_dot = m_dot_lb * lb_to_kg # Total combined mass flow (kg/s)
 
 m_dot_fu = m_dot / (1 + OF) # Fuel mass flow (kg/s)

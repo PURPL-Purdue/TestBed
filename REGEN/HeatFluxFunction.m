@@ -1,4 +1,4 @@
-function [QDot, Tsubc, Wmin] = HeatFlux(chanW,deltaP,heightStepLength,thermalConductivity,targetTemp, fluidInfo)
+function [QDot, Tsubc, Wmin] = HeatFlux(chanW,deltaP,thermalConductivity,targetTemp, fluidInfo)
 %Note: Function returns [Qdot, -1, -1] if a wall thickness could not be
 %found that meets the strength requirements
 wallThicknesses = 0.001:0.001:0.02; %Prospective wall thicknesses range in meters

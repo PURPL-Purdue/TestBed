@@ -46,9 +46,9 @@ exit_diameter: 2 # (in) Dominik Sloup
 
 # Maelstrom GOX/RP-1 Injector parameters (INPUTS)
 
-of_ratio: 1 # (N/A) Dominik Sloup
+of_ratio: 1    # (N/A) Dominik Sloup
 gox_stiffness: 1.2  # (N/A) Dominik Sloup
-rp_stiffness: 0.5  # (N/A) Dominik Sloup
+rp_stiffness: 0.28 # (N/A) Dominik Sloup
 
 rp_tube_inner_dia: 0.4  # (in) Dominik Sloup 
 gox_tube_inner_dia: 0.65  # (in) Dominik Sloup
@@ -59,7 +59,7 @@ rp_design_mdot: 1.344 # (lb/s) Dominik Sloup
 gox_design_mdot: 1.344 # (lb/s) Dominik Sloup
 
 gox_feed_pressure: 1100.0 # (psi) Dominik Sloup
-rp_feed_pressure: 750.0 # (psi) Dominik Sloup
+rp_feed_pressure: 640.0 # (psi) Dominik Sloup
 
 gox_line_velocity: 89.66 # (ft/s) Dominik Sloup
 rp_line_velocity: 30.45  # (ft/s) Dominik Sloup
