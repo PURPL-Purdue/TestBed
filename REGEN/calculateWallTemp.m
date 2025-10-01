@@ -12,7 +12,7 @@ function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, h
     
     
     chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
-    k_w = 0; % thermal conductivity of the wall (W/m*K)
+    k_w = 130; % thermal conductivity of the wall (W/m*K)
     gravity = 9.83; %m/s^2
     
 
