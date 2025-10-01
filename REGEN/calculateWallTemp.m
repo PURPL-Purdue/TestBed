@@ -3,16 +3,16 @@ function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, h
     T_start= 298; % K
     P_start = 3447000; % Pa
     v_start = 0; %m/s
-    rho_start = 1000; %kg/m^3, changed coolant density to water at standard temp
-    m_flow_total = 0.26716591; %kg/s
+    rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
+    m_flow_total = 0.2164043871; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
     channel_number = numChannels;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     
-    chamberDiameter = 0.0762; % diameter of chamber (m)
+    chamberDiameter = 0.0508; % diameter of chamber at the exit (m)
     
     
     chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
-    k_w = 0; % thermal conductivity of the wall (W/m*K)
+    k_w = 130; % thermal conductivity of the wall (al7075-T6) (W/m*K)
     gravity = 9.83; %m/s^2
     
 
