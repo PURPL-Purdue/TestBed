@@ -2,7 +2,6 @@ function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, h
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 3447000; % Pa
-    v_start = 0; %m/s
     rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
     m_flow_total = 0.2164043871; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
     channel_number = numChannels;
