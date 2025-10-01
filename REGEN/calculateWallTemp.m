@@ -4,7 +4,7 @@ function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, h
     P_start = 3447000; % Pa
     v_start = 0; %m/s
     rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
-    m_flow_total = 0.2164043871; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
+    m_flow_total = 0.6109090909; %kg/s --> Took rp_design_mdot in the yaml and converted to kg/s
     channel_number = numChannels;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     
