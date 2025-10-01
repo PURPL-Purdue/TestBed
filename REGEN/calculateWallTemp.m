@@ -7,7 +7,7 @@ function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, h
     m_flow_total = 0.26716591; %kg/s
     channel_number = numChannels;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
-    v_start = 0; %m/s
+    v_start = mass_flow/(height * width * rho_start); %m/s
 
     chamberDiameter = 0.0762; % diameter of chamber (m)
     
