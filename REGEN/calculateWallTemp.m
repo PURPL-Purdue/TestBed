@@ -1,13 +1,12 @@
-function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
+function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
-    P_start = 3447000; % Pa
+    P_start = 5516000; % Pa
     rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
     m_flow_total = 0.6109090909; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
-    channel_number = numChannels;
+    channel_number = channelNum;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     v_start = mass_flow/(height * width * rho_start); %m/s
-
     chamberDiameter = 0.0762; % diameter of chamber (m)
     
     
@@ -21,13 +20,13 @@ function [flowTemp,flowVelocity,flowPressure] = calculateWallTemp(numChannels, h
     flowVelocity = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
-    T_target = XXX; % target gas-side hotwall temp
+    T_target = 450; % target gas-side hotwall temp
 
     wInd = widthValue;
     hInd = heightValue;
 
 for heightStepNumber = 1:1:length(height_steps)          
-    currentHeightStep = height_steps(heightStepNumber);
+    currentHeightStep = height_steps(2);
     if (heightStepNumber==1)
 
         hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)
@@ -44,9 +43,8 @@ for heightStepNumber = 1:1:length(height_steps)
 
     end
     %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
-    [Q_dot, T_wallL, wall_thickness] = HeatFlux(width, hotwall_dP, k_w, T_target, newFluidProperties);
+    [Q_dot, T_wallL, wall_thickness] = HeatFluxFunction(width, hotWall_dP, k_w, T_target, newFluidProperties);
     
-
     if(temp == 999999999999999999999999999999999999999999) % if channel dimension combo is already unsuccessful, do not let computation with it continue
         flowTemp(wInd,hInd,heightStepNumber) = 999999999999999999999999999999999999999999;
         break
@@ -57,17 +55,18 @@ for heightStepNumber = 1:1:length(height_steps)
     hyd_diam = (2*width*height)/(height+width);
     
 
-    % Density (kg/m^3)
-    if(heightStepNumber == 1)
-        density = rho_start;
-    else
-        density = 287.67129 * .53365016^(-(1+(1-temp/574.262)^.628866));
-    end 
+    % % Density (kg/m^3)
+    % if(heightStepNumber == 1)
+    %     density = rho_start;
+    % else
+    %     density = 287.67129 * .53365016^(-(1+(1-temp/574.262)^.628866));
+    % end 
+    density = py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Dodecane');
 
     % Dynamic viscosity [Pa·s]
     
-    dyn_visc = 94.544*exp(-.014*temp);
-
+    %dyn_visc = 94.544*exp(-.014*temp);
+    dyn_visc = py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Dodecane');%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
 
 
     % Calculate Reynolds number
@@ -77,11 +76,14 @@ for heightStepNumber = 1:1:length(height_steps)
 
     %% Calculate Prandtl Number
     % Thermal conductivity [W/(m·K)]
-    kf = .000005*temp + .105;
+    %kf = .000005*temp + .105;
+    kf = py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Dodecane');
+    
     %^Use empirical data/curves found from papers in regen channel
 
     % Specific heat capacity [J/(kg·K)]
-    cp = 32.068*exp(.0023*temp);
+    %cp = 32.068*exp(.0023*temp);
+    cp = py.CoolProp.CoolProp.PropsSI('C','P',pressure,'T',temp,'Dodecane');
     %^Use empirical data/curves found from papers in regen channel
 
     % Prandtl number [-]
@@ -93,7 +95,8 @@ for heightStepNumber = 1:1:length(height_steps)
     % Get viscosity at wall temperature for Sieder-Tate correction
     %mu_wall = 88.748 *exp(-.013*flowTemp(wInd, hInd, heightStepNumber-1));
     %NEEDS CHANGING TO WALL LIQUID SIDE TEMP
-    mu_wall = 94.544*exp(-.014*T_wallL); %relation using liquid side temp
+    %mu_wall = 94.544*exp(-.014*T_wallL); %relation using liquid side temp
+    mu_wall = py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wallL,'Dodecane');
 
 
     % Calculate Nusselt number using Sieder-Tate correlation
@@ -111,12 +114,12 @@ for heightStepNumber = 1:1:length(height_steps)
     % Area of Wall on Coolant side (m^2)
     A_wallL = currentHeightStep*width;
 
-    % Area of Wall on Hotwall side (m^2)
-    A_wallG = currentHeightStep *(width+fin_width);
-
     % Calculate fin width at start of channels (m)
     fin_width = ((pi*(chamberDiameter+2*(wall_thickness))) - (channel_number*width))/channel_number;
     
+    % Area of Wall on Hotwall side (m^2)
+    A_wallG = currentHeightStep *(width+fin_width);
+
     % Finning Parameter- measure of convection from fins
     fin_param = sqrt((2*h_l*(fin_width+currentHeightStep))/(k_w*currentHeightStep*fin_width));
 
@@ -130,7 +133,7 @@ for heightStepNumber = 1:1:length(height_steps)
     m_coolant = density*currentHeightStep*((pi*((chamberDiameter+wall_thickness*2)/2)^2)-(pi*((chamberDiameter/2)^2)))*(angle_channel/360);
 
     % Calculate required specific heat transfer rate, qdotL_total (J/kg*s)
-    qdotL_total = Q_dot(heightStepNumber)*((pi*(chamberDiameter)*(angle_channel/360))*currentHeightStep)/m_coolant;
+    qdotL_total = Q_dot*((pi*(chamberDiameter)*(angle_channel/360))*currentHeightStep)/m_coolant;
 
     % Calculate required coolant temp, T_L_req (K)
     T_L_req =  -((qdotL_total*A_wallG)/(h_l*((fin_efficiency*A_fin)+A_wallL)))+T_wallL;
@@ -138,12 +141,12 @@ for heightStepNumber = 1:1:length(height_steps)
 
 
     %% Calculate Coolant Temp increase, delta_T (K)
-    delta_T = qdotL_total*currentHeightStep*(width+(2*height*fin_efficiency))/(mass_flow*cp);
+    delta_T = qdotL_total(heightStepNumber)*currentHeightStep*(width+(2*height*fin_efficiency))/(mass_flow*cp);
 
     flowTemp(wInd, hInd, heightStepNumber) = temp+delta_T; % Previous step flow temp plus deltaT
+    
 
-
-    if (flowTemp(wInd, hInd, heightStepNumber) > T_L_req)
+    if (double(flowTemp(wInd, hInd, heightStepNumber)) > T_L_req)
         flowTemp(wInd, hInd, heightStepNumber) = 999999999999999999999999999999999999999999; % if coolant temp is too high, nullify
 
     end
@@ -165,5 +168,8 @@ for heightStepNumber = 1:1:length(height_steps)
     
     %% Calculate Coolant Velocity Increase via Bernoulli's
     flowVelocity(wInd, hInd, heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
+    %% 
     
+    disp(delta_P)
+    disp(velocity)
 end

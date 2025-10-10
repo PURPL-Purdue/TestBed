@@ -1,9 +1,10 @@
 %% Main Compiled Code
 
-widthArray = linspace(0.001, 0.005, 20); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.001, 0.005, 20); %m %channel height sweep %CHECK WITH LITERATURE
+widthArray = linspace(0.025/39.37, 0.25/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+heightArray = linspace(0.1/39.37, 0.25/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
-heightStepNumber = 67;
+heightStepNumber = 10;
+numChannels = 45;
 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
@@ -12,19 +13,19 @@ flowPressureMatrix = zeros(length(widthArray), length(heightArray), heightStepNu
 geometryMap = zeros(length(widthArray), length(heightArray), heightStepNumber); %will be used later on to see which channel dimension combos worked/failed
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
-syms x;
-steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
-    n = pi/heightStepNumber;
-    step = 1;
-    for i = 0:n:(pi-n)
-        heightStepArray(step) = int(steps,i,i+n);
-        step = step +1;
-    end
-heightStepArray = heightStepArray/39.37; % change to meters
-
+%{syms x;
+%steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
+    %n = pi/heightStepNumber;
+    %step = 1;
+    %for i = 0:n:(pi-n)
+   %     heightStepArray(step) = int(steps,i,i+n);
+  %      step = step +1;
+ %   end
+%heightStepArray = heightStepArray/39.37; % change to meters
+heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEAOutFrozen.xlsx"); %pull all nasaCEA values into fluidProperties
 fluidProperties(1,:) = [];
 y = 1;
 r = 1;
@@ -47,7 +48,20 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     sumCstar = 0;                
 
     while a <= length(axialDist)
-        if axialDist(a) < heightStepArray(y)
+        
+        if a-r==0
+            sumAEAT = sumAEAT+fluidProperties(a,2);
+            sumPrandtl = sumPrandtl+fluidProperties(a,3);
+            sumMach = sumMach+fluidProperties(a,4);
+            sumGamma = sumGamma+fluidProperties(a,5);
+            sumT = sumT+fluidProperties(a,6);
+            sumVisc = sumVisc+fluidProperties(a,7);
+            sumCp = sumCp+fluidProperties(a,8);
+            sumP = sumP+fluidProperties(a,9);
+            sumCstar = sumCstar+fluidProperties(a,10);
+            a=a+1;
+
+        elseif axialDist(a) < heightStepArray(y)
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -73,7 +87,6 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             newFluidProperties(y,9) = sumP/divFactor;
             newFluidProperties(y,10) = sumCstar/divFactor;
             r = a;
-            
             break; 
         
         end
@@ -89,6 +102,7 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
 
         [flowTemp,flowVelocity, flowPressure] = calculateWallTemp(numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
+       
         
         %create geometry map
         for(x = 1:1:length(flowTemp))
@@ -98,6 +112,8 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
                 geometryMap(widthValue, heightValue, x) = 1; %pass
             end
         end
+
     end
+    
 end
 
