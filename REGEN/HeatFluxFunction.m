@@ -16,11 +16,8 @@ while i <= length(Tc)
     %Corralation between copper's yield/ultimate tensile strength in MPa and
     %temperature in K
     %calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3) .* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3;
-    %calcPainArr = 1570.3 - 14.184 .* temperatureDist + 5.6410 .* 10 .^ (-2) .* (temperatureDist) .^ 2 - 1.0592 .* 10 .^ -4 .* (temperatureDist) .^ 3 + 9.2881 .* 10 .^ -8 .* (temperatureDist) .^4 - 3.086 .* 10 .^ -11 .* (temperatureDist) .^ 5;
-    
-    %AL7075 properties at temp
     calcPainArr = 525.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
-    
+
     OEffectives(i) = sum(calcPainArr .* wallThicknesses(i)) .* 1000000;  %Calcs effective strength for each wall thickness in Pa
     if bendMaxs(i) >= TMaxs(i)
         OMaxs(i) = bendMaxs(i);
