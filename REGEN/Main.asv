@@ -1,17 +1,17 @@
 %% Main Compiled Code
 
-widthArray = linspace(0.05/39.37, 0.125/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.05/39.37, 2.5/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+widthArray = linspace(0.025/39.37, 0.1/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+heightArray = linspace(0.05/39.37, 0.25/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
-heightStepNumber = 40;
-numChannels = 45;
+heightStepNumber = 30;
+numChannels = 41;
 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
 flowVelocityMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
 flowPressureMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
 wall_thicknessMatrix = [];
-geometryMap = zeros(length(widthArray), length(heightArray)); %will be used later on to see which channel dimension combos worked/failed
+geometryMap = zeros(length(widthArray), length(heightArray), heightStepNumber); %will be used later on to see which channel dimension combos worked/failed
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
 %{syms x;
@@ -94,7 +94,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     end
     y=y+1;
 end
-newFluidProperties = flip(newFluidProperties,1);
+
 %% Main Loop
 for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
     for heightValue = 1:length(heightArray) %heigth value sent to calculateWallTemp from height array
@@ -104,11 +104,6 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix, wall_thicknessMatrix] = calculateWallTemp(wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
-        if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == 0
-                geometryMap(widthValue, heightValue) = 0;%fail
-            else
-                geometryMap(widthValue, heightValue) = 1; %pass
-        end
         
         
         
@@ -117,6 +112,3 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
     
 end
 
-%create geometry map
-        
-           
