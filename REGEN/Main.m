@@ -33,11 +33,15 @@ r = 1;
 axialDist = (fluidProperties(:,1));
 newFluidProperties = zeros(length(heightStepArray),10);
 newFluidProperties(:,1) = heightStepArray;
+chamberDiameter = [];
+chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
+
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
     a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
-
+    
+    sumDiameter = 0;
     sumAEAT = 0;
     sumPrandtl = 0;
     sumMach = 0;
@@ -51,6 +55,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     while a <= length(axialDist)
         
         if a-r==0
+            sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -63,6 +68,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
 
         elseif axialDist(a) < heightStepArray(y)
+            sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -78,6 +84,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
         else
             divFactor = a-r;
+            chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
             newFluidProperties(y,2) = sumAEAT/divFactor;
             newFluidProperties(y,3) = sumPrandtl/divFactor;
             newFluidProperties(y,4) = sumMach/divFactor;
@@ -101,7 +108,7 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         width = widthArray(widthValue);
         height = heightArray(heightValue);
 
-        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix, wall_thicknessMatrix] = calculateWallTemp(wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
+        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix, wall_thicknessMatrix] = calculateWallTemp(chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
         if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == 0

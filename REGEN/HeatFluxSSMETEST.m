@@ -1,8 +1,8 @@
-function [QDot, Tsubc, Wmin] = HeatFluxFunction(heightStepArray,chanW,deltaP,thermalConductivity,targetTemp, fluidInfo)
+function [QDot, Tsubc, Wmin] = HeatFluxSSMETEST(heightStepArray,chanW,deltaP,thermalConductivity,targetTemp, fluidInfo)
 %Note: Function returns [Qdot, -1, -1] if a wall thickness could not be
 %found that meets the strength requirements
 
-wallThicknesses = linspace(0.000254,0.00127,length(heightStepArray)); %Prospective wall thicknesses range in meters
+wallThicknesses = linspace(0.000508,0.001016,length(heightStepArray)); %Prospective wall thicknesses range in meters
 gasTemp = fluidInfo(:,6); %Hot gas temperature in K
 flux = H_g_From_Temperature(targetTemp,fluidInfo) .* (gasTemp - targetTemp); %Calcs heat flux in W/m^2
 Tc = -(wallThicknesses .* flux' ./ thermalConductivity - targetTemp); %Calcs prospective coolant wall temperatures ,,flux:
@@ -16,7 +16,8 @@ while i <= length(Tc)
     %Corralation between copper's yield/ultimate tensile strength in MPa and
     %temperature in K
     %calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3) .* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3;
-    calcPainArr = 525.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
+    %calcPainArr = 525.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
+    calcPainArr = ((-(235-187)/175)*(temperatureDist-298))+235;
 
     OEffectives(i) = sum(calcPainArr .* wallThicknesses(i)) .* 1000000;  %Calcs effective strength for each wall thickness in Pa
     if bendMaxs(i) >= TMaxs(i)

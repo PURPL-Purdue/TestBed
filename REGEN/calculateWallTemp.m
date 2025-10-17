@@ -1,4 +1,4 @@
-function [flowTemp,flowVelocity,flowPressure, wall_thicknesses] = calculateWallTemp(wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
+function [flowTemp,flowVelocity,flowPressure, wall_thicknesses] = calculateWallTemp(chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
@@ -7,7 +7,9 @@ function [flowTemp,flowVelocity,flowPressure, wall_thicknesses] = calculateWallT
     channel_number = channelNum;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     v_start = mass_flow/(height * width * rho_start); %m/s
-    chamberDiameter = 0.0762; % diameter of chamber (m)
+    
+    
+    
     
     
     chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
@@ -27,7 +29,12 @@ function [flowTemp,flowVelocity,flowPressure, wall_thicknesses] = calculateWallT
 
 for heightStepNumber = 1:1:length(height_steps)   
 % heightStepNumber = 1;
-    currentHeightStep = 0.1796/(length(height_steps)-1);
+    if heightStepNumber==1
+      currentHeightStep = height_steps(2) - height_steps(1);
+    else
+      currentHeightStep = height_steps(heightStepNumber) - height_steps(heightStepNumber-1);
+    end
+    chamberDiameter = chamberDiameterArray(heightStepNumber);
     if (heightStepNumber==1)
 
         hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)
@@ -131,7 +138,7 @@ for heightStepNumber = 1:1:length(height_steps)
     fin_width = ((pi*(chamberDiameter+2*(wall_thickness))) - (channel_number*width))/channel_number;
     
     % Area of Wall on Hotwall side (m^2)
-    A_wallG = pi*currentHeightStep *chamberDiameter/channel_number;
+    A_wallG = pi*currentHeightStep *chamberDiameter*angle_channel/360;
     %currentHeightStep *(width+fin_width);
 
     % Finning Parameter- measure of convection from fins
