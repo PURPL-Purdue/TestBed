@@ -64,7 +64,6 @@ for heightStepNumber = 1:1:length(height_steps)
         flowTemp(wInd,hInd,heightStepNumber) = -1;
         break
     end
-    disp(100)
     %wall_thickness = 0.000254;
     wall_thicknesses(wInd, hInd, heightStepNumber) = wall_thickness;
     

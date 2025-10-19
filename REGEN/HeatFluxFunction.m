@@ -1,11 +1,11 @@
-function [QDot, Tsubc, Wmin] = HeatFluxFunction(heightStepArray,chanW,deltaP,thermalConductivity,targetTemp, fluidInfo)
+function [QDot, Tsubc, Wmin] = HeatFluxFunction(heightStepNumber,heightStepArray,chanW,deltaP,thermalConductivity,targetTemp, fluidInfo)
 %Note: Function returns [Qdot, -1, -1] if a wall thickness could not be
 %found that meets the strength requirements
 
 wallThicknesses = linspace(0.000254,0.00127,length(heightStepArray)); %Prospective wall thicknesses range in meters
 gasTemp = fluidInfo(:,6); %Hot gas temperature in K
-flux = H_g_From_Temperature(targetTemp,fluidInfo) .* (gasTemp - targetTemp); %Calcs heat flux in W/m^2
-Tc = -(wallThicknesses .* flux' ./ thermalConductivity - targetTemp); %Calcs prospective coolant wall temperatures ,,flux:
+flux = (H_g_From_Temperature(targetTemp,fluidInfo) .* (gasTemp - targetTemp))'; %Calcs heat flux in W/m^2
+Tc = -(wallThicknesses .* flux(heightStepNumber) ./ thermalConductivity - targetTemp); %Calcs prospective coolant wall temperatures ,,flux:
 bendMaxs = 3 .* deltaP.* chanW .^ 2 ./ (4 .* wallThicknesses.^ 2); %Calcs expected max bending stress in Pa
 TMaxs = 3 .* deltaP .* chanW ./ (0.577 .* 4 .* wallThicknesses); %Calcs expected tensile stress in Pa
 OEffectives = zeros(length(Tc),1);

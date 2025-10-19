@@ -1,7 +1,7 @@
 %% Main Compiled Code
 
-widthArray = linspace(0.05/39.37, 0.125/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.05/39.37, 2.5/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+widthArray = linspace(0.04/39.37, 0.0625/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+heightArray = linspace(0.04/39.37, 0.09/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
 heightStepNumber = 40;
 numChannels = 45;
@@ -101,6 +101,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     end
     y=y+1;
 end
+chamberDiameter = flip(chamberDiameter);
 newFluidProperties = flip(newFluidProperties,1);
 %% Main Loop
 for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
