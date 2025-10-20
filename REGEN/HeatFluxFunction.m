@@ -27,8 +27,8 @@ while i <= length(Tc)
     i = i + 1;
 end
 
-Wmin = -1;
-Tsubc = -1;
+Wmin = -2;
+Tsubc = -2;
 %Searches and finds coolant wall temperature and Wmin that *just* meets the
 %strength requirements.
 a = 0;

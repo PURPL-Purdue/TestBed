@@ -1,4 +1,4 @@
-function [flowTemp,flowVelocity,flowPressure, wall_thicknesses] = calculateWallTemp(chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
+function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] = calculateWallTemp(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
@@ -22,7 +22,7 @@ function [flowTemp,flowVelocity,flowPressure, wall_thicknesses] = calculateWallT
     flowVelocity = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
-    T_target = 453; % target gas-side hotwall temp
+    T_target = 450; % target gas-side hotwall temp
 
     wInd = widthValue;
     hInd = heightValue;
@@ -60,10 +60,13 @@ for heightStepNumber = 1:1:length(height_steps)
     
     %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
     [Q_dot, T_wallL, wall_thickness] = HeatFluxFunction(heightStepNumber,heightStepArray, width, hotWall_dP, k_w, T_target, newFluidProperties);
-    if(T_wallL == -1)
-        flowTemp(wInd,hInd,heightStepNumber) = -1;
+    
+    
+    if(T_wallL == -2)
+        flowTemp(wInd,hInd,heightStepNumber) = -2;
         break
     end
+    
     %wall_thickness = 0.000254;
     wall_thicknesses(wInd, hInd, heightStepNumber) = wall_thickness;
     
@@ -89,6 +92,10 @@ for heightStepNumber = 1:1:length(height_steps)
     % Calculate Reynolds number
     Re = (density * velocity * hyd_diam) / dyn_visc;
     
+        % if(heightStepNumber == 10)
+        %     display(Re)
+        % 
+        % end
 
 
     %% Calculate Prandtl Number
@@ -105,7 +112,11 @@ for heightStepNumber = 1:1:length(height_steps)
 
     % Prandtl number [-]
     Pr = cp * dyn_visc / kf;
-
+   
+    % if(heightStepNumber == 10)
+    %     display(Pr)
+    % 
+    % end
 
 
     %% Sieder Tate Nusselt's Number
@@ -117,11 +128,25 @@ for heightStepNumber = 1:1:length(height_steps)
 
 
     % Calculate Nusselt number using Sieder-Tate correlation
-    Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
+    
+    %Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
+    
+    %
+    frictionFactor = ((0.79*log(Re)-1.64)^-2)/8;
+    Nu = frictionFactor*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
+       
     
     % Calculate convective heat transfer coefficient [W/(m^2·K)]
     h_l = Nu * kf / hyd_diam;
-    
+    % if(heightStepNumber == 10)
+    %     display(h_l)
+    % end
+    % if(heightStepNumber == 10 && hInd ==1 && wInd ==1)
+    %     display(h_l)
+    %     display(Nu)
+    %     display(frictionFactor)
+    %     display(Re)
+    % end
 
 
     %% Calculate Required flow temperature
@@ -149,14 +174,14 @@ for heightStepNumber = 1:1:length(height_steps)
     A_wallL = A_wallLiquid+(A_fin*fin_efficiency);
 
     % Calculate mass of coolant in height step, m_coolant (kg)
-    m_coolant = density*currentHeightStep*((pi*((chamberDiameter/2)+wall_thickness+ height)^2)-(pi*(((chamberDiameter/2)+(wall_thickness))^2)))*(angle_channel/360);
+    %m_coolant = density*currentHeightStep*((pi*((chamberDiameter/2)+wall_thickness+ height)^2)-(pi*(((chamberDiameter/2)+(wall_thickness))^2)))*(angle_channel/360);
 
     %Calculate required heat flux, qdotL_total
     qdotL_total = Q_dot(heightStepNumber);
 
     % Calculate required coolant temp,x T_L_req (K) 
     T_L_req =  (-(qdotL_total*A_wallG)/(h_l*A_wallL))+T_wallL;
-
+    T_l_reqMatrix(wInd,hInd,heightStepNumber) = T_L_req; 
 
 
     %% Calculate Coolant Temp increase, delta_T (K)
