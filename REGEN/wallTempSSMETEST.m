@@ -225,7 +225,7 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] =
     flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
     
     %% Calculate Coolant Velocity Increase via Bernoulli's
-    flowVelocity(wInd, hInd, heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
+    flowVelocity(wInd, hInd, heightStepNumber) = mass_flow/(width*height*density); % Flow velocity
     %% 
     
    

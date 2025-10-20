@@ -1,9 +1,9 @@
 %% Main Compiled Code
 
 widthArray = linspace(0.04/39.37, 0.0625/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.04/39.37, 0.09/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+heightArray = linspace(0.04/39.37, 0.12/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
-heightStepNumber = 45;
+heightStepNumber = 50;
 numChannels = 62;
 
 heightStepArray = linspace(0,8.97*0.0254,heightStepNumber);

@@ -22,7 +22,7 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] =
     flowVelocity = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
-    T_target = 450; % target gas-side hotwall temp
+    T_target = 530; % target gas-side hotwall temp 530 for 7075, 773 for copper
 
     wInd = widthValue;
     hInd = heightValue;
@@ -60,7 +60,6 @@ for heightStepNumber = 1:1:length(height_steps)
     
     %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
     [Q_dot, T_wallL, wall_thickness] = HeatFluxFunction(heightStepNumber,heightStepArray, width, hotWall_dP, k_w, T_target, newFluidProperties);
-    
     
     if(T_wallL == -2)
         flowTemp(wInd,hInd,heightStepNumber) = -2;
@@ -141,12 +140,12 @@ for heightStepNumber = 1:1:length(height_steps)
     % if(heightStepNumber == 10)
     %     display(h_l)
     % end
-    % if(heightStepNumber == 10 && hInd ==1 && wInd ==1)
-    %     display(h_l)
-    %     display(Nu)
-    %     display(frictionFactor)
-    %     display(Re)
-    % end
+    if(heightStepNumber == 10 && hInd ==1 && wInd ==1)
+        display(h_l)
+        display(Nu)
+        display(frictionFactor)
+        display(Re)
+    end
 
 
     %% Calculate Required flow temperature
@@ -199,21 +198,12 @@ for heightStepNumber = 1:1:length(height_steps)
 
 
     %% Calculate Coolant Pressure Drop
-    if(Re < 2100) % Calculate Friction Factor, cf
-        cf = 16/Re;
-    elseif(5000 < Re && 200000 > Re)
-        cf = 0.046/(Re^0.2);
-    else
-        cf = 0.0014 + (0.125/(Re^0.32));
 
-    end
-
-    delta_P = 2 * cf * currentHeightStep * density * (velocity^2)/ hyd_diam; %Frictional static pressure drop across the channel
+    delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ 2*hyd_diam; %Frictional static pressure drop across the channel
     flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
     
     %% Calculate Coolant Velocity Increase via Bernoulli's
-    flowVelocity(wInd, hInd, heightStepNumber) = sqrt((delta_P/density)+(gravity*(currentHeightStep))+velocity^2); % Flow velocity
-    %% 
+    flowVelocity(wInd, hInd, heightStepNumber) = mass_flow/(width*height*density); % Flow velocity    %% 
     
    
 end

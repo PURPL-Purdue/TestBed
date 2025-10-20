@@ -1,10 +1,10 @@
 %% Main Compiled Code
 
 widthArray = linspace(0.04/39.37, 0.0625/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.04/39.37, 0.09/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+heightArray = linspace(0.02/39.37, 0.06/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
 heightStepNumber = 45;
-numChannels = 45;
+numChannels = 20;
 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
@@ -35,7 +35,7 @@ newFluidProperties = zeros(length(heightStepArray),10);
 newFluidProperties(:,1) = heightStepArray;
 chamberDiameter = [];
 chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
-
+T_l_reqMatrix = [];
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
