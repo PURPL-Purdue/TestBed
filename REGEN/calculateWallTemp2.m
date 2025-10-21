@@ -1,4 +1,4 @@
-function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] = calculateWallTemp(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
+function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] = calculateWallTemp2(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
@@ -13,7 +13,7 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] =
     
     
     chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
-    k_w = 130; % thermal conductivity of the wall (W/m*K)
+    k_w = 130; % thermal conductivity of the wall (W/m*K) %copper 401, 7075 130
     gravity = 9.83; %m/s^2
     
 
