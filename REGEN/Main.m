@@ -1,10 +1,10 @@
 %% Main Compiled Code
 
-widthArray = linspace(0.04/39.37, 0.0625/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+widthArray = linspace(0.0625/39.37, 0.125/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 heightArray = linspace(0.02/39.37, 0.06/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
 heightStepNumber = 45;
-numChannels = 20;
+numChannels = 30;
 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
@@ -26,7 +26,7 @@ geometryMap = zeros(length(widthArray), length(heightArray)); %will be used late
 heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFrozen.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEAOutFzOF1.xlsx"); %pull all nasaCEA values into fluidProperties
 fluidProperties(1,:) = [];
 y = 1;
 r = 1;

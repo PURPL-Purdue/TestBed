@@ -36,6 +36,8 @@ newFluidProperties(:,1) = heightStepArray;
 chamberDiameter = [];
 chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
 T_l_reqMatrix = [];
+updatedTemps = [];
+heightMatrix = [];
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
@@ -105,23 +107,23 @@ chamberDiameter = flip(chamberDiameter);
 newFluidProperties = flip(newFluidProperties,1);
 %% Main Loop
 for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
-    for heightValue = 1:length(heightArray) %heigth value sent to calculateWallTemp from height array
+    
         width = widthArray(widthValue);
-        height = heightArray(heightValue);
+        
 
-        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix] = calculateWallTemp2(T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
+        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, heightMatrix] = calculateWallTemp2(updatedTemps, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
-        if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == 0
-                geometryMap(widthValue, heightValue) = 0;%fail
-            else
-                geometryMap(widthValue, heightValue) = 1; %pass
-        end
+        % if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(heightArray,widthValue,heightValue,length(heightStepArray)) == 0
+        %         geometryMap(widthValue, heightValue) = 0;%fail
+        %     else
+        %         geometryMap(widthValue, heightValue) = 1; %pass
+        % end
         
         
         
 
-    end
+   
     
 end
 
