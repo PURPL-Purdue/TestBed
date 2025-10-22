@@ -1,4 +1,4 @@
-function sigma_vm = vonMisesStress(varargin)
+function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long, )
 % VONMISESSTRESS Compute von Mises equivalent stress (2D plane-stress or 3D)
 %
 % Usage:
@@ -107,7 +107,47 @@ sigma_vm = sqrt( 0.5*((sxx - syy).^2 + (syy - szz).^2 + (szz - sxx).^2) ...
 end
 
 %% Local helper: compute wall shear from Darcy-Weisbach
-function tau_w = darcyWallShear(L, D, v, rho, mu, eps_rough)
+function tau_exhaust = darcyWallShear(L, D, v, rho, mu, eps_rough)
+% tau_w = darcyWallShear(L, D, v, rho, mu, eps_rough)
+% Returns wall shear stress (Pa) computed from Darcy-Weisbach friction factor f
+% tau_w = f * rho * v^2 / 8
+%
+% Inputs:
+%  L        - length (m) (not used in this explicit f approximation but kept for API parity)
+%  D        - hydraulic diameter (m)
+%  v        - velocity (m/s)
+%  rho      - density (kg/m^3)
+%  mu       - dynamic viscosity (Pa*s)
+%  eps_rough- absolute roughness (m)
+
+if nargin < 6
+    eps_rough = 0; % smooth by default
+end
+
+Re = rho .* v .* D ./ mu;
+
+% Preallocate f
+f = zeros(size(Re));
+
+% Laminar regime
+laminarMask = Re <= 2300;
+f(laminarMask) = 64 ./ Re(laminarMask);
+
+% Turbulent regime: Swamee-Jain explicit approximation
+turbMask = ~laminarMask;
+if any(turbMask(:))
+    eD = eps_rough ./ D;
+    % Swamee-Jain: f = 0.25 / [ log10(e/(3.7D) + 5.74/Re^0.9) ]^2
+    f(turbMask) = 0.25 ./ ( log10( eD(turbMask) ./ 3.7 + 5.74 ./ (Re(turbMask).^0.9) ).^2 );
+end
+
+% compute wall shear
+tau_w = f .* rho .* v.^2 ./ 8;
+end
+
+
+%% Local helper: compute wall shear from Darcy-Weisbach
+function tau_coolant = darcyWallShear(L, D, v, rho, mu, eps_rough)
 % tau_w = darcyWallShear(L, D, v, rho, mu, eps_rough)
 % Returns wall shear stress (Pa) computed from Darcy-Weisbach friction factor f
 % tau_w = f * rho * v^2 / 8
