@@ -1,4 +1,4 @@
-function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long, )
+function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long)
 % VONMISESSTRESS Compute von Mises equivalent stress (2D plane-stress or 3D)
 %
 % Usage:
@@ -15,6 +15,8 @@ function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long, )
 % Units: Pascals (Pa)
 
 % Detect optional options struct at end
+%
+tau_coolant
 n = nargin;
 opts = [];
 if n >= 1 && isstruct(varargin{end})
@@ -107,96 +109,59 @@ sigma_vm = sqrt( 0.5*((sxx - syy).^2 + (syy - szz).^2 + (szz - sxx).^2) ...
 end
 
 %% Local helper: compute wall shear from Darcy-Weisbach
-function tau_exhaust = darcyWallShear(L, D, v, rho, mu, eps_rough)
-% tau_w = darcyWallShear(L, D, v, rho, mu, eps_rough)
-% Returns wall shear stress (Pa) computed from Darcy-Weisbach friction factor f
-% tau_w = f * rho * v^2 / 8
-%
-% Inputs:
-%  L        - length (m) (not used in this explicit f approximation but kept for API parity)
-%  D        - hydraulic diameter (m)
-%  v        - velocity (m/s)
-%  rho      - density (kg/m^3)
-%  mu       - dynamic viscosity (Pa*s)
-%  eps_rough- absolute roughness (m)
+function tau_exhaust  = exhaustWallShear(chamberDiameterArray, heightStepNumber)
 
-if nargin < 6
-    eps_rough = 0; % smooth by default
-end
+    eps_rough = 8e-7;
 
-Re = rho .* v .* D ./ mu;
+    vm_Data = readmatrix("CEAOutFz_10-22-25.xlsx");
 
-% Preallocate f
-f = zeros(size(Re));
+    exhaustDensity = vm_Data(:,11);
+    exhaustMach = vm_Data(:,4);
+    exhaustSoS = vm_Data(:,12);
+    exhaustArea = vm_Data(:,2);
+    exhaustViscosity = vm_Data(:,7);
 
-% Laminar regime
-laminarMask = Re <= 2300;
-f(laminarMask) = 64 ./ Re(laminarMask);
+    chamberDiameter = chamberDiameterArray(heightStepNumber);
 
-% Turbulent regime: Swamee-Jain explicit approximation
-turbMask = ~laminarMask;
-if any(turbMask(:))
-    eD = eps_rough ./ D;
-    % Swamee-Jain: f = 0.25 / [ log10(e/(3.7D) + 5.74/Re^0.9) ]^2
-    f(turbMask) = 0.25 ./ ( log10( eD(turbMask) ./ 3.7 + 5.74 ./ (Re(turbMask).^0.9) ).^2 );
-end
+    exhaustVelocity = exhaustMach * exhaustSoS;
 
-% compute wall shear
-tau_w = f .* rho .* v.^2 ./ 8;
+    LStar = 73.4776667586; % THIS IS NOT THE REAL NUMBER
+
+    exhaustReynolds = (exhaustDensity *exhaustVelocity * LStar) / exhaustViscosity;
+
+    exhaustFriction = 1.325/(log(((eps_rough)/(3.7*chamberDiameter))+(5.74)/((exhaustReynolds)^0.9)));
+
+    tau_exhaust = (frictionFactorExhaust/4)*(1/2)*(exhaustDensity)*(exhaustVelocity^2);
+
 end
 
 
 %% Local helper: compute wall shear from Darcy-Weisbach
-function tau_coolant = darcyWallShear(L, D, v, rho, mu, eps_rough)
-% tau_w = darcyWallShear(L, D, v, rho, mu, eps_rough)
-% Returns wall shear stress (Pa) computed from Darcy-Weisbach friction factor f
-% tau_w = f * rho * v^2 / 8
-%
-% Inputs:
-%  L        - length (m) (not used in this explicit f approximation but kept for API parity)
-%  D        - hydraulic diameter (m)
-%  v        - velocity (m/s)
-%  rho      - density (kg/m^3)
-%  mu       - dynamic viscosity (Pa*s)
-%  eps_rough- absolute roughness (m)
+function tau_coolant = coolantWallShear(density, flowVelocity, flowPressure, frictionFactor)
+    % coolant side wall shear stress
 
-if nargin < 6
-    eps_rough = 0; % smooth by default
+    tau_coolant = (frictionFactor/4)*(1/2)*(density)*(flowVelocity^2);
+
 end
 
-Re = rho .* v .* D ./ mu;
+function sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameterArray)
 
-% Preallocate f
-f = zeros(size(Re));
+    vm_Data = readmatrix("CEAOutFz_10-22-25.xlsx");
 
-% Laminar regime
-laminarMask = Re <= 2300;
-f(laminarMask) = 64 ./ Re(laminarMask);
+     exhaustPressure = (vm_Data(:,9))/100000; % Pa
 
-% Turbulent regime: Swamee-Jain explicit approximation
-turbMask = ~laminarMask;
-if any(turbMask(:))
-    eD = eps_rough ./ D;
-    % Swamee-Jain: f = 0.25 / [ log10(e/(3.7D) + 5.74/Re^0.9) ]^2
-    f(turbMask) = 0.25 ./ ( log10( eD(turbMask) ./ 3.7 + 5.74 ./ (Re(turbMask).^0.9) ).^2 );
-end
+     dP = flowPressure - exhaustPressure;
 
-% compute wall shear
-tau_w = f .* rho .* v.^2 ./ 8;
-end
+     chamberDiameter = chamberDiameterArray(heightStepNumber); %?? unit?
 
-%% Local helper: longitudinal stress from internal pressure (thin-wall cylinder)
-function sigma_long = longitudinalStressFromPressure(p, r, t)
-% sigma_long = longitudinalStressFromPressure(p, r, t)
-% Thin-wall longitudinal stress: sigma_long = p * r / (2*t)
-% Inputs:
-%   p - internal pressure (Pa)
-%   r - inner radius (m)
-%   t - wall thickness (m)
+     wallThick = 0.0015556992 % m
 
-if any(t(:) == 0)
-    error('longitudinalStressFromPressure:ZeroThickness','Wall thickness t must be non-zero.');
-end
+      % sigma_long = longitudinalStressFromPressure(p, r, t)
+    % Thin-wall longitudinal stress: sigma_long = p * r / (2*t)
+    % Inputs:
+    %   p - internal pressure (Pa)
+    %   r - inner radius (m)
+    %   t - wall thickness (m)
 
-sigma_long = (p .* r) ./ (2 .* t);
+    sigma_long = (-dP * (chamberDiameter/2)) / (2 * wallThick);
 end
