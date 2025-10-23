@@ -207,8 +207,8 @@ for heightStepNumber = 1:1:length(height_steps)
     flowVelocity(wInd, hInd, heightStepNumber) = mass_flow/(width*height*density); % Flow velocity    %% 
     
     %% von Mises stress calculations
-    tau_exhaust = exhaustWallShear(chamberDiameterArray, heightStepNumber);
-    tau_coolant = coolantWallShear(density, flowVelocity, flowPressure, frictionFactor);
-    sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameterArray);
+    tau_exhaust = exhaustWallShear(chamberDiameter, heightStepNumber);
+    tau_coolant = coolantWallShear(density, flowVelocity, frictionFactor);
+    sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameter);
     vonMisesStress = vonMisesStress(tau_exhaust, tau_coolant, sigma_long);
 end

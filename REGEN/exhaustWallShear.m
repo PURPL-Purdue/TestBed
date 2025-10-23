@@ -13,14 +13,14 @@ function tau_exhaust  = exhaustWallShear(chamberDiameterArray, heightStepNumber)
 
     chamberDiameter = chamberDiameterArray(heightStepNumber);
 
-    exhaustVelocity = exhaustMach * exhaustSoS;
+    exhaustVelocity = exhaustMach .* exhaustSoS;
 
     LStar = 73.4776667586; % THIS IS NOT THE REAL NUMBER
 
-    exhaustReynolds = (exhaustDensity *exhaustVelocity * LStar) / exhaustViscosity;
+    exhaustReynolds = (exhaustDensity .* exhaustVelocity .* LStar) ./ exhaustViscosity;
 
-    exhaustFriction = 1.325/(log(((eps_rough)/(3.7*chamberDiameter))+(5.74)/((exhaustReynolds)^0.9)));
+    exhaustFriction = 1.325/(log(((eps_rough)/(3.7 .*chamberDiameter))+(5.74)./((exhaustReynolds).^0.9)));
 
-    tau_exhaust = (frictionFactorExhaust/4)*(1/2)*(exhaustDensity)*(exhaustVelocity^2);
+    tau_exhaust = (exhaustFriction/4).*(1/2).*(exhaustDensity).*(exhaustVelocity.^2);
 
 end
