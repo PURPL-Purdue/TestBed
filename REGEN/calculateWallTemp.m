@@ -1,4 +1,4 @@
-function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses] = calculateWallTemp(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
+function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, vonMisesStress] = calculateWallTemp(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
@@ -206,5 +206,9 @@ for heightStepNumber = 1:1:length(height_steps)
     %% Calculate Coolant Velocity Increase via Bernoulli's
     flowVelocity(wInd, hInd, heightStepNumber) = mass_flow/(width*height*density); % Flow velocity    %% 
     
-   
+    %% von Mises stress calculations
+    tau_exhaust = exhaustWallShear(chamberDiameterArray, heightStepNumber);
+    tau_coolant = coolantWallShear(density, flowVelocity, flowPressure, frictionFactor);
+    sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameterArray);
+    vonMisesStress = vonMisesStress(tau_exhaust, tau_coolant, sigma_long);
 end

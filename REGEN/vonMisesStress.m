@@ -1,4 +1,5 @@
 function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long)
+    sigma_vm = sqrt(((tau_exhaust + tau_coolant)^2 + (sigma_long)^2)/2);
 % VONMISESSTRESS Compute von Mises equivalent stress (2D plane-stress or 3D)
 %
 % Usage:
@@ -15,7 +16,7 @@ function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long)
 % Units: Pascals (Pa)
 
 % Detect optional options struct at end
-%
+%{
 tau_coolant
 n = nargin;
 opts = [];
@@ -107,7 +108,8 @@ end
 sigma_vm = sqrt( 0.5*((sxx - syy).^2 + (syy - szz).^2 + (szz - sxx).^2) ...
                  + 3*(sxy.^2 + syz.^2 + sxz.^2) );
 end
-
+%}
+end
 %% Local helper: compute wall shear from Darcy-Weisbach
 function tau_exhaust  = exhaustWallShear(chamberDiameterArray, heightStepNumber)
 
