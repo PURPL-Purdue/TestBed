@@ -1,5 +1,6 @@
 in_to_m = 0.0254;
 lb_to_kg = 0.4536;
+N_to_lbf = 0.2248;
 
 % Input Parameters
 flow_disturbance = 0.05; % Maximal Flow Disturbance Ratio
@@ -14,6 +15,8 @@ chamber_length = (4.5 / 2) * in_to_m;
 
 of_ratio = 0.5;
 max_mass_flow = 22.8 * lb_to_kg;
+
+throttle = 0.5; % Minimum Throttle
 
 % Constants
 psi_to_Pa = 6894.757;
@@ -77,15 +80,21 @@ fprintf("--------------------------------------\n");
 L_a = (R_cg - sqrt(R_cg^2 - A_pg * sin(theta_pt) / pi)) / sin(theta_pt);
 L_open = L_a / cos(theta_pt);
 
+L_min = (R_cg - sqrt(R_cg^2 - A_pg * throttle * sin(theta_pt) / pi)) / sin(theta_pt);
+L_open_min = L_min / cos(theta_pt);
+
 fprintf("Actual Opening Gap (thou): %.2f\n", L_a * 1000.0 / in_to_m);
-fprintf("Lopen (thou): %.2f\n", L_open * 1000.0 / in_to_m);
+fprintf("Lopen for Max Throttle (100%%) (thou): %.2f\n", L_open * 1000.0 / in_to_m);
+fprintf("Lopen for Min Throttle (%02.0f%%) (thou): %.2f\n", throttle * 100.0, L_open_min * 1000.0 / in_to_m);
 fprintf("--------------------------------------\n");
 
 P_f = P_mf + rho_f * v_f^2 / 2;
 
-head_y_strain = (R_pt^2 - R_pr^2) / (youngs * tan(theta_pt)) / ((P_f + P_c)*R_pt^2 - P_f*R_pr^2);
-head_x_strain = pi * (R_pt^2 - R_pr^2) / youngs / tan(theta_pt);
+F_D = pi * (P_f - P_c) * R_pt^2 - P_f * pi * R_pr^2;
+head_y_comp = ((P_f + P_c) * R_pt^2 - P_f * R_pr^2)/ R_pt / R_pr / youngs;
+shaft_strain = F_D / (pi * R_pr^2) / youngs;
 
-fprintf("Head Height Deformation (%%%%strain, thou): %.2f%%%%\t%.2e\n", 10000.0 * head_y_strain, head_y_strain * (R_pt-R_pr) * tan(theta_pt) * 1000.0 / in_to_m);
-fprintf("Head Radius Deformation (%%%%strain, thou): %.2f%%%%\t%.2e\n", 10000.0 * head_x_strain, head_x_strain * R_pt * 1000.0 / in_to_m);
+fprintf("Axial Load (lbf, + = Into Chamber): %+.2f\n", F_D * N_to_lbf);
+fprintf("Head Height Compression (%%%%, thou): %.2f\t%.2e\n", 10000.0 * head_y_comp, head_y_comp * (R_pt-R_pr) * tan(theta_pt) * 1000.0 / in_to_m);
+fprintf("Shaft Strain (%%%%): %.2f\n", shaft_strain * 10000.0);
 
