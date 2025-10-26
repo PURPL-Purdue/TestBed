@@ -68,7 +68,9 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             sumCp = sumCp+fluidProperties(a,8);
             sumP = sumP+fluidProperties(a,9);
             sumCstar = sumCstar+fluidProperties(a,10);
-            sumRho = sumRho+fluidProperties(a,)
+            sumRho = sumRho+fluidProperties(a,11);
+            sumSoS = sumSoS+fluidProperties(a,12);
+            sumIsp = sumIsp+fluidProperties(a,13);
             a=a+1;
 
         elseif axialDist(a) < heightStepArray(y)
@@ -82,9 +84,9 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             sumCp = sumCp+fluidProperties(a,8);
             sumP = sumP+fluidProperties(a,9);
             sumCstar = sumCstar+fluidProperties(a,10);
-
-
-            
+            sumRho = sumRho+fluidProperties(a,11);
+            sumSoS = sumSoS + fluidProperties(a,12);
+            sumIsp = sumIsp+fluidProperties(a,13);
             a=a+1;
         else
             divFactor = a-r;
@@ -98,8 +100,11 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             newFluidProperties(y,8) = sumCp/divFactor;
             newFluidProperties(y,9) = sumP/divFactor;
             newFluidProperties(y,10) = sumCstar/divFactor;
+            newFluidProperties(y,11) = sumRho/divFactor;
+            newFluidProperties(y,12) = sumSoS/divFactor;
+            newFluidProperties(y,13) = sumIsp/divFactor;
             r = a;
-            break; 
+            break;
         
         end
     end
@@ -121,9 +126,6 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
             else
                 geometryMap(widthValue, heightValue) = 1; %pass
         end
-        
-        
-        
 
     end
     
