@@ -23,3 +23,5 @@ jobs:
       - name: Run tests
         run: |
           if [ -f pytest.ini ] || [ -d tests ]; then pytest; else echo "No tests found"; fi
+      - name: Verify Python version
+        run: python --version
