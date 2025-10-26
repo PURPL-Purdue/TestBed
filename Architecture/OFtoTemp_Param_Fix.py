@@ -2,10 +2,8 @@ from rocketcea.cea_obj import CEA_Obj
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 # Conversion Ratio
 rankineToKelvin = 0.555556
-
 
 # Chamber Pressure (psi)
 #p_c = 1000 # Test 300 to 3000 with 300 increments

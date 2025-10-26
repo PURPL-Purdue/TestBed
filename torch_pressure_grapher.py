@@ -3,7 +3,6 @@
 # First Created: 04/22/2023
 # Last Updated: 04/23/2023
 # Calculations done in SI units
-
 import math
 import numpy as np
 import matplotlib.pyplot as plt
