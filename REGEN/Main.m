@@ -104,7 +104,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             newFluidProperties(y,12) = sumSoS/divFactor;
             newFluidProperties(y,13) = sumIsp/divFactor;
             r = a;
-            break; 
+            break;
         
         end
     end
@@ -118,7 +118,7 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         width = widthArray(widthValue);
         height = heightArray(heightValue);
 
-        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, vonMisesStressMatrix] = calculateWallTemp(T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
+        [flowTempMatrix, flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, vonMisesStressMatrix] = calculateWallTemp(T_l_reqMatrix, chamberDiameter, wall_thicknessMatrix, numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, vonMisesStressMatrix, height, width, heightValue, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
         if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == 0
@@ -126,9 +126,6 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
             else
                 geometryMap(widthValue, heightValue) = 1; %pass
         end
-        
-        
-        
 
     end
     

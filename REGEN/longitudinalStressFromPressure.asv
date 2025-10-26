@@ -1,8 +1,8 @@
-function sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameterArray, heightStepNumber, newFluidProperties, wInd, hInd)
+function sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameterArray, newFluidProperties, hInd, wInd)
 
-    exhaustPressure = (newFluidProperties(heightStepNumber,9))/100000; % Pa
+    exhaustPressure = (hIn,d(newFluidProperties(:,9))/100000; % Pa
     
-    dP = flowPressure(wInd, hInd, heightStepNumber) - exhaustPressure;
+    dP = flowPressure - exhaustPressure;
 
     chamberDiameter = chamberDiameterArray(heightStepNumber); %?? unit?
 

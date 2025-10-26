@@ -1,5 +1,6 @@
-function sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long)
+function [sigma_vm] = vonMisesStress(tau_exhaust, tau_coolant, sigma_long)
     sigma_vm = sqrt(((tau_exhaust + tau_coolant)^2 + (sigma_long)^2)/2);
+    display(sigma_vm)
 % VONMISESSTRESS Compute von Mises equivalent stress (2D plane-stress or 3D)
 %
 % Usage:
