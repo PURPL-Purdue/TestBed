@@ -8,6 +8,8 @@ g0 = 9.80665             # m/s^2
 psi_to_Pa = 6894.76      # Pa per psi
 ft_to_m = 0.3048
 lbf_to_N = 4.44822
+#mix_eff = 0.9            # mixing efficiency
+mix_eff = 0.9
 
 # ---------- User-tunable inputs ----------
 
@@ -105,7 +107,7 @@ def compute_sizing(F_newtons, pc_psi, of, pe_psi=ambient_p_psi):
 
     # Calculate vacuum-specific impulse
     Cf, IspVac, IspSL = cea.get_PambCf(Pamb = 14.7, Pc = pc_psi, MR=of, eps =eps)
-    Isp = (cstar * Cf) / 9.81
+    Isp = (cstar * Cf * mix_eff) / 9.81
 
     # Calculate exhaust velocity (APPLY EFFICIENCY HERE)
     Ve = Isp * g0

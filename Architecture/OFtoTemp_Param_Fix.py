@@ -2,8 +2,10 @@ from rocketcea.cea_obj import CEA_Obj
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # Conversion Ratio
 rankineToKelvin = 0.555556
+
 
 # Chamber Pressure (psi)
 #p_c = 1000 # Test 300 to 3000 with 300 increments
@@ -69,4 +71,27 @@ while True:
         break  # exit loop if successful
     except ValueError:
         print("Invalid input, please enter a number.")
+
+# Interpolation (note: numpy.interp expects x to be increasing)
+OF_target = np.interp(T_target, RP1t_c, OFs)
+
+print(f"O/F at {T_target} K ≈ {OF_target:.3f}")
+
+
+#---- GRAPHING ----#
+# Using matplotlib we make a graph
+    
+plt.figure()
+# Plot the function
+plt.plot(OFs, RP1t_c, label='RP-1')
+
+# Customize the plot
+plt.title("RP-1 + LOx OF to Chamber Temp")
+plt.xlabel("OF")
+plt.ylabel("Chamber Temperature  (K)")
+plt.grid(True)
+plt.legend()
+
+# Show the plot
+plt.show()
 
