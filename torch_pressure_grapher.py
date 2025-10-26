@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import CEA_Wrap as CEA
 from matplotlib.widgets import TextBox
-
 # ──────────────────────────────────────────────────────────────
 #  CONSTANTS
 # ──────────────────────────────────────────────────────────────
