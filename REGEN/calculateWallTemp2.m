@@ -56,14 +56,15 @@ for heightStepNumber = 1:1:length(height_steps)
             hotWall_dP = updatedPressure(wInd,heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
             pressure = updatedPressure(wInd,heightStepNumber-1); % if on a different height step, initialize as the previous height step's value
             temp = updatedTemps(wInd,heightStepNumber-1);
-            velocity = updatedVelocity(wInd,heightStepNumber-1);
+            %velocity = updatedVelocity(wInd,heightStepNumber-1);
+            velocity = mass_flow/(width*height*density);
     
         end
      
         if(temp == 0) % if channel dimension combo is already unsuccessful, do not let computation with it continue
-            flowTemp(wInd,hInd,heightStepNumber) = -1;
+            flowTemp(wInd,hInd,heightStepNumber) = 999;
           
-            break
+            continue
             
         end
         
@@ -201,13 +202,14 @@ for heightStepNumber = 1:1:length(height_steps)
         
         
         if (double(flowTemp(wInd, hInd, heightStepNumber)) > T_L_req)
-            flowTemp(wInd, hInd, heightStepNumber) = -1; % if coolant temp is too high, nullify
-            break
+            flowTemp(wInd, hInd, heightStepNumber) = 999; % if coolant temp is too high, nullify
+            continue
         end
     
     
         %% Calculate Coolant Pressure Drop
-        disp(width)
+        % disp(velocity)
+         disp(frictionFactor)
         delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ 2*hyd_diam; %Frictional static pressure drop across the channel
         flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
         
@@ -216,13 +218,34 @@ for heightStepNumber = 1:1:length(height_steps)
     end
     
 
-   
         
-        [temperature2,indexTemp] = min(flowTemp(wInd,:,heightStepNumber)-T_l_reqMatrix(wInd,:,heightStepNumber)); % picks optimized height value
-        updatedTemps(wInd,heightStepNumber) = flowTemp(wInd,indexTemp,heightStepNumber);
-        updatedPressure(wInd,heightStepNumber) = flowTemp(wInd,indexTemp,heightStepNumber);
-        updatedVelocity(wInd,heightStepNumber) = flowTemp(wInd,indexTemp,heightStepNumber);
-        heightMatrix(wInd,heightStepNumber) = heightArray(indexTemp);
+        % if(heightStepNumber < 9)
+              %[temperature2,indexTemp] = min((flowTemp(wInd,:,heightStepNumber)-T_l_reqMatrix(wInd,:,heightStepNumber))); % picks optimized height value
+        % 
+        % else
 
+        % if heightStepNumber < 8
+        %     correctionFactor = 225;
+        % elseif heightStepNumber < 18
+            correctionFactor = 0;
+        % elseif heightStepNumber < 22
+        %     correctionFactor = 120;
+        % else
+        %     correctionFactor = 150;
+        % end
+        data = flowTemp(wInd,:,heightStepNumber)-(T_l_reqMatrix(wInd,:,heightStepNumber)-correctionFactor);
+        negatives = data(data<0);
+        negativeIndex = find(data<0);
+        [temperature2,relIndex] = max(negatives);
+        indexTemp = negativeIndex(relIndex);
+             %[temperature2,indexTemp] = min((flowTemp(wInd,:,heightStepNumber)-(T_l_reqMatrix(wInd,:,heightStepNumber)-100))<0); % picks optimized height value
+        
+        %end
+            
+        updatedTemps(wInd,heightStepNumber) = flowTemp(wInd,indexTemp,heightStepNumber);
+        updatedPressure(wInd,heightStepNumber) = flowPressure(wInd,indexTemp,heightStepNumber);
+        updatedVelocity(wInd,heightStepNumber) = flowVelocity(wInd,indexTemp,heightStepNumber);
+        heightMatrix(wInd,heightStepNumber) = heightArray(indexTemp);
+        display(temperature2)
    
 end
