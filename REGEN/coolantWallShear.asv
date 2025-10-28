@@ -3,6 +3,5 @@ function tau_coolant = coolantWallShear(density, flowVelocity, frictionFactor, w
     % coolant side wall shear stress
     vel = flowVelocity(wInd, hInd, heightStepNumber);
     tau_coolant = (frictionFactor/4)*(1/2)*(density)*(vel^2);
-    display(tau_coolant)
-    
+
 end

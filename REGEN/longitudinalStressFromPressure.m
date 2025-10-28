@@ -16,4 +16,5 @@ function sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiamet
     %   t - wall thickness (m)
 
     sigma_long = (-dP * (chamberDiameter/2)) / (2 * wallThick);
+
 end

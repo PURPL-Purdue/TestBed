@@ -34,6 +34,7 @@ for heightStepNumber = 1:1:length(height_steps)
       currentHeightStep = height_steps(heightStepNumber) - height_steps(heightStepNumber-1);
     end
     chamberDiameter = chamberDiameterArray(heightStepNumber);
+
     if (heightStepNumber==1)
 
         hotWall_dP = P_start - chamberPressure; %calculate dP for structures (Pa)

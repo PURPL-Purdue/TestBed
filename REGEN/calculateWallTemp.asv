@@ -1,4 +1,4 @@
-function [flowTemp, flowVelocity, flowPressure, T_l_reqMatrix, wall_thicknesses, vmStress] = calculateWallTemp(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, vonMisesStress, height, width, heightValue, widthValue, newFluidProperties)
+function [flowTemp, flowVelocity, flowPressure, T_l_reqMatrix, wall_thicknesses, vmStress] = calculateWallTemp(T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, vonMisesStressMatrix, height, width, heightValue, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
@@ -7,8 +7,6 @@ function [flowTemp, flowVelocity, flowPressure, T_l_reqMatrix, wall_thicknesses,
     channel_number = channelNum;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     v_start = mass_flow/(height * width * rho_start); %m/s
-    
-    
     
     
     
@@ -21,7 +19,7 @@ function [flowTemp, flowVelocity, flowPressure, T_l_reqMatrix, wall_thicknesses,
     flowTemp = flowTempMatrix;
     flowVelocity = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
-    vmStress = vonMisesStress;
+    vmStress = vonMisesStressMatrix;
     height_steps = heightStepArray;
     T_target = 550; % target gas-side hotwall temp 530 for 7075, 773 for copper
 
@@ -209,8 +207,7 @@ for heightStepNumber = 1:1:length(height_steps)
     
     %% von Mises stress calculations
     tau_exhaust = exhaustWallShear(chamberDiameter, heightStepNumber, newFluidProperties);
-    tau_coolant = coolantWallShear(density, flowVelocity, frictionFactor);
+    tau_coolant = coolantWallShear(density, flowVelocity, frictionFactor, wInd, hInd, heightStepNumber);
     sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameter, heightStepNumber, newFluidProperties, hInd, wInd);
-    sigma_vm = vonMisesStress(tau_exhaust, tau_coolant, sigma_long);
-    vmStress(hInd, wInd, heightStepNumber) = sigma_vm;
+    vmStress(hInd, wInd, heightStepNumber) = vonMisesStress(tau_exhaust, tau_coolant, sigma_long);
 end
