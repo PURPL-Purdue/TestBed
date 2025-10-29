@@ -101,11 +101,9 @@ torque_max = F_D * (static_friction * cos(thread_angle) + sin(thread_angle)) / (
 
 fprintf("Axial Load (lbf, + = Into Chamber): %+.2f\n", F_D * N_to_lbf);
 fprintf("Thread Angle (degrees): %.2f\n", thread_angle * 180.0 / pi);
-fprintf("Thread Pitch (TPI): %.2f\n", (1.0 * in_to_m) / (R_pr * tan(thread_angle))); 
+fprintf("Maximum Thread Pitch (TPI): %.2f\n", 1.0 / (2 * pi * R_pr / in_to_m * tan(thread_angle))); 
+fprintf("Min Thread Pitch (TPI): %.2f\n", 1.0 / (2 * pi * R_pr / in_to_m * static_friction));
 fprintf("Max Torque on Servo (lb * in): %.2f\n", torque_max * N_to_lbf / in_to_m);
-if thread_angle >= atan(static_friction)
-	fprintf("WARNING: SELF_LOCKING REQUIRES THREAD ANGLE < %.2f!!!\n", atan(static_friction) * 180.0/pi);
-end
 fprintf("--------------------------------------\n");
 
 head_y_comp = ((P_f + P_c) * R_pt^2 - P_f * R_pr^2)/ R_pt / R_pr / youngs;
