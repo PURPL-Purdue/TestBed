@@ -210,7 +210,7 @@ for heightStepNumber = 1:1:length(height_steps)
         %% Calculate Coolant Pressure Drop
         % disp(velocity)
          disp(frictionFactor)
-        delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ 2*hyd_diam; %Frictional static pressure drop across the channel
+        delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ (2*hyd_diam); %Frictional static pressure drop across the channel
         flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
         
         %% Calculate Coolant Velocity Increase via Bernoulli's
