@@ -37,6 +37,8 @@ P_mlox = 720 * psi_to_Pa;
 C_d = 1.0;
 youngs = 117 * 10^9;
 
+static_friction = 0.800; % Steel-on-Steel
+
 % Calculations
 fprintf("\n\n\nDesign Dimensions:\n");
 fprintf("--------------------------------------\n");
@@ -82,19 +84,29 @@ L_open = L_a / cos(theta_pt);
 
 L_min = (R_cg - sqrt(R_cg^2 - A_pg * throttle * sin(theta_pt) / pi)) / sin(theta_pt);
 L_open_min = L_min / cos(theta_pt);
-
+L_open_diff = L_open - L_open_min;
 fprintf("Actual Opening Gap (thou): %.2f\n", L_a * 1000.0 / in_to_m);
 fprintf("Lopen for Max Throttle (100%%) (thou): %.2f\n", L_open * 1000.0 / in_to_m);
 fprintf("Lopen for Min Throttle (%02.0f%%) (thou): %.2f\n", throttle * 100.0, L_open_min * 1000.0 / in_to_m);
+fprintf("Pintle Transverse Distance (thou): %.2f\n", L_open_diff * 1000.0 / in_to_m);
 fprintf("--------------------------------------\n");
 
 P_f = P_mf + rho_f * v_f^2 / 2;
 
 F_D = pi * (P_f - P_c) * R_pt^2 - P_f * pi * R_pr^2;
-head_y_comp = ((P_f + P_c) * R_pt^2 - P_f * R_pr^2)/ R_pt / R_pr / youngs;
-shaft_strain = F_D / (pi * R_pr^2) / youngs;
+thread_angle = atan(L_open_diff / (pi * R_pr));
+torque_max = F_D * (static_friction * cos(thread_angle) + sin(thread_angle)) / (cos(thread_angle) - static_friction * sin(thread_angle)) * R_pr;
 
 fprintf("Axial Load (lbf, + = Into Chamber): %+.2f\n", F_D * N_to_lbf);
+fprintf("Thread Angle (degrees): %.2f\n", thread_angle * 180.0 / pi);
+fprintf("Max Torque on Servo (lb * in): %.2f\n", torque_max * N_to_lbf / in_to_m);
+if thread_angle >= atan(static_friction)
+	fprintf("WARNING: SELF_LOCKING REQUIRES THREAD ANGLE < %.2f!!!\n", atan(static_friction) * 180.0/pi);
+end
+fprintf("--------------------------------------\n");
+
+head_y_comp = ((P_f + P_c) * R_pt^2 - P_f * R_pr^2)/ R_pt / R_pr / youngs;
+shaft_strain = F_D / (pi * R_pr^2) / youngs;
 fprintf("Head Height Compression (%%%%, thou): %.2f\t%.2e\n", 10000.0 * head_y_comp, head_y_comp * (R_pt-R_pr) * tan(theta_pt) * 1000.0 / in_to_m);
 fprintf("Shaft Strain (%%%%): %.2f\n", shaft_strain * 10000.0);
 
