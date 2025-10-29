@@ -1,10 +1,8 @@
-function sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameterArray, heightStepNumber, newFluidProperties, wInd, hInd)
+function sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameter, heightStepNumber, newFluidProperties, wInd, hInd)
 
     exhaustPressure = (newFluidProperties(heightStepNumber,9))/100000; % Pa
     
     dP = flowPressure(wInd, hInd, heightStepNumber) - exhaustPressure;
-
-    chamberDiameter = chamberDiameterArray(heightStepNumber); %?? unit?
 
     wallThick = 0.0015556992; % m
 
