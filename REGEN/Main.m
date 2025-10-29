@@ -121,6 +121,7 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         [flowTempMatrix, flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, vonMisesStressMatrix] = calculateWallTemp(T_l_reqMatrix, chamberDiameter, wall_thicknessMatrix, numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, vonMisesStressMatrix, height, width, heightValue, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
+
         if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == 0
                 geometryMap(widthValue, heightValue) = 0;%fail
             else

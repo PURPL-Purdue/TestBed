@@ -200,15 +200,16 @@ for heightStepNumber = 1:1:length(height_steps)
 
     %% Calculate Coolant Pressure Drop
 
-    delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ 2*hyd_diam; %Frictional static pressure drop across the channel
+    delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ (2*hyd_diam); %Frictional static pressure drop across the channel
+    display(delta_P)
     flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
     
     %% Calculate Coolant Velocity Increase via Bernoulli's
     flowVelocity(wInd, hInd, heightStepNumber) = mass_flow/(width*height*density); % Flow velocity    %% 
     
     %% von Mises stress calculations
-    tau_exhaust = exhaustWallShear(chamberDiameter, heightStepNumber, newFluidProperties);
-    tau_coolant = coolantWallShear(density, flowVelocity, frictionFactor, wInd, hInd, heightStepNumber);
-    sigma_long = longitudinalStressFromPressure(flowPressure, chamberDiameter, heightStepNumber, newFluidProperties, hInd, wInd);
-    vmStress(hInd, wInd, heightStepNumber) = vonMisesStress(tau_exhaust, tau_coolant, sigma_long);
+
+    [stress1] = vonMisesStress(wInd, hInd, heightStepNumber, chamberDiameter, newFluidProperties, flowPressure, flowVelocity, frictionFactor, density);
+  
+    vmStress(wInd, hInd, heightStepNumber) = stress1;
 end
