@@ -18,6 +18,8 @@ max_mass_flow = 22.8 * lb_to_kg;
 
 throttle = 0.5; % Minimum Throttle
 
+servo_angle = 180.0 * (pi / 180.0); % Maximum Servo Angle
+
 % Constants
 psi_to_Pa = 6894.757;
 
@@ -94,11 +96,12 @@ fprintf("--------------------------------------\n");
 P_f = P_mf + rho_f * v_f^2 / 2;
 
 F_D = pi * (P_f - P_c) * R_pt^2 - P_f * pi * R_pr^2;
-thread_angle = atan(L_open_diff / (pi * R_pr));
+thread_angle = atan(L_open_diff / (servo_angle * R_pr));
 torque_max = F_D * (static_friction * cos(thread_angle) + sin(thread_angle)) / (cos(thread_angle) - static_friction * sin(thread_angle)) * R_pr;
 
 fprintf("Axial Load (lbf, + = Into Chamber): %+.2f\n", F_D * N_to_lbf);
 fprintf("Thread Angle (degrees): %.2f\n", thread_angle * 180.0 / pi);
+fprintf("Thread Pitch (TPI): %.2f\n", (1.0 * in_to_m) / (R_pr * tan(thread_angle))); 
 fprintf("Max Torque on Servo (lb * in): %.2f\n", torque_max * N_to_lbf / in_to_m);
 if thread_angle >= atan(static_friction)
 	fprintf("WARNING: SELF_LOCKING REQUIRES THREAD ANGLE < %.2f!!!\n", atan(static_friction) * 180.0/pi);
