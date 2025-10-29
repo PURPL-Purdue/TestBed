@@ -42,10 +42,5 @@ function [sigma_vm] = vonMisesStress(wInd, hInd, heightStepNumber, chamberDiamet
 
 % von Mises stress calculation
     sigma_vm = sqrt(((tau_exhaust + tau_coolant)^2 + (sigma_long)^2)/2);
-    %if(heightStepNumber ==2)
-    %    display(sigma_vm)
-    %end
-    %if heightStepNumber == 1
-    %    display(flowPressure(hInd, wInd, heightStepNumber));
-    %end
+    
 end
