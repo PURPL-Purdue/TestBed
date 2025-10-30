@@ -62,7 +62,7 @@ R_cg = (2*shaft_ratio^2*sleeve_thickness + sqrt(4*shaft_ratio^2*sleeve_thickness
 
 R_sv = sleeve_thickness + R_cg;
 R_pr = R_sv * shaft_ratio;
-R_pt = R_cg;
+R_pt = (0.75 * R_cg) + (0.25 * R_sv);
 
 fprintf("Fuel Area (thou^2): %.2e\n", A_pg * (1000.0 / in_to_m)^2);
 fprintf("Central Gap Radius (thou): %.2f\n", R_cg * 1000.0 / in_to_m);
@@ -95,11 +95,13 @@ fprintf("--------------------------------------\n");
 
 P_f = P_mf + rho_f * v_f^2 / 2;
 
-F_D = pi * (P_f - P_c) * R_pt^2 - P_f * pi * R_pr^2;
+F_D = pi * P_f * R_cg^2 - P_c * pi * R_pt^2 - P_f * pi * R_pr^2;
+F_transient = pi * P_f * R_cg^2 - P_f * pi * R_pr^2;
 thread_angle = atan(L_open_diff / (servo_angle * R_pr));
 torque_max = F_D * (static_friction * cos(thread_angle) + sin(thread_angle)) / (cos(thread_angle) - static_friction * sin(thread_angle)) * R_pr;
 
 fprintf("Axial Load (lbf, + = Into Chamber): %+.2f\n", F_D * N_to_lbf);
+fprintf("Transient Starting Load (lbf, + = Into Chamber): %.2f\n", F_transient * N_to_lbf);
 fprintf("Thread Angle (degrees): %.2f\n", thread_angle * 180.0 / pi);
 fprintf("Maximum Thread Pitch (TPI): %.2f\n", 1.0 / (2 * pi * R_pr / in_to_m * tan(thread_angle))); 
 fprintf("Min Thread Pitch (TPI): %.2f\n", 1.0 / (2 * pi * R_pr / in_to_m * static_friction));
