@@ -129,8 +129,8 @@ for heightStepNumber = 1:1:length(height_steps)
     % Calculate Nusselt number using Sieder-Tate correlation
     
     %Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
-    
-    %
+    surfaceRoughness = ___
+    frictionFactor = 1/()
     frictionFactor = ((0.79*log(Re)-1.64)^-2)/8;
     Nu = frictionFactor*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
        
@@ -200,7 +200,7 @@ for heightStepNumber = 1:1:length(height_steps)
 
     %% Calculate Coolant Pressure Drop
 
-    delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ 2*hyd_diam; %Frictional static pressure drop across the channel
+    delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ (2*hyd_diam); %Frictional static pressure drop across the channel
     display(delta_P)
     flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
     
