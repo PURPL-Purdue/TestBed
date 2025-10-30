@@ -6,15 +6,14 @@ N_to_lbf = 0.2248;
 flow_disturbance = 0.05; % Maximal Flow Disturbance Ratio
 tolerance = 4.0 * (in_to_m / 1000.0); % +- in Thou
 stiffness = 0.2; % Ratio of Pressure Drop to Chamber Pressure
-shaft_ratio = 0.6; % Dominik's Vibes
-head_ratio = 0.95; % Pintle Head : Sleeve Radius
+shaft_ratio = 0.6; % Pintle Shaft to Sleeve Radius (Dom's Vibes)
 sleeve_thickness = 125 * (in_to_m / 1000.0); % Thickness of Sleeve Wall
 
 chamber_radius = (4.5 / 2) * in_to_m;
 chamber_length = (4.5 / 2) * in_to_m;
 
-of_ratio = 0.5;
-max_mass_flow = 22.8 * lb_to_kg;
+of_ratio = 1.50087; % Architecture Number
+max_mass_flow = 8.82281 * lb_to_kg;
 
 throttle = 0.5; % Minimum Throttle
 
@@ -47,7 +46,7 @@ fprintf("--------------------------------------\n");
 v_lox = C_d * sqrt(2 * stiffness * P_c / rho_lox);
 v_f = C_d * sqrt(2 * stiffness * P_c / rho_f);
 
-beta = atan(2 * chamber_radius / chamber_length);
+beta = atan((4/3) * chamber_radius / chamber_length);
 
 theta_pt = acos((mdot_lox * v_lox * (1/cos(beta) - 1)) / (mdot_f * v_f * sqrt((1/cos(beta) - 1)^2 + 1))) - atan(1/cos(beta) - 1);
 
@@ -63,11 +62,12 @@ R_cg = (2*shaft_ratio^2*sleeve_thickness + sqrt(4*shaft_ratio^2*sleeve_thickness
 
 R_sv = sleeve_thickness + R_cg;
 R_pr = R_sv * shaft_ratio;
-R_pt = R_sv * head_ratio;
+R_pt = R_cg;
 
 fprintf("Fuel Area (thou^2): %.2e\n", A_pg * (1000.0 / in_to_m)^2);
 fprintf("Central Gap Radius (thou): %.2f\n", R_cg * 1000.0 / in_to_m);
-fprintf("Sleeve / Pintle Head Radius (thou): %.2f\n", R_sv * 1000.0 / in_to_m);
+fprintf("Sleeve Radius (thou): %.2f\n", R_sv * 1000.0 / in_to_m);
+fprintf("Pintle Head Radius (thou): %.2f\n", R_pt * 1000.0 / in_to_m);
 fprintf("Pintle Shaft Radius (thou): %.2f\n", R_pr * 1000.0 / in_to_m);
 fprintf("--------------------------------------\n");
 
