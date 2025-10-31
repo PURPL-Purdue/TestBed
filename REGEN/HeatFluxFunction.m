@@ -24,8 +24,10 @@ while i <= length(Tc)
     OEffectives(i) = sum(calcPainArr .* wallThicknesses(i)) .* 1000000;  %Calcs effective strength for each wall thickness in Pa
     if bendMaxs(i) >= TMaxs(i)
         OMaxs(i) = bendMaxs(i);
+    
     else
        OMaxs(i) = TMaxs(i);
+      
     end
     i = i + 1;
 end
@@ -40,6 +42,7 @@ while a < length(OMaxs)
     if OEffectives(a) >= OMaxs(a)
         Wmin = wallThicknesses(a);
         Tsubc = Tc(a);
+        
         break
     end
 end

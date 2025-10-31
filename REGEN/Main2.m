@@ -122,7 +122,7 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         %         geometryMap(widthValue, heightValue) = 1; %pass
         % end
         
-        
+        wallthicknessesGoated = wall_thicknessMatrix(1,10,:);
         
 
    

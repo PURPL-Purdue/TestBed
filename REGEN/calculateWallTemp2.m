@@ -22,7 +22,7 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, u
     flowVelocity = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
-    T_target = 500; % target gas-side hotwall temp 530 for 7075, 773 for copper
+    T_target = 590; % target gas-side hotwall temp 530 for 7075, 773 for copper
     
     wInd = widthValue;
     
@@ -138,16 +138,16 @@ for heightStepNumber = 1:1:length(height_steps)
     
         % Calculate Nusselt number using Sieder-Tate correlation
         
-        %Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
+        Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
         
         %
         %frictionFactor = ((0.79*log(Re)-1.64)^-2)/8; old friction factor
         
         surfaceRoughness = 0.000002; % measure for how rough channels are after slit saw (chosen from engineering toolbox)
         frictionFactor = (1/(-1.8*log10(((surfaceRoughness/hyd_diam)/3.7)^(1.11)+(6.9/Re))))^2; %new friction factor which is so cool (from vincent and haaland)
-        disp(frictionFactor)
+        %disp(frictionFactor)
 
-        Nu = frictionFactor*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
+        %Nu = frictionFactor*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
            %display(Pr)
         
         % Calculate convective heat transfer coefficient [W/(m^2·K)]
@@ -155,12 +155,7 @@ for heightStepNumber = 1:1:length(height_steps)
         % if(heightStepNumber == 10)
         %     display(h_l)
         % end
-        if(heightStepNumber == 10 && hInd ==1 && wInd ==1)
-            display(h_l)
-            display(Nu)
-            display(frictionFactor)
-            display(Re)
-        end
+       
     
     
         %% Calculate Required flow temperature
@@ -210,7 +205,10 @@ for heightStepNumber = 1:1:length(height_steps)
             flowTemp(wInd, hInd, heightStepNumber) = 999; % if coolant temp is too high, nullify
             continue
         end
-    
+         if(wInd ==1 && hInd ==10)
+            disp(Nu)
+           
+        end
     
         %% Calculate Coolant Pressure Drop
         % disp(velocity)
