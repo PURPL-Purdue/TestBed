@@ -34,7 +34,37 @@
 ###### ZEPHYR ENGINE ARCHITECTURE #######
 ######################################
 
-# Maelstrom Chamber performance (INPUTS)
+# Zephyr Chamber performance (INPUTS)
+of_ratio: 1.500 
+chamber_pressure: 600 #psi
 
-of_ratio: 1.5
-chamberpressure: 600 #psi
+# Zephyr Chamber Values (OUTPUTS)
+gamma: 1.2512
+Exit_specific_impulse (eps): 5.579
+Champer_temperature: 2521.1 #K
+Isp: 253.87 #sec
+Exit_velocity: 2489.6 #m/s
+Characteristic_velocity (c*): 1653.5 #m/s
+mdot: 8.934 #kg/s
+
+# Zephyr Chamber geometry (All CM values)
+Throat_diameter: 6.74 #cm
+Exit_diameter: 15.93 #cm
+
+#Zephyr Chamber diameters
+Converging_length: 5.06 #cm 
+Full_chamber_length: 25.29 #cm (Value may change based on chamber diameter and length changing) - Current value is from 11/2/2025 ZephyrCharacteristicGenerator.py
+Chamber volume: 452.2 #cm^3 (w/converving section)
+Characteristic_Length_Cylinder (L*): 1.264 #m 
+Characteristic_Length_with_converging (L*): 1.429 #m
+Nozzle_length: 17.14 #cm
+
+# Based on the ZephyrCharacteristicGenerator.py, throat length is a value of 5.95 cm. In the future, throat length will likely be 0 cm
+
+
+
+
+
+
+# Notes: These are the performormance values for the Zephyr engine model.
+# Zephyr Engine Performance (OUTPUTS)
