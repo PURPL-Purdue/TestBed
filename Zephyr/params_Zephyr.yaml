@@ -40,7 +40,7 @@ chamber_pressure: 600 #psi
 
 # Zephyr Chamber Outputs (OUTPUTS)
 gamma: 1.2512
-Exit_specific_impulse (eps): 5.579
+Exit_specific_impulse? (eps): 5.579
 Champer_temperature: 2521.1 #K
 Isp: 253.87 #sec
 Exit_velocity: 2489.6 #m/s
