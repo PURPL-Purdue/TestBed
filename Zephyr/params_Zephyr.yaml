@@ -38,7 +38,7 @@
 of_ratio: 1.500 
 chamber_pressure: 600 #psi
 
-# Zephyr Chamber Values (OUTPUTS)
+# Zephyr Chamber Outputs (OUTPUTS)
 gamma: 1.2512
 Exit_specific_impulse (eps): 5.579
 Champer_temperature: 2521.1 #K
