@@ -8,8 +8,8 @@ num_outlets = 40           # total outlets spaced around 360°
 ring_radius = 0.5           # [m]
 segment_length = (2 * np.pi * ring_radius) / num_outlets  # segment length [m]
 
-# Fluid properties (for LOX)
-rho_lox = 1140.0           # density [kg/m^3]
+# Fluid properties
+rho_lox = 813.18            # density [kg/m^3]
 mu_lox = 0.000197          # viscosity [Pa·s]
 f = 0.02                   # Darcy friction factor (approx.)
 
@@ -23,9 +23,9 @@ area_min = 1.0e-4          # [m²]
 area_max = 1.0e-2          # [m²]
 
 # Iteration control
-max_iter = 5000
-tolerance = 1e-6
-relax = 0.5   # slightly stronger relaxation
+max_iter = 10000
+tolerance = 1e-3
+relax = 0.1   # slightly stronger relaxation
 
 # --- Constant outlet area
 A_outlet = 1.0e-4  # [m²]
@@ -51,6 +51,7 @@ pressure_forward = np.full(half_outlets + 1, P_in)
 pressure_backward = np.full(half_outlets + 1, P_in)
 area_forward = np.copy(area)
 area_backward = np.copy(area)
+converged = False
 
 for iteration in range(max_iter):
     # --- Forward half (0° → 180°)
@@ -94,6 +95,7 @@ for iteration in range(max_iter):
     taper_factor = np.linspace(1.0, 0.6, half_outlets)
     area_forward = np.clip(area_forward * taper_factor, area_min, area_max)
     area_backward = np.clip(area_backward * taper_factor, area_min, area_max)
+    
 
     if np.max(np.abs(imbalance)) < tolerance:
         converged = True

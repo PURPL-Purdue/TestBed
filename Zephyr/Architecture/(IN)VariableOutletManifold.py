@@ -8,8 +8,8 @@ num_outlets = 40           # total outlets spaced around 360°
 ring_radius = 0.5           # [m]
 segment_length = (2 * np.pi * ring_radius) / num_outlets  # segment length [m]
 
-# Fluid properties (for LOX)
-rho_lox = 1140.0           # density [kg/m^3]
+# Fluid properties 
+rho_lox = 813.18           # density [kg/m^3]
 mu_lox = 0.000197          # viscosity [Pa·s]
 f = 0.02                   # Darcy friction factor (approx.)
 
