@@ -1,5 +1,5 @@
 ###################################################################################################
-#                        Welcome to the Testbed Project's source of truth!                         #
+#                        Welcome to the Testbed Project Zephyr's source of truth!                         #
 #                                                                                                 #
 # Why are we doing this?:                                                                         #
 #   As our project grows, it gets hard to keep track of the values on everyone's subsystems as    #
@@ -30,39 +30,37 @@
 ###################################################################################################
 
 
-######################################
-###### ZEPHYR ENGINE ARCHITECTURE #######
-######################################
+#######################################
+##### ZEPHYR ENGINE ARCHITECTURE ######
+#######################################
 
-# Zephyr Chamber performance (INPUTS)
-of_ratio: 1.500 
-chamber_pressure: 600 #psi
+# Zephyr Chamber Performance (INPUTS)
+OF_ratio: 1.500 
+Chamber_pressure: 600 # (psi)
+Thrust: 5000 # (lb/f)
 
-# Zephyr Chamber Outputs (OUTPUTS)
-gamma: 1.2512
-Exit_specific_impulse? (eps): 5.579
-Champer_temperature: 2521.1 #K
-Isp: 253.87 #sec
-Exit_velocity: 2489.6 #m/s
-Characteristic_velocity (c*): 1653.5 #m/s
-mdot: 8.934 #kg/s
+# Zephyr Chamber Outputs (OUTPUTS BASED ON 85% EFFICIENCY FROM INJECTOR)
+Expansion_ratio: 5.579
+Champer_temperature: 2521.1 # (K)
+Isp: 253.87 # (sec)
+Exit_velocity: 2116.1 # (m/s)
+Characteristic_velocity (c*): 1653.5 # (m/s)
+mdot: 10.510 # (kg/s)
 
-# Zephyr Chamber geometry (All CM values)
-Throat_diameter: 6.74 #cm
-Exit_diameter: 15.93 #cm
-
-#Zephyr Chamber diameters
-Converging_length: 5.06 #cm 
-Full_chamber_length: 25.29 #cm (Value may change based on chamber diameter and length changing) - Current value is from 11/2/2025 ZephyrCharacteristicGenerator.py
-Chamber volume: 452.2 #cm^3 (w/converving section)
-Characteristic_Length_Cylinder (L*): 1.264 #m 
-Characteristic_Length_with_converging (L*): 1.429 #m
-Nozzle_length: 17.14 #cm
+# Zephyr Geometry
+Throat_diameter: 6.74 # (cm)
+Exit_diameter: 15.93 # (cm)
+Full_chamber_length: 25.29 # (cm)
+Chamber_volume: 5018.02 # (cm^3) (w/converging section)
+Chamber_diameter: 14.73 # (cm)
+Chamber_length: 29.46 # (cm)
+Characteristic_Length_Cylinder (L*): 1.405 # (m) 
+Characteristic_Length_with_converging (L*): 1.511 # (m)
+Nozzle_length: 17.14 # (cm)
 # Based on the ZephyrCharacteristicGenerator.py, throat length is a value of 5.95 cm. In the future, throat length will likely be 0 cm
 
-#Hotfire Aimed Values (Based on geometry and values above)
-Hotfire_time: 30.0 #sec
-Fuel: 107.20 #kg (34.96 gal)
-Oxidizer: 160.81 #kg (37.26 gal)
-Total: 268.01 #kg (72.23 gal)
+#Calculated Hotfire Values (Based on 30s requirement)
+Fuel: 126.12 # (kg) (41.13 gal)
+Oxidizer: 189.18 # (kg) (43.84 gal)
+
 
