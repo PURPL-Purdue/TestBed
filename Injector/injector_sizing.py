@@ -152,7 +152,7 @@ V_dot_ox = m_dot_ox / rho_ox_amb # Oxygen volumetric flow rate at STP (m^3/s)
 V_dot_n2 = m_dot_fu / rho_fu  # Nitrogen tank press volumetric flow rate at STP (m^3/s)
 
 SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
-SCFM_n2 =  V_dot_n2 / np.pow(ft_to_m, 3) * 60
+SCFM_n2 = (m_dot_fu / rho_fu) * (rho_fu / 1.165) * 35.3147 * 60
 
 data["of_ratio"] = OF
 data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
