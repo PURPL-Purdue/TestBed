@@ -2,7 +2,7 @@ function [QDot, Tsubc, Wmin] = HeatFluxFunction(heightStepNumber,heightStepArray
 %Note: Function returns [Qdot, -1, -1] if a wall thickness could not be
 %found that meets the strength requirements
 
-wallThicknesses = linspace(0.000762,0.00254,length(heightStepArray)); %Prospective wall thicknesses range in meters
+wallThicknesses = linspace(0.000762,0.003175,length(heightStepArray)); %Prospective wall thicknesses range in meters
 gasTemp = fluidInfo(:,6); %Hot gas temperature in K
 flux = (H_g_From_Temperature(targetTemp,fluidInfo) .* (gasTemp - targetTemp))'; %Calcs heat flux in W/m^2
 Tc = -(wallThicknesses .* flux(heightStepNumber) ./ thermalConductivity - targetTemp); %Calcs prospective coolant wall temperatures ,,flux:

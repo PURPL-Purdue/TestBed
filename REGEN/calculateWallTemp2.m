@@ -1,4 +1,4 @@
-function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity, heightMatrix] = calculateWallTemp2(updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties)
+function [h_lMatrix,flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity, heightMatrix] = calculateWallTemp2(h_lMatrix, updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
@@ -147,10 +147,11 @@ for heightStepNumber = 1:1:length(height_steps)
         frictionFactor = (1/(-1.8*log10(((surfaceRoughness/hyd_diam)/3.7)^(1.11)+(6.9/Re))))^2; %new friction factor which is so cool (from vincent and haaland)
         %disp(frictionFactor)
 
-        %Nu = frictionFactor*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
+        %Nu = frictionFactor/8*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
            %display(Pr)
         
         % Calculate convective heat transfer coefficient [W/(m^2·K)]
+        %h_l = (0.023*(Re^0.8)*(Pr^0.4)*((dyn_visc/mu_wall)^0.114))*kf/hyd_diam;
         h_l = Nu * kf / hyd_diam;
         % if(heightStepNumber == 10)
         %     display(h_l)
@@ -191,7 +192,7 @@ for heightStepNumber = 1:1:length(height_steps)
         % Calculate required coolant temp,x T_L_req (K) 
         T_L_req =  (-(qdotL_total*A_wallG)/(h_l*A_wallL))+T_wallL;
         T_l_reqMatrix(wInd,hInd,heightStepNumber) = T_L_req; 
-    
+        h_lMatrix(wInd,hInd, heightStepNumber) = h_l;
     
         %% Calculate Coolant Temp increase, delta_T (K)
         delta_T = qdotL_total*A_wallL/(mass_flow*cp);
@@ -205,11 +206,11 @@ for heightStepNumber = 1:1:length(height_steps)
             flowTemp(wInd, hInd, heightStepNumber) = 999; % if coolant temp is too high, nullify
             continue
         end
-         if(wInd ==1 && hInd ==10)
-            disp(Nu)
-           
-        end
-    
+        %  if(wInd ==1 && hInd ==6)
+        %     disp(h_l)
+        % 
+        % end
+        % 
         %% Calculate Coolant Pressure Drop
         % disp(velocity)
          %disp(frictionFactor)
@@ -249,6 +250,10 @@ for heightStepNumber = 1:1:length(height_steps)
         updatedPressure(wInd,heightStepNumber) = flowPressure(wInd,indexTemp,heightStepNumber);
         updatedVelocity(wInd,heightStepNumber) = flowVelocity(wInd,indexTemp,heightStepNumber);
         heightMatrix(wInd,heightStepNumber) = heightArray(indexTemp);
+        if wInd == 1
+            h_lFinal = h_lMatrix(1, indexTemp, heightStepNumber);
+            display(h_lFinal)
+        end
         %display(temperature2)
    
 end
