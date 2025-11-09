@@ -1,5 +1,5 @@
 ###################################################################################################
-#                        Welcome to the Testbed Project's source of truth!                         #
+#                        Welcome to the Testbed Project Zephyr's source of truth!                         #
 #                                                                                                 #
 # Why are we doing this?:                                                                         #
 #   As our project grows, it gets hard to keep track of the values on everyone's subsystems as    #
@@ -30,11 +30,37 @@
 ###################################################################################################
 
 
-######################################
-###### ZEPHYR ENGINE ARCHITECTURE #######
-######################################
+#######################################
+##### ZEPHYR ENGINE ARCHITECTURE ######
+#######################################
 
-# Maelstrom Chamber performance (INPUTS)
+# Zephyr Chamber Performance (INPUTS)
+OF_ratio: 1.500 
+Chamber_pressure: 600 # (psi)
+Thrust: 5000 # (lb/f)
 
-of_ratio: 1.5
-chamberpressure: 600 #psi
+# Zephyr Chamber Outputs (OUTPUTS BASED ON 85% EFFICIENCY FROM INJECTOR)
+Expansion_ratio: 5.579
+Champer_temperature: 2521.1 # (K)
+Isp: 253.87 # (sec)
+Exit_velocity: 2116.1 # (m/s)
+Characteristic_velocity (c*): 1653.5 # (m/s)
+mdot: 10.510 # (kg/s)
+
+# Zephyr Geometry
+Throat_diameter: 6.74 # (cm)
+Exit_diameter: 15.93 # (cm)
+Full_chamber_length: 25.29 # (cm)
+Chamber_volume: 5018.02 # (cm^3) (w/converging section)
+Chamber_diameter: 14.73 # (cm)
+Chamber_length: 29.46 # (cm)
+Characteristic_Length_Cylinder (L*): 1.405 # (m) 
+Characteristic_Length_with_converging (L*): 1.511 # (m)
+Nozzle_length: 17.14 # (cm)
+# Based on the ZephyrCharacteristicGenerator.py, throat length is a value of 5.95 cm. In the future, throat length will likely be 0 cm
+
+#Calculated Hotfire Values (Based on 30s requirement)
+Fuel: 126.12 # (kg) (41.13 gal)
+Oxidizer: 189.18 # (kg) (43.84 gal)
+
+
