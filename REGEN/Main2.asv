@@ -1,9 +1,9 @@
 %% Main Compiled Code
 
-widthArray = linspace(0.02/39.37, 0.080/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
-heightStepNumber = 45;
+heightStepNumber = 52;
 numChannels = 60;
 
 %% Initialize all arrays and matrices
@@ -26,7 +26,7 @@ geometryMap = zeros(length(widthArray), length(heightArray)); %will be used late
 heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFzOF1.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEAOutEq_10-30-25.xlsx"); %pull all nasaCEA values into fluidProperties
 fluidProperties(1,:) = [];
 y = 1;
 r = 1;
@@ -40,7 +40,6 @@ updatedTemps = [];
 updatedPressure = [];
 updatedVelocity = [];
 heightMatrix = [];
-h_lMatrix = [];
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
@@ -114,7 +113,7 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         width = widthArray(widthValue);
         
 
-        [h_lMatrix,flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity, heightMatrix] = calculateWallTemp2(h_lMatrix,updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties);
+        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity, heightMatrix] = calculateWallTemp2(updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
         % if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(heightArray,widthValue,heightValue,length(heightStepArray)) == 0
@@ -132,4 +131,4 @@ end
 
 %create geometry map
         
-       
+           

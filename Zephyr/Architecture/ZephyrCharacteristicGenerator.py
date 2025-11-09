@@ -16,11 +16,13 @@ OF_TARGET = 1.5
 OF_RANGE = np.linspace(0.5, 3.0, 50)
 
 AMBIENT_P_PSI = 14.7
-EFFICIENCY_FACTOR = 1
+EFFICIENCY_FACTOR = .85
 HOTFIRE_SECONDS = 30
 
 NOZZLE_HALF_ANGLE_DEG = 15.0
 THROAT_LENGTH_FACTOR = 0.5
+CHAMBER_L_OVER_D = 2.0  # choose desired length-to-diameter ratio
+
 
 # =====================================================
 # === CONSTANTS =======================================
@@ -105,30 +107,41 @@ def compute_sizing(F_newtons, pc_psi, of):
     Cf = compute_Cf_ideal(gamma, Pe_Pc, Pa_over_Pc, eps)
     At = F_newtons / (Pc_Pa * Cf)
     Dt = math.sqrt(4.0 * At / math.pi)
-    mdot = Pc_Pa * At / cstar
+    
+    # Apply injector efficiency to effective cstar
+    cstar_eff = cstar * EFFICIENCY_FACTOR
+    mdot = Pc_Pa * At / cstar_eff
+    
     Ae = At * eps
     De = math.sqrt(4.0 * Ae / math.pi)
     Isp = (Cf * cstar) / G0
     Ve = Isp * G0 * EFFICIENCY_FACTOR
 
-    # === Chamber geometry iterative L* ===
+    # === Chamber geometry (use chosen aspect ratio) ===
     D_chamber = 2.5 * Dt
     L_chamber = 3.0 * Dt
-    for _ in range(20):
+
+
+    # Set target L* scaled by injector efficiency
+    Lstar_target = 1.2 / EFFICIENCY_FACTOR  # meters; lower efficiency -> longer chamber
+
+    for _ in range(50):
         V_chamber = (math.pi / 4.0) * D_chamber**2 * L_chamber
         Lstar = V_chamber / At
-        if Lstar < 1.0:
-            L_chamber *= 1.1
-            D_chamber *= 1.05
-        elif Lstar > 1.5:
-            L_chamber *= 0.9
-            D_chamber *= 0.95
-        else:
+        error = Lstar_target - Lstar
+
+        if abs(error) < 0.01:
             break
+
+        adjust_factor = 1 + 0.2 * error
+        L_chamber *= adjust_factor
+        D_chamber *= math.sqrt(adjust_factor)  # keep roughly cylindrical
 
     V_chamber = (math.pi / 4.0) * D_chamber**2 * L_chamber
     Lstar_cylinder = V_chamber / At
 
+    D_chamber = (4 * V_chamber / (math.pi * CHAMBER_L_OVER_D)) ** (1/3)
+    L_chamber = CHAMBER_L_OVER_D * D_chamber
     # Converging section
     L_converge = (D_chamber - Dt) / (2 * math.tan(math.radians(45)))
     V_converge = (1/3) * math.pi * L_converge * ((D_chamber/2)**2 + (D_chamber/2)*(Dt/2) + (Dt/2)**2)
@@ -150,6 +163,7 @@ def compute_sizing(F_newtons, pc_psi, of):
         'Lstar': Lstar_cylinder, 'V_total': V_total, 'Lstar_with_converge': Lstar_with_converge,
         'L_throat': L_throat * 100.0, 'L_nozzle': L_nozzle * 100.0
     }
+
 
 # =====================================================
 # === PRETTY PRINT ====================================

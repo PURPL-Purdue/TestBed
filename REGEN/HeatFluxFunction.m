@@ -2,7 +2,7 @@ function [QDot, Tsubc, Wmin] = HeatFluxFunction(heightStepNumber,heightStepArray
 %Note: Function returns [Qdot, -1, -1] if a wall thickness could not be
 %found that meets the strength requirements
 
-wallThicknesses = linspace(0.000762,0.00254,length(heightStepArray)); %Prospective wall thicknesses range in meters
+wallThicknesses = linspace(0.000762,0.003175,length(heightStepArray)); %Prospective wall thicknesses range in meters
 gasTemp = fluidInfo(:,6); %Hot gas temperature in K
 flux = (H_g_From_Temperature(targetTemp,fluidInfo) .* (gasTemp - targetTemp))'; %Calcs heat flux in W/m^2
 Tc = -(wallThicknesses .* flux(heightStepNumber) ./ thermalConductivity - targetTemp); %Calcs prospective coolant wall temperatures ,,flux:
@@ -24,8 +24,10 @@ while i <= length(Tc)
     OEffectives(i) = sum(calcPainArr .* wallThicknesses(i)) .* 1000000;  %Calcs effective strength for each wall thickness in Pa
     if bendMaxs(i) >= TMaxs(i)
         OMaxs(i) = bendMaxs(i);
+    
     else
        OMaxs(i) = TMaxs(i);
+      
     end
     i = i + 1;
 end
@@ -40,6 +42,7 @@ while a < length(OMaxs)
     if OEffectives(a) >= OMaxs(a)
         Wmin = wallThicknesses(a);
         Tsubc = Tc(a);
+        
         break
     end
 end
