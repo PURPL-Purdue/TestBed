@@ -1,3 +1,4 @@
+%% 
 in_to_m = 0.0254;
 lb_to_kg = 0.4536;
 N_to_lbf = 0.2248;
@@ -62,7 +63,7 @@ R_cg = (2*shaft_ratio^2*sleeve_thickness + sqrt(4*shaft_ratio^2*sleeve_thickness
 
 R_sv = sleeve_thickness + R_cg;
 R_pr = R_sv * shaft_ratio;
-R_pt = (0.75 * R_cg) + (0.25 * R_sv);
+R_pt = (0.5 * R_cg) + (0.5 * R_sv);
 
 fprintf("Fuel Area (thou^2): %.2e\n", A_pg * (1000.0 / in_to_m)^2);
 fprintf("Central Gap Radius (thou): %.2f\n", R_cg * 1000.0 / in_to_m);
