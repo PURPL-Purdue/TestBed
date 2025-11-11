@@ -1,10 +1,10 @@
-function [h_lMatrix,flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity, heightMatrix] = calculateWallTemp2(h_lMatrix, updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties)
+function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity] = calculateWallTemp3(updatedTemps, updatedPressure, updatedVelocity, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
     P_start = 5516000; % Pa
     rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
     m_flow_total = 0.6109090909; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
-    channel_number = channelNum;
+    channel_number = 60;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     
     
@@ -23,19 +23,18 @@ function [h_lMatrix,flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thic
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
     T_target = 500; % target gas-side hotwall temp 530 for 7075, 773 for copper
-    
-    wInd = widthValue;
+    h_lMatrix = [];
     
 
 for heightStepNumber = 1:1:length(height_steps)   
-% heightStepNumber = 1;
-    for hInd = 1:1:length(heightArray)
+    %heightStepNumber = 1;
+%     for hInd = 1:1:length(heightArray)
         
         
-            
-        height = heightArray(hInd);
-        
+        width = widthArray(heightStepNumber);
+        height = heightArray(heightStepNumber);
         v_start = mass_flow/(height * width * rho_start); %m/s
+
         if heightStepNumber==1
           currentHeightStep = height_steps(2) - height_steps(1);
         else
@@ -52,16 +51,16 @@ for heightStepNumber = 1:1:length(height_steps)
     
         else
     
-            hotWall_dP = updatedPressure(wInd,heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
-            pressure = updatedPressure(wInd,heightStepNumber-1); % if on a different height step, initialize as the previous height step's value
-            temp = updatedTemps(wInd,heightStepNumber-1);
+            hotWall_dP = updatedPressure(heightStepNumber-1) - chamberPressure; %calculate dP for structures (Pa)
+            pressure = updatedPressure(heightStepNumber-1); % if on a different height step, initialize as the previous height step's value
+            temp = updatedTemps(heightStepNumber-1);
             %velocity = updatedVelocity(wInd,heightStepNumber-1);
             velocity = mass_flow/(width*height*density);
     
         end
      
         if(temp == 0) % if channel dimension combo is already unsuccessful, do not let computation with it continue
-            flowTemp(wInd,hInd,heightStepNumber) = 999;
+            flowTemp(heightStepNumber) = 999;
           
             continue
             
@@ -71,12 +70,12 @@ for heightStepNumber = 1:1:length(height_steps)
         [Q_dot, T_wallL, wall_thickness] = HeatFluxFunction(heightStepNumber,heightStepArray, width, hotWall_dP, k_w, T_target, newFluidProperties);
         
         if(T_wallL == -2)
-            flowTemp(wInd,hInd,heightStepNumber) = -2;
+            flowTemp(heightStepNumber) = -2;
             break
         end
         
         %wall_thickness = 0.000254;
-        wall_thicknesses(wInd, hInd, heightStepNumber) = wall_thickness;
+        wall_thicknesses(heightStepNumber) = wall_thickness;
         
         %% Reynold's Number
         % Hydraulic Diameter (m)
@@ -146,11 +145,10 @@ for heightStepNumber = 1:1:length(height_steps)
         frictionFactor = (1/(-1.8*log10(((surfaceRoughness/hyd_diam)/3.7)^(1.11)+(6.9/Re))))^2; %new friction factor which is so cool (from vincent and haaland)
         %disp(frictionFactor)
 
-        %Nu = frictionFactor/8*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
+        %Nu = frictionFactor*(Re-1000)*Pr/(1+(12.7*(frictionFactor^0.5)*(-1+Pr^(2/3))));
            %display(Pr)
         
         % Calculate convective heat transfer coefficient [W/(m^2·K)]
-        %h_l = (0.023*(Re^0.8)*(Pr^0.4)*((dyn_visc/mu_wall)^0.114))*kf/hyd_diam;
         h_l = Nu * kf / hyd_diam;
         % if(heightStepNumber == 10)
         %     display(h_l)
@@ -190,35 +188,35 @@ for heightStepNumber = 1:1:length(height_steps)
     
         % Calculate required coolant temp,x T_L_req (K) 
         T_L_req =  (-(qdotL_total*A_wallG)/(h_l*A_wallL))+T_wallL;
-        T_l_reqMatrix(wInd,hInd,heightStepNumber) = T_L_req; 
-        h_lMatrix(wInd,hInd, heightStepNumber) = h_l;
+        T_l_reqMatrix(heightStepNumber) = T_L_req; 
+    
     
         %% Calculate Coolant Temp increase, delta_T (K)
         delta_T = qdotL_total*A_wallL/(mass_flow*cp);
         
-        flowTemp(wInd, hInd, heightStepNumber) = temp+delta_T; % Previous step flow temp plus deltaT
+        flowTemp(heightStepNumber) = temp+delta_T; % Previous step flow temp plus deltaT
         
         
         
         
-        if (double(flowTemp(wInd, hInd, heightStepNumber)) > T_L_req)
-            flowTemp(wInd, hInd, heightStepNumber) = 999; % if coolant temp is too high, nullify
-            continue
-        end
-        %  if(wInd ==1 && hInd ==6)
-        %     disp(h_l)
-        % 
-        % end
-        % 
+        % if (double(flowTemp(heightStepNumber)) > T_L_req)
+        %    flowTemp(heightStepNumber) = 999; % if coolant temp is too high, nullify
+        %    continue
+        %end
+        % if(wInd ==1 && hInd ==10)
+        %    disp(Nu)
+        %   
+        %end
+    
         %% Calculate Coolant Pressure Drop
         % disp(velocity)
          %disp(frictionFactor)
         delta_P = frictionFactor * currentHeightStep * density * (velocity^2)/ (2*hyd_diam); %Frictional static pressure drop across the channel
-        flowPressure(wInd, hInd, heightStepNumber) = pressure - delta_P; %Flow pressure
+        flowPressure(heightStepNumber) = pressure - delta_P; %Flow pressure
         
         %% Calculate Coolant Velocity Increase via Bernoulli's
-        flowVelocity(wInd, hInd, heightStepNumber) = mass_flow/(width*height*density); % Flow velocity    %% 
-    end
+        flowVelocity(heightStepNumber) = mass_flow/(width*height*density); % Flow velocity    %% 
+    %end
     
 
         
@@ -236,7 +234,7 @@ for heightStepNumber = 1:1:length(height_steps)
         % else
         %     correctionFactor = 150;
         % end
-        data = flowTemp(wInd,:,heightStepNumber)-(T_l_reqMatrix(wInd,:,heightStepNumber)-correctionFactor);
+        data = flowTemp(heightStepNumber)-(T_l_reqMatrix(heightStepNumber)-correctionFactor);
         negatives = data(data<0);
         negativeIndex = find(data<0);
         [temperature2,relIndex] = max(negatives);
@@ -244,15 +242,12 @@ for heightStepNumber = 1:1:length(height_steps)
              %[temperature2,indexTemp] = min((flowTemp(wInd,:,heightStepNumber)-(T_l_reqMatrix(wInd,:,heightStepNumber)-100))<0); % picks optimized height value
         
         %end
-            
-        updatedTemps(wInd,heightStepNumber) = flowTemp(wInd,indexTemp,heightStepNumber);
-        updatedPressure(wInd,heightStepNumber) = flowPressure(wInd,indexTemp,heightStepNumber);
-        updatedVelocity(wInd,heightStepNumber) = flowVelocity(wInd,indexTemp,heightStepNumber);
-        heightMatrix(wInd,heightStepNumber) = heightArray(indexTemp);
-        if wInd == 1
-            h_lFinal = h_lMatrix(1, indexTemp, heightStepNumber);
-            display(h_lFinal)
-        end
+           h_lMatrix(heightStepNumber) = h_l;
+        updatedTemps(heightStepNumber) = flowTemp(heightStepNumber);
+        updatedPressure(heightStepNumber) = flowPressure(heightStepNumber);
+        updatedVelocity(heightStepNumber) = flowVelocity(heightStepNumber);
+        %heightMatrix(heightStepNumber) = heightArray(indexTemp);
         %display(temperature2)
    
+end
 end
