@@ -1,0 +1,66 @@
+###################################################################################################
+#                        Welcome to the Testbed Project Zephyr's source of truth!                         #
+#                                                                                                 #
+# Why are we doing this?:                                                                         #
+#   As our project grows, it gets hard to keep track of the values on everyone's subsystems as    #
+#   they get more and more complicated. Consolidating all of our important design parameters,     #
+#   inputs and outputs in the same file helps reduce miscommunications and ensures everyone is in #
+#   the same page.                                                                                #
+# What the hell is a YAML?:                                                                       #
+#   YAML is a type of files that allows people to write data in a way that is readable to both a  #
+#   person AND a computer. As opposed to other filetypes like JSON and XML, the syntax is pretty  #
+#   nice and readable and will thus make a good reference for programmers and non-programmers in  #
+#   the team.                                                                                     #
+# (video explaining how to use a YAML) https://www.youtube.com/watch?v=BEki_rsWu4E                #
+#                                                                                                 #
+# Basic rules:                                                                                    #
+#   1. Be clear with naming, limit acronym usage on any parameters you add                        #
+#   2. Write the units in a comment using parenthesis and maintain unit system consistency        #
+#   3. Write your name next to any parameters you own, notify owners of inputs before             #
+#      changing them                                                                              #
+#   4. Do not change OUTPUTS manually, only code should do this!!!                                #
+#   5. No slop, only throw a value here if it actually is useful information. EX: things like     #
+#      shaft speed, design propellant temps... Not things like super specific shaft dimensions or #
+#      random off-design conditions                                                               #
+#   6. Check if the value is already there before adding it                                       #
+#                                                                                                 #
+# If you have any questions about how to use this document, reach out to Dominik Sloup            #
+# dsloup@purdue.edu                                                                               #
+#                                                                                                 #
+###################################################################################################
+
+
+#######################################
+##### ZEPHYR ENGINE ARCHITECTURE ######
+#######################################
+
+# Zephyr Chamber Performance (INPUTS)
+OF_ratio: 1.500 
+Chamber_pressure: 600 # (psi)
+Thrust: 5000 # (lb/f)
+
+# Zephyr Chamber Outputs (OUTPUTS BASED ON 85% EFFICIENCY FROM INJECTOR)
+Expansion_ratio: 5.579
+Champer_temperature: 2521.1 # (K)
+Isp: 253.87 # (sec)
+Exit_velocity: 2116.1 # (m/s)
+Characteristic_velocity (c*): 1653.5 # (m/s)
+mdot: 10.510 # (kg/s)
+
+# Zephyr Geometry
+Throat_diameter: 6.74 # (cm)
+Exit_diameter: 15.93 # (cm)
+Full_chamber_length: 25.29 # (cm)
+Chamber_volume: 5018.02 # (cm^3) (w/converging section)
+Chamber_diameter: 14.73 # (cm)
+Chamber_length: 29.46 # (cm)
+Characteristic_Length_Cylinder (L*): 1.405 # (m) 
+Characteristic_Length_with_converging (L*): 1.511 # (m)
+Nozzle_length: 17.14 # (cm)
+# Based on the ZephyrCharacteristicGenerator.py, throat length is a value of 5.95 cm. In the future, throat length will likely be 0 cm
+
+#Calculated Hotfire Values (Based on 30s requirement)
+Fuel: 126.12 # (kg) (41.13 gal)
+Oxidizer: 189.18 # (kg) (43.84 gal)
+
+

@@ -1,42 +1,52 @@
 %% Main Compiled Code
 
-widthArray = linspace(0.0625/39.37, 0.125/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.02/39.37, 0.06/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+widthArray = linspace(0.04/39.37, 0.0625/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+heightArray = linspace(0.04/39.37, 0.12/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 
-heightStepNumber = 45;
-numChannels = 30;
+heightStepNumber = 50;
+numChannels = 62;
+
+heightStepArray = linspace(0,8.97*0.0254,heightStepNumber);
+
+%% Run NASA CEA and retrieve values
+fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties(1,:) = [];
+y = 1;
+r = 1;
+axialDist = (fluidProperties(:,1));
+newFluidProperties = zeros(length(heightStepArray),10);
+newFluidProperties(:,1) = heightStepArray;
+chamberDiameter = [];
+
+i = 1;
+throatInd = 1+ length(heightStepArray(heightStepArray < 0.178816));
+startConvInd = 1+length(heightStepArray(heightStepArray < 0.132334));
+for a = heightStepArray
+    
+    if(heightStepArray(i)<=startConvInd)
+        chamberDiameter(i) = 0.09525; % set diameter in m
+        
+    elseif(heightStepArray(i)<=throatInd)
+        chamberDiameter(i) = (((heightStepArray(i)-0.132334)*-1.245) +0.09525);
+    else
+        chamberDiameter(i) = (((heightStepArray(i)-0.178816)*0.5129) +0.037338);
+    end
+
+    i=i+1;
+end
+
+
 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
 flowVelocityMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
 flowPressureMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
-vonMisesStressMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
 wall_thicknessMatrix = [];
 geometryMap = zeros(length(widthArray), length(heightArray)); %will be used later on to see which channel dimension combos worked/failed
 
-%% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
-%{syms x;
-%steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
-    %n = pi/heightStepNumber;
-    %step = 1;
-    %for i = 0:n:(pi-n)
-   %     heightStepArray(step) = int(steps,i,i+n);
-  %      step = step +1;
- %   end
-%heightStepArray = heightStepArray/39.37; % change to meters
-heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
 
-%% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFz_10-22-25.xlsx"); %pull all nasaCEA values into fluidProperties
-fluidProperties(1,:) = [];
-y = 1;
-r = 1;
-axialDist = (fluidProperties(:,1));
-newFluidProperties = zeros(length(heightStepArray),13);
-newFluidProperties(:,1) = heightStepArray;
-chamberDiameter = [];
-chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
-T_l_reqMatrix = [];
+
+
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
@@ -51,14 +61,12 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     sumVisc = 0;
     sumCp = 0;
     sumP = 0;
-    sumCstar = 0;
-    sumRho = 0;
-    sumSoS = 0;
-    sumIsp = 0;
+    sumCstar = 0;                
 
     while a <= length(axialDist)
+        
         if a-r==0
-            sumDiameter = sumDiameter + chamberPlot(a,2);
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -68,13 +76,10 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             sumCp = sumCp+fluidProperties(a,8);
             sumP = sumP+fluidProperties(a,9);
             sumCstar = sumCstar+fluidProperties(a,10);
-            sumRho = sumRho+fluidProperties(a,11);
-            sumSoS = sumSoS+fluidProperties(a,12);
-            sumIsp = sumIsp+fluidProperties(a,13);
             a=a+1;
 
         elseif axialDist(a) < heightStepArray(y)
-            sumDiameter = sumDiameter + chamberPlot(a,2);
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -84,13 +89,13 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             sumCp = sumCp+fluidProperties(a,8);
             sumP = sumP+fluidProperties(a,9);
             sumCstar = sumCstar+fluidProperties(a,10);
-            sumRho = sumRho+fluidProperties(a,11);
-            sumSoS = sumSoS + fluidProperties(a,12);
-            sumIsp = sumIsp+fluidProperties(a,13);
+
+
+            
             a=a+1;
         else
             divFactor = a-r;
-            chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
+            %chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
             newFluidProperties(y,2) = sumAEAT/divFactor;
             newFluidProperties(y,3) = sumPrandtl/divFactor;
             newFluidProperties(y,4) = sumMach/divFactor;
@@ -100,11 +105,8 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             newFluidProperties(y,8) = sumCp/divFactor;
             newFluidProperties(y,9) = sumP/divFactor;
             newFluidProperties(y,10) = sumCstar/divFactor;
-            newFluidProperties(y,11) = sumRho/divFactor;
-            newFluidProperties(y,12) = sumSoS/divFactor;
-            newFluidProperties(y,13) = sumIsp/divFactor;
             r = a;
-            break;
+            break; 
         
         end
     end
@@ -112,26 +114,25 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
 end
 chamberDiameter = flip(chamberDiameter);
 newFluidProperties = flip(newFluidProperties,1);
+T_l_reqMatrix = [];
 %% Main Loop
 for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
     for heightValue = 1:length(heightArray) %heigth value sent to calculateWallTemp from height array
         width = widthArray(widthValue);
         height = heightArray(heightValue);
 
-        [flowTempMatrix, flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, vonMisesStressMatrix] = calculateWallTemp(T_l_reqMatrix, chamberDiameter, wall_thicknessMatrix, numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, vonMisesStressMatrix, height, width, heightValue, widthValue, newFluidProperties);
+        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix] = wallTempSSMETEST(T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, height, width, heightValue, widthValue, newFluidProperties);
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
-
         if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == 0
                 geometryMap(widthValue, heightValue) = 0;%fail
             else
                 geometryMap(widthValue, heightValue) = 1; %pass
         end
+        
+        
+        
 
     end
     
 end
-
-%create geometry map
-        
-           

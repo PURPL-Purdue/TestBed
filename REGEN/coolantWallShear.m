@@ -1,0 +1,6 @@
+%% Local helper: compute wall shear from Darcy-Weisbach
+function tau_coolant = coolantWallShear(density, flowVelocity, frictionFactor, wInd, hInd, heightStepNumber)
+    % coolant side wall shear stress
+    vel = flowVelocity(wInd, hInd, heightStepNumber);
+    tau_coolant = (frictionFactor/4)*(1/2)*(density)*(vel^2);
+end
