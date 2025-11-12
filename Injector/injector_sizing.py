@@ -89,9 +89,6 @@ m_dot_lb = F / Isp_real # Total combined mass flow (lb/s)
 
 m_dot_kg = F_N / Isp_real * g
 
-print(m_dot_lb)
-print(m_dot_kg)
-
 m_dot = m_dot_lb * lb_to_kg # Total combined mass flow (kg/s)
 
 m_dot_fu = m_dot / (1 + OF) # Fuel mass flow (kg/s)
@@ -177,6 +174,7 @@ with open(yaml_path, "w") as f:
 # ──────────────────────────────────────────────────────────────
 
 print(f"Specific impulse ({Isp_eff} efficiency): {math.floor(Isp_real)} s")
+print(f"Characteristic velocity: {math.floor(cstar)} ft/s")
 print(f"Total mass flow: {m_dot:.3f} kg/s")
 print(f"Fuel mass flow: {m_dot_fu:.3f} kg/s")
 print(f"Ox mass flow: {m_dot_ox:.3f} kg/s")
