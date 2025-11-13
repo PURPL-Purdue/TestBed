@@ -88,9 +88,6 @@ m_dot_lb = F / Isp_real # Total combined mass flow (lb/s)
 
 m_dot_kg = F_N / Isp_real * g
 
-print(m_dot_lb)
-print(m_dot_kg)
-
 m_dot = m_dot_lb * lb_to_kg # Total combined mass flow (kg/s)
 
 m_dot_fu = m_dot / (1 + OF) # Fuel mass flow (kg/s)
@@ -151,7 +148,7 @@ V_dot_ox = m_dot_ox / rho_ox_amb # Oxygen volumetric flow rate at STP (m^3/s)
 V_dot_n2 = m_dot_fu / rho_fu  # Nitrogen tank press volumetric flow rate at STP (m^3/s)
 
 SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
-SCFM_n2 =  V_dot_n2 / np.pow(ft_to_m, 3) * 60
+SCFM_n2 = (m_dot_fu / rho_fu) * (rho_fu / 1.165) * 35.3147 * 60
 
 data["of_ratio"] = OF
 data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
@@ -176,6 +173,7 @@ with open(yaml_path, "w") as f:
 # ──────────────────────────────────────────────────────────────
 
 print(f"Specific impulse ({Isp_eff} efficiency): {math.floor(Isp_real)} s")
+print(f"Characteristic velocity: {math.floor(cstar)} ft/s")
 print(f"Total mass flow: {m_dot:.3f} kg/s")
 print(f"Fuel mass flow: {m_dot_fu:.3f} kg/s")
 print(f"Ox mass flow: {m_dot_ox:.3f} kg/s")
