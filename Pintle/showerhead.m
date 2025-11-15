@@ -21,6 +21,8 @@ throttle = 0.2; % Minimum Throttle
 
 servo_angle = 180.0 * (pi / 180.0); % Maximum Servo Angle
 
+safety = 2.0;
+
 % Constants
 psi_to_Pa = 6894.757;
 
@@ -58,14 +60,28 @@ R_tot = sqrt(A_ann / pi + R_od^2 + 2 * R_od * sleeve_thickness + sleeve_thicknes
 R_sv = R_od + sleeve_thickness;
 delta_ann = R_tot - R_sv;
 
+R_finlet = sqrt(A_pg / pi);
+R_oxinlet = sqrt(A_ann / pi);
+
 fprintf("Mass Flow LOx (lb/s): %.2f\n", mdot_lox / lb_to_kg);
 fprintf("Mass Flow RP1 (lb/s): %.2f\n", mdot_f / lb_to_kg);
 fprintf("Fuel Area (thou^2): %.2e\n", A_pg * (1000.0 / in_to_m)^2);
 fprintf("LOx Area (thou^2): %.2e\n", A_ann * (1000.0 / in_to_m)^2);
+fprintf("Fuel Inlet Diameter Min. (thou): %.0f\n", 2 * R_finlet * 1000.0 / in_to_m);
+fprintf("LOx Inlet Diameter Min. (thou): %.0f\n", 2 * R_oxinlet * 1000.0 / in_to_m);
+fprintf("--------------------------------------\n");
 fprintf("Total Diameter (thou): %.0f\n", 2 * R_tot * 1000.0 / in_to_m);
 fprintf("Pintle Diameter (thou): %.0f\n", 2 * R_od * 1000.0 / in_to_m);
+fprintf("Pintle Bore Diameter (thou): %.0f\n", 2 * (R_od - pintle_wall) * 1000.0 / in_to_m);
 fprintf("Sleeve Tip Diameter (thou): %.0f\n", 2 * R_sv * 1000.0 / in_to_m);
 fprintf("Annular Gap (thou): %.0f\n", delta_ann * 1000.0 / in_to_m);
+fprintf("--------------------------------------\n");
+
+fuel_manifold_height = safety * A_pg / (2 * pi * (R_od - pintle_wall));
+lox_manifold_height = safety * A_ann / (2 * pi * R_sv);
+
+fprintf("Fuel Manifold Height Min. (thou): %.0f\n", fuel_manifold_height * 1000.0 / in_to_m);
+fprintf("LOx Manifold Height Min. (thou): %.0f\n", lox_manifold_height * 1000.0 / in_to_m);
 fprintf("--------------------------------------\n");
 
 slot_height = A_pg * 1 / (2 * pi * (R_od - pintle_wall) * (1 - min_material));
