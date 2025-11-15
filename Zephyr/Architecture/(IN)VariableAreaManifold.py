@@ -64,7 +64,41 @@ def ring_manifold_half(cfg):
                   f"{m_half/n_half:.3f} kg/s | "
                   f"Plenum {A_i_cm2:.3f} cm²")
 
-    return outlet_velocities, outlet_massflows, A_plenum
+    # ============================================================
+    # ✨ NEW FUNCTIONALITY: SCALE AREAS TO 5 mm SEMICIRCLE HEIGHT
+    # ============================================================
+    target_radius_mm = 5.0
+    target_radius_m = target_radius_mm / 1000.0
+
+    # Smallest and largest plenum areas (in m²)
+    A_min_m2 = cm2_to_m2(A_plenum[-1])
+    A_max_m2 = cm2_to_m2(A_plenum[0])
+
+    # Compute current smallest semicircle radius
+    r_min_m = math.sqrt((2 * A_min_m2) / math.pi)
+
+    # Scale factor for all areas (so smallest becomes 5 mm)
+    scale_factor = (target_radius_m / r_min_m) ** 2
+    A_plenum_scaled = [a * scale_factor for a in A_plenum]
+
+    # Compute radii (mm) for key points
+    def semicircle_radius_mm(area_cm2):
+        return math.sqrt((2 * cm2_to_m2(area_cm2)) / math.pi) * 1000.0
+
+    r_small = semicircle_radius_mm(A_plenum_scaled[-1])
+    r_large = semicircle_radius_mm(A_plenum_scaled[0])
+    r_mid = semicircle_radius_mm(A_plenum_scaled[len(A_plenum_scaled)//2])
+
+    print("\n--- Scaled Plenum Geometry ---")
+    print(f"Scale factor applied: {scale_factor:.6f}")
+    print(f"Largest radius : {r_large:.3f} mm")
+    print(f"Midpoint radius: {r_mid:.3f} mm")
+    print(f"Smallest radius: {r_small:.3f} mm (set to target height)")
+    print("--------------------------------\n")
+
+    return outlet_velocities, outlet_massflows, A_plenum_scaled
+    # ============================================================
+
 
 # =============================
 # 📊 PLOTTING FUNCTION
