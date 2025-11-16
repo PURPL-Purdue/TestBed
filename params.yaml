@@ -61,11 +61,11 @@ gox_design_mdot: 1.344 # (lb/s) Dominik Sloup
 gox_feed_pressure: 1100.0 # (psi) Dominik Sloup
 rp_feed_pressure: 640.0 # (psi) Dominik Sloup
 
-gox_line_velocity: 89.66 # (ft/s) Dominik Sloup
+gox_line_velocity: 89.66  # (ft/s) Dominik Sloup
 rp_line_velocity: 30.45  # (ft/s) Dominik Sloup
 
-gox_SCFM: 970.05 # (ft^3/min) Dominik Sloup
-n2_SCFM: 1.59 # (ft^3/min) Dominik Sloup
+gox_SCFM: 970.05  # (ft^3/min) Dominik Sloup
+n2_SCFM: 1108.42 # (ft^3/min) Dominik Sloup
 
 # Maelstrom Swirl injector design (OUTPUTS)
 

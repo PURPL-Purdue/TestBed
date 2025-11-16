@@ -1,17 +1,19 @@
 %% Main Compiled Code
-
-widthArray = linspace(0.02/39.37, 0.080/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
-heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-
+updatedHeightValues = readmatrix("wallThicknessesGoated.xlsx");
+%widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+%heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+widthArray = updatedHeightValues(7,2:46);
+heightArray = updatedHeightValues(6,2:46);
+wall_thicknessMatrix = updatedHeightValues(4,2:46);
 heightStepNumber = 45;
 numChannels = 60;
 
 %% Initialize all arrays and matrices
-flowTempMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
-flowVelocityMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
-flowPressureMatrix = zeros(length(widthArray), length(heightArray), heightStepNumber);
-wall_thicknessMatrix = [];
-geometryMap = zeros(length(widthArray), length(heightArray)); %will be used later on to see which channel dimension combos worked/failed
+flowTempMatrix = zeros(heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
+flowVelocityMatrix = zeros(heightStepNumber);
+flowPressureMatrix = zeros(heightStepNumber);
+%wall_thicknessMatrix = [];
+%geometryMap = zeros(length(widthArray), length(heightArray)); %will be used later on to see which channel dimension combos worked/failed
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
 %{syms x;
@@ -39,8 +41,7 @@ T_l_reqMatrix = [];
 updatedTemps = [];
 updatedPressure = [];
 updatedVelocity = [];
-heightMatrix = [];
-h_lMatrix = [];
+%heightMatrix = zeros(heightStepNumber);
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
@@ -109,12 +110,13 @@ end
 chamberDiameter = flip(chamberDiameter);
 newFluidProperties = flip(newFluidProperties,1);
 %% Main Loop
-for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
-    
-        width = widthArray(widthValue);
-        
-
-        [h_lMatrix,flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity, heightMatrix] = calculateWallTemp2(h_lMatrix,updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, width, widthValue, newFluidProperties);
+% for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
+% 
+%         width = widthArray(widthValue);
+%   
+% 
+        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity] = calculateWallTemp3(updatedTemps, updatedPressure, updatedVelocity, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties);
+        %[flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity, heightMatrix] = calculateWallTemp2(updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties)
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
         % if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(heightArray,widthValue,heightValue,length(heightStepArray)) == 0
@@ -122,14 +124,13 @@ for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp fro
         %     else
         %         geometryMap(widthValue, heightValue) = 1; %pass
         % end
+        %wallthicknessesGoated = wall_thicknessMatrix(1,10,:);
         
-        wallthicknessesGoated = wall_thicknessMatrix(1,10,:);
-        
-
-   
-    
-end
+% 
+% 
+% 
+% end
 
 %create geometry map
         
-       
+           
