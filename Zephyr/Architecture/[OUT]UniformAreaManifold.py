@@ -15,45 +15,46 @@ f = 0.02                   # Darcy friction factor (approx.)
 
 # Flow and pressure
 Q_total = 4.6979e-03       # total inlet flow [m³/s]
+P_out_target = 750.0      # desired outlet pressure [psi]
 
 # Design constraints
-area_min = 1e-4             # [m²]
-area_max = 2.0e-2           # [m²]
+area_min = 1.0e-4          # [m²]
+area_max = 1.0e-2          # [m²]
 
 # Iteration control
 max_iter = 5000
 meet_tol = 1e3             # [Pa] pressure continuity tolerance
 mass_tol = 1e-6            # [m^3/s]
-tolerance = 1e-6           # [m^3/s] mass balanced tolerance
-alpha = 0.2                # slightly stronger relaxation
 
 # ============================================================
 # OUTLET SPECIFIC INPUTS
 # ============================================================
-Vman = 4                   # [m/s]  The velocity we want throughout the manifold (The target velocity)
-Cd_branch = 0.65           #        Discharge efficiency factor, basically the efficiency of the flow from the inlet channels.
-A_branch = 1.0e-4          # [m^2]  Area of each of the inlet channels (Same as the one for the inlet manifold)
-K_join = 0.0               #        Pressure loss from when each channel joins the main manifold area.
-dP_channel_guess_psi = 10  # [psi]  guessed channel -> collector delta p
+V_desired = 4.0            # [m/s] Desired velocity constant (CHANGE THIS)
+A_desired = np.clip(Q_total / V_desired, area_min, area_max)
+
+Cd_branch = 0.65           #       Discharge efficiency factor, basically the efficiency of the flow from the inlet channels.
+A_branch = 1.0e-4          # [m^2] Area of each of the inlet channels 
+K_join = 0.0               #       Pressure loss from when each channel joins the main manifold area.
 # ============================================================
 # INITIALIZATION
 # ============================================================
-psi_to_pa    = 6894.76            # Conversion ratio  
-P_out_target = 750 * psi_to_pa    # Final pressure (required pressure)
-P_chan       = 995 * psi_to_pa # MINIMUM pressure value from the inlet manifold
+psi_to_pa = 6894.76
+P_out_target *= psi_to_pa
+P_chan = 954.43 * psi_to_pa
 
 half_outlets = num_outlets // 2
 
 # Start with slightly tapered manifold areas to avoid zero imbalance
-area = np.full(half_outlets, Q_total / Vman)
+area = np.linspace(4.2e-4, 3.8e-4, half_outlets)
 
 # ============================================================
 # DUAL-FLOW SIMULATION (0° → ±180°)
 # ============================================================
 pressure_forward = np.full(half_outlets + 1, P_out_target) #Starts from the outlet channel. 
 pressure_backward = np.full(half_outlets + 1, P_out_target)
-area_forward = np.copy(area)
-area_backward = np.copy(area)
+
+area_forward = np.full(half_outlets, A_desired)
+area_backward = np.full(half_outlets, A_desired)
 
 converged = False
 
@@ -67,9 +68,9 @@ for iteration in range(max_iter):
         Q_running_f += q_in
 
         # tee/junction mixing loss
-        A_header = np.clip(area_forward[i], area_min, area_max)
+        A_header = A_desired
         D_header = np.sqrt(4.0 * A_header / np.pi)
-        v_header = np.clip(Q_running_f / A_header, 1e-6, 1e4)
+        v_header = np.clip(Q_running_f / A_header, 1e-9, 1e4)
         dp_join = K_join * 0.5 * rho_lox * v_header**2
         pressure_forward[i] -= dp_join
 
@@ -77,11 +78,6 @@ for iteration in range(max_iter):
         dp_fric = 0.5 * f * rho_lox * v_header**2 * (segment_length / D_header)
         pressure_forward[i+1] = pressure_forward[i] - dp_fric
 
-        # manifold area above this outlet
-        A_target = Q_running_f / max(Vman, 1e-6)
-        area_forward[i] = np.clip((1 - alpha)*area_forward[i] + alpha*A_target, area_min, area_max)
-
-    
 
     # --- Backward half (0° → -180°)
     Q_running_b = 0.0
@@ -91,17 +87,14 @@ for iteration in range(max_iter):
         q_in = Cd_branch * A_branch * np.sqrt(2.0 * dp_branch / rho_lox)
         Q_running_b += q_in
 
-        A_header = np.clip(area_backward[i], area_min, area_max)
+        A_header = A_desired
         D_header = np.sqrt(4.0 * A_header / np.pi)
-        v_header = np.clip(Q_running_b / A_header, 1e-6, 1e4)
+        v_header = np.clip(Q_running_b / A_header, 1e-9, 1e4)
         dp_join = K_join * 0.5 * rho_lox * v_header**2
         pressure_backward[i] -= dp_join
         
         dp_fric = 0.5 * f * rho_lox * v_header**2 * (segment_length / D_header)
         pressure_backward[i+1] = pressure_backward[i] - dp_fric
-
-        A_target = Q_running_b / max(Vman, 1e-6)
-        area_backward[i] = np.clip((1 - alpha)*area_backward[i] + alpha*A_target, area_min, area_max)
 
     # Combine both sides for balancing (optional)
     p_meet_f = pressure_forward[-1]
@@ -109,20 +102,42 @@ for iteration in range(max_iter):
     meet_err = abs(p_meet_f - p_meet_b)
 
     Q_collected = Q_running_f + Q_running_b
+    mass_err = abs(Q_collected - Q_total)
+
     if Q_collected > 0:
         scale = np.sqrt(np.clip(Q_total / Q_collected, 0.2, 5.0))
         A_branch *= np.clip(scale, 0.8, 1.25)
-    mass_err = abs(Q_collected - Q_total)
 
     if (meet_err < meet_tol) and (mass_err < mass_tol):
         converged = True
         break
 
+    if iteration % 50 == 0:
+        print(f"iter {iteration}: meet_err={meet_err:.2e} Pa, mass_err={mass_err:.2e} m^3/s, A_branch={A_branch:.3e}")
+
+# ============================================================
+# OUTLET (SINGLE PIPE) CONDITIONS
+# ============================================================
+
+# Pressure at the outlet node (index 0 of the ring)
+P_exit = 0.5 * (pressure_forward[0] + pressure_backward[0])  # [Pa]
+P_exit_psi = P_exit / psi_to_pa
+
+# Define the outlet channel area (can reuse A_desired or choose your own)
+A_exit = A_desired    # [m^2] you can change this if outlet pipe is different
+v_exit = Q_total / A_exit   # [m/s]
+
+print("\n=== Single Outlet Channel Conditions ===")
+print(f"P_exit = {P_exit_psi:.3f} psi")
+print(f"A_exit = {A_exit:.6e} m^2")
+print(f"v_exit = {v_exit:.3f} m/s")
+
+
 # ============================================================
 # MERGE INTO FULL 360° RING (manifold taper)
 # ============================================================
 pressure_half = 0.5 * (pressure_forward[1:] + pressure_backward[1:])
-area_half = 0.5 * (area_forward + area_backward)
+area_half = np.full(half_outlets, A_desired)
 
 # mirror to full ring
 pressure_full = np.concatenate((pressure_half, pressure_half[::-1]))
