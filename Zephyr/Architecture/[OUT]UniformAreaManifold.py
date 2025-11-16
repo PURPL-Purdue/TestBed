@@ -108,30 +108,24 @@ for iteration in range(max_iter):
         scale = np.sqrt(np.clip(Q_total / Q_collected, 0.2, 5.0))
         A_branch *= np.clip(scale, 0.8, 1.25)
 
-    if (meet_err < meet_tol) and (mass_err < mass_tol):
+    if (meet_err < meet_tol) and (mass_err < mass_tol): #Checks symmetry of both halves
         converged = True
         break
 
-    if iteration % 50 == 0:
-        print(f"iter {iteration}: meet_err={meet_err:.2e} Pa, mass_err={mass_err:.2e} m^3/s, A_branch={A_branch:.3e}")
-
 # ============================================================
-# OUTLET (SINGLE PIPE) CONDITIONS
+# OUTLET CHANNEL DIMENSIONS
 # ============================================================
 
-# Pressure at the outlet node (index 0 of the ring)
-P_exit = 0.5 * (pressure_forward[0] + pressure_backward[0])  # [Pa]
-P_exit_psi = P_exit / psi_to_pa
-
-# Define the outlet channel area (can reuse A_desired or choose your own)
-A_exit = A_desired    # [m^2] you can change this if outlet pipe is different
-v_exit = Q_total / A_exit   # [m/s]
+# Pressure at the outlet node (180 degrees)
+P_exit = (0.5 * (pressure_forward[0] + pressure_backward[0]) )/ psi_to_pa # [Pa] Exit pressure in Pa
+v_exit = Q_total / A_desired   # [m/s] SHOULD be the same as the desired velocity
+d_exit = np.sqrt((A_desired * 4) / np.pi) *100 # [cm]
 
 print("\n=== Single Outlet Channel Conditions ===")
-print(f"P_exit = {P_exit_psi:.3f} psi")
-print(f"A_exit = {A_exit:.6e} m^2")
-print(f"v_exit = {v_exit:.3f} m/s")
-
+print(f"P_exit = {P_exit:.2f} psi")
+print(f"A_exit = {A_desired:.2e} m^2")
+print(f"D_exit = {d_exit:.2f} cm")
+print(f"v_exit = {v_exit:.2f} m/s")
 
 # ============================================================
 # MERGE INTO FULL 360° RING (manifold taper)
