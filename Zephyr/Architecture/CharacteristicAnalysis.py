@@ -15,9 +15,9 @@ CHAMBER_PRESSURES = [600]
 OF_TARGET = 1.5
 OF_RANGE = np.linspace(0.5, 3.0, 50)
 
-# --- comparison point (will be plotted as red dot on every new sweep subplot) ---
-comparisonPc = 600     # psi (the chamber pressure you want marked on every sweep figure)
-comparisonOF = 1.5     # O/F ratio used to compute the reference data point
+# --- comparison point ---
+comparisonPc = 600
+comparisonOF = 1.5
 
 AMBIENT_P_PSI = 14.7
 EFFICIENCY_FACTOR = .85
@@ -25,8 +25,7 @@ HOTFIRE_SECONDS = 30
 
 NOZZLE_HALF_ANGLE_DEG = 15.0
 
-
-# --- NEW: User-provided L* for chamber sizing ---
+# --- L* ---
 LSTAR = 1.1  # m
 
 # =====================================================
@@ -64,7 +63,7 @@ def area_ratio_from_M(M, gamma):
 
 def Mach_from_pe_pc(pe_pc, gamma):
     if pe_pc <= 0 or pe_pc >= 1:
-        raise ValueError("pe_pc must be between 0 and 1 (exclusive).")
+        raise ValueError("pe_pc must be between 0 and 1.")
     term = (pe_pc) ** (-(gamma - 1.0) / gamma)
     M = math.sqrt((2.0 / (gamma - 1.0)) * (term - 1.0))
     return M
@@ -114,7 +113,6 @@ def compute_sizing(F_newtons, pc_psi, of):
     At = F_newtons / (Pc_Pa * Cf)
     Dt = math.sqrt(4.0 * At / math.pi)
 
-    # Apply injector efficiency to effective cstar
     cstar_eff = cstar * EFFICIENCY_FACTOR
     mdot = Pc_Pa * At / cstar_eff
 
@@ -123,23 +121,33 @@ def compute_sizing(F_newtons, pc_psi, of):
     Isp = (Cf * cstar) / G0
     Ve = Isp * G0 * EFFICIENCY_FACTOR
 
-    # === Chamber geometry based on provided L* and chamber diameter ===
-    D_chamber = 2.0 * Dt  # m, chamber diameter = 2 × throat
-    V_chamber = LSTAR * At  # cylinder volume from L* and throat area
-    L_chamber = V_chamber / (math.pi/4 * D_chamber**2)  # cylinder length from volume
+    # === Chamber geometry ===
+    D_chamber = 2.0 * Dt
+    V_chamber = LSTAR * At
+    L_chamber = V_chamber / (math.pi/4 * D_chamber**2)
 
-    # Converging section (assume 45 deg taper)
     L_converge = (D_chamber - Dt) / (2 * math.tan(math.radians(45)))
     V_converge = (1/3) * math.pi * L_converge * ((D_chamber/2)**2 + (D_chamber/2)*(Dt/2) + (Dt/2)**2)
 
-    # Total chamber volume including converge
     V_total = V_chamber + V_converge
     Lstar_with_converge = V_total / At
 
-    # Other geometry
-    R_throat = 0.382 * Dt
+    R_throat = 0.382 * Dt  # Throat radius of curvature (not really important here)
     L_throat = R_throat + 0.5 * Dt
     L_nozzle = (De - Dt) / (2 * math.tan(math.radians(NOZZLE_HALF_ANGLE_DEG)))
+
+    # >>> FIXED <<< Surface areas
+    # Cylinder lateral area = circumference * length = pi * D * L
+    A_cyl_wall = math.pi * D_chamber * L_chamber
+
+    # Converging section is a frustum: lateral area = pi * (r1 + r2) * s
+    # where s = slant length = sqrt((r1 - r2)^2 + axial_length^2)
+    r1 = D_chamber / 2.0
+    r2 = Dt / 2.0
+    slant_converge = math.sqrt((r1 - r2)**2 + L_converge**2)
+    A_converge_wall = math.pi * (r1 + r2) * slant_converge
+
+    A_total_wall = A_cyl_wall + A_converge_wall
 
     return {
         'pc_psi': pc_psi, 'of': of, 'gamma': gamma, 'Tc': Tc,
@@ -149,7 +157,12 @@ def compute_sizing(F_newtons, pc_psi, of):
         'L_chamber_cyl': L_chamber, 'L_converge': L_converge,
         'L_chamber_full': L_chamber + L_converge, 'V_chamber': V_chamber,
         'Lstar': LSTAR, 'V_total': V_total, 'Lstar_with_converge': Lstar_with_converge,
-        'L_throat': L_throat*100.0, 'L_nozzle': L_nozzle*100.0
+        'L_throat': L_throat*100.0, 'L_nozzle': L_nozzle*100.0,
+
+        # >>> ADDED <<<
+        'A_cyl_wall': A_cyl_wall * 10000,  # m² to cm²
+        'A_converge_wall': A_converge_wall * 10000,  # m² to cm²
+        'A_total_wall': A_total_wall * 10000   # m² to cm²
     }
 
 # =====================================================
@@ -188,13 +201,13 @@ def pretty_print(r):
     print("="*60 + "\n")
 
 # =====================================================
-# === NEW: Pc sweep per OF plotting ====================
+# === Pc sweep with surface area ======================
 # =====================================================
 
 def sweep_Pc_and_plot_pcaxis(of_list, pc_min, pc_max, pc_step, target_thrust_N, comparison_pc, comparison_of):
     pc_values = np.arange(pc_min, pc_max + 1e-9, pc_step)
 
-    # compute reference values at (comparison_of, comparison_pc)
+    # reference sizing at comparison point
     ref = compute_sizing(target_thrust_N, comparison_pc, comparison_of)
     Tc_ref = ref['Tc']
     Dch_ref = ref['D_chamber'] * 100.0
@@ -203,6 +216,10 @@ def sweep_Pc_and_plot_pcaxis(of_list, pc_min, pc_max, pc_step, target_thrust_N, 
     mdot_ref = ref['mdot']
     mdot_fuel_ref = ref['mdot'] / (1.0 + comparison_of)
 
+    # reference surface areas
+    A_cyl_ref = ref['A_cyl_wall']
+    A_total_ref = ref['A_total_wall']
+
     for of in of_list:
         Tc_list = []
         Dch_list = []
@@ -210,6 +227,10 @@ def sweep_Pc_and_plot_pcaxis(of_list, pc_min, pc_max, pc_step, target_thrust_N, 
         Lstar_list = []
         mdot_list = []
         mdot_fuel_list = []
+
+        # >>> ADDED <<<
+        A_cyl_list = []
+        A_total_list = []
 
         for pc in pc_values:
             r = compute_sizing(target_thrust_N, pc, of)
@@ -220,6 +241,10 @@ def sweep_Pc_and_plot_pcaxis(of_list, pc_min, pc_max, pc_step, target_thrust_N, 
             mdot_list.append(r['mdot'])
             mdot_fuel_list.append(r['mdot'] / (1.0 + of))
 
+            # >>> ADDED <<<
+            A_cyl_list.append(r['A_cyl_wall'])
+            A_total_list.append(r['A_total_wall'])
+
         plt.figure(figsize=(14, 9))
         plt.suptitle(f"Pc sweep (Pc={pc_min}-{pc_max} step {pc_step} psi) — O/F = {of:.2f}", fontsize=14)
 
@@ -229,42 +254,45 @@ def sweep_Pc_and_plot_pcaxis(of_list, pc_min, pc_max, pc_step, target_thrust_N, 
         # subplot 1: Chamber Temp
         ax = plt.subplot(2, 3, 1)
         ax.plot(pc_values, Tc_list, 'o-', label='Chamber Temp (K)')
-        ax.plot(comparison_pc, Tc_ref, 'ro', markersize=6, label=f"Ref (OF={comparison_of}, Pc={comparison_pc}psi)")
+        ax.plot(comparison_pc, Tc_ref, 'ro', markersize=6, label='reference')
         ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Tc (K)")
         ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
 
         # subplot 2: Chamber Diameter
         ax = plt.subplot(2, 3, 2)
         ax.plot(pc_values, Dch_list, 'o-', label='Chamber Dia (cm)')
-        ax.plot(comparison_pc, Dch_ref, 'ro', markersize=6)
+        ax.plot(comparison_pc, Dch_ref, 'ro', markersize=6, label='reference')
         ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Chamber Dia (cm)")
         ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
 
         # subplot 3: Isp
         ax = plt.subplot(2, 3, 3)
         ax.plot(pc_values, Isp_list, 'o-', label='Isp (s)')
-        ax.plot(comparison_pc, Isp_ref, 'ro', markersize=6)
+        ax.plot(comparison_pc, Isp_ref, 'ro', markersize=6, label='reference')
         ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Isp (s)")
         ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
 
-        # subplot 4: L*
+        # subplot 4: Surface area
         ax = plt.subplot(2, 3, 4)
-        ax.plot(pc_values, Lstar_list, 'o-', label='L* (m)')
-        ax.plot(comparison_pc, Lstar_ref, 'ro', markersize=6)
-        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("L* (m)")
+        ax.plot(pc_values, A_cyl_list, 'o-', label='Cyl Wall Area (cm²)')
+        ax.plot(pc_values, A_total_list, 's-', label='Cyl + Converge (cm²)')
+        # add red reference dots (label so they appear on legend)
+        ax.plot(comparison_pc, A_cyl_ref, 'ro', markersize=6, label='ref(cyl)')
+        ax.plot(comparison_pc, A_total_ref, 'ro', markersize=6, label='ref(cyl+converge)')
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Surface Area (cm²)")
         ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
 
         # subplot 5: mdot
         ax = plt.subplot(2, 3, 5)
         ax.plot(pc_values, mdot_list, 'o-', label='mdot (kg/s)')
-        ax.plot(comparison_pc, mdot_ref, 'ro', markersize=6)
+        ax.plot(comparison_pc, mdot_ref, 'ro', markersize=6, label='reference')
         ax.set_xlabel("Pc (psi)"); ax.set_ylabel("mdot (kg/s)")
         ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
 
         # subplot 6: fuel mdot
         ax = plt.subplot(2, 3, 6)
         ax.plot(pc_values, mdot_fuel_list, 'o-', label='fuel mdot (kg/s)')
-        ax.plot(comparison_pc, mdot_fuel_ref, 'ro', markersize=6)
+        ax.plot(comparison_pc, mdot_fuel_ref, 'ro', markersize=6, label='reference')
         ax.set_xlabel("Pc (psi)"); ax.set_ylabel("fuel mdot (kg/s)")
         ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
 
@@ -287,6 +315,10 @@ if __name__ == "__main__":
         Ve_list, mdot_list, cstar_list, gamma_list, eps_list = [], [], [], [], []
         At_list, Ae_list, Dt_list, De_list, Tc_list, Isp_list = [], [], [], [], [], []
 
+        
+        A_cyl_list = []
+        A_total_list = []
+
         for of in OF_RANGE:
             r = compute_sizing(target_thrust_N, pc, of)
             Ve_list.append(r['Ve']); mdot_list.append(r['mdot'])
@@ -295,6 +327,10 @@ if __name__ == "__main__":
             Ae_list.append(r['Ae']); Dt_list.append(r['Dt']*100)
             De_list.append(r['De']*100); Tc_list.append(r['Tc'])
             Isp_list.append(r['Isp'])
+
+            # >>> ADDED <<<
+            A_cyl_list.append(r['A_cyl_wall'])
+            A_total_list.append(r['A_total_wall'])
 
         Isp_arr = np.array(Isp_list)
         idx_isp_opt = np.nanargmax(Isp_arr)
@@ -306,7 +342,7 @@ if __name__ == "__main__":
             r_opt_isp = compute_sizing(target_thrust_N, pc, opt_Isp_OF)
             pretty_print(r_opt_isp)
 
-        # ====== Performance Plots (original per-Pc figures) ======
+        # ====== Performance Plots ======
         plt.figure(figsize=(10, 8))
         plt.suptitle(f"Performance at Pc={pc} psi")
 
@@ -328,7 +364,7 @@ if __name__ == "__main__":
 
         plt.tight_layout(); plt.show()
 
-        # ====== Geometry & Temp Plots (original per-Pc figures) ======
+        # ====== Geometry & Temp Plots ======
         plt.figure(figsize=(10, 8))
         plt.suptitle(f"Geometry & Temperature at Pc={pc} psi")
 
@@ -362,8 +398,9 @@ if __name__ == "__main__":
 
         plt.tight_layout(); plt.show()
 
-    # === generate Pc-sweep figures for a set of OF values ===
-    OF_values_to_plot = np.arange(1.25, 2.5 + 1e-9, OFSTEP)  # 1.25,1.5,...,2.5
+
+    # === Pc-sweep figures ===
+    OF_values_to_plot = np.arange(1.25, 2.5 + 1e-9, OFSTEP)
     sweep_Pc_and_plot_pcaxis(
         of_list=OF_values_to_plot,
         pc_min=300,
