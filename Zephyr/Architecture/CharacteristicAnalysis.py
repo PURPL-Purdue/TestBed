@@ -303,7 +303,7 @@ def interactive_OF_plot(pc_min=300, pc_max=700, pc_step=25, target_thrust_N=None
 
         # === FIXED AXIS RANGES ===
         if key == "Tc":
-            ax.set_ylim(1500, 3000)
+            ax.set_ylim(1500, 4000)
         elif key == "Isp":
             ax.set_ylim(100, 300)
         elif key == "mdot":
