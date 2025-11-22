@@ -15,13 +15,19 @@ CHAMBER_PRESSURES = [600]
 OF_TARGET = 1.5
 OF_RANGE = np.linspace(0.5, 3.0, 50)
 
+# --- comparison point (will be plotted as red dot on every new sweep subplot) ---
+comparisonPc = 600     # psi (the chamber pressure you want marked on every sweep figure)
+comparisonOF = 1.5     # O/F ratio used to compute the reference data point
+
 AMBIENT_P_PSI = 14.7
 EFFICIENCY_FACTOR = .85
 HOTFIRE_SECONDS = 30
 
 NOZZLE_HALF_ANGLE_DEG = 15.0
-LSTAR = 1.1
 
+
+# --- NEW: User-provided L* for chamber sizing ---
+LSTAR = 1.1  # m
 
 # =====================================================
 # === CONSTANTS =======================================
@@ -38,6 +44,7 @@ M3_TO_GAL = GAL_PER_LITER * L_PER_M3
 
 DENSITY_RP1 = 810.0
 DENSITY_LOX = 1140.0
+OFSTEP = 0.25
 
 # =====================================================
 # === HELPER FUNCTIONS ================================
@@ -145,7 +152,6 @@ def compute_sizing(F_newtons, pc_psi, of):
         'L_throat': L_throat*100.0, 'L_nozzle': L_nozzle*100.0
     }
 
-
 # =====================================================
 # === PRETTY PRINT ====================================
 # =====================================================
@@ -182,6 +188,90 @@ def pretty_print(r):
     print("="*60 + "\n")
 
 # =====================================================
+# === NEW: Pc sweep per OF plotting ====================
+# =====================================================
+
+def sweep_Pc_and_plot_pcaxis(of_list, pc_min, pc_max, pc_step, target_thrust_N, comparison_pc, comparison_of):
+    pc_values = np.arange(pc_min, pc_max + 1e-9, pc_step)
+
+    # compute reference values at (comparison_of, comparison_pc)
+    ref = compute_sizing(target_thrust_N, comparison_pc, comparison_of)
+    Tc_ref = ref['Tc']
+    Dch_ref = ref['D_chamber'] * 100.0
+    Isp_ref = ref['Isp']
+    Lstar_ref = ref['Lstar']
+    mdot_ref = ref['mdot']
+    mdot_fuel_ref = ref['mdot'] / (1.0 + comparison_of)
+
+    for of in of_list:
+        Tc_list = []
+        Dch_list = []
+        Isp_list = []
+        Lstar_list = []
+        mdot_list = []
+        mdot_fuel_list = []
+
+        for pc in pc_values:
+            r = compute_sizing(target_thrust_N, pc, of)
+            Tc_list.append(r['Tc'])
+            Dch_list.append(r['D_chamber'] * 100.0)
+            Isp_list.append(r['Isp'])
+            Lstar_list.append(r['Lstar'])
+            mdot_list.append(r['mdot'])
+            mdot_fuel_list.append(r['mdot'] / (1.0 + of))
+
+        plt.figure(figsize=(14, 9))
+        plt.suptitle(f"Pc sweep (Pc={pc_min}-{pc_max} step {pc_step} psi) — O/F = {of:.2f}", fontsize=14)
+
+        x_min = min(pc_values.min(), comparison_pc) - 5
+        x_max = max(pc_values.max(), comparison_pc) + 5
+
+        # subplot 1: Chamber Temp
+        ax = plt.subplot(2, 3, 1)
+        ax.plot(pc_values, Tc_list, 'o-', label='Chamber Temp (K)')
+        ax.plot(comparison_pc, Tc_ref, 'ro', markersize=6, label=f"Ref (OF={comparison_of}, Pc={comparison_pc}psi)")
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Tc (K)")
+        ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
+
+        # subplot 2: Chamber Diameter
+        ax = plt.subplot(2, 3, 2)
+        ax.plot(pc_values, Dch_list, 'o-', label='Chamber Dia (cm)')
+        ax.plot(comparison_pc, Dch_ref, 'ro', markersize=6)
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Chamber Dia (cm)")
+        ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
+
+        # subplot 3: Isp
+        ax = plt.subplot(2, 3, 3)
+        ax.plot(pc_values, Isp_list, 'o-', label='Isp (s)')
+        ax.plot(comparison_pc, Isp_ref, 'ro', markersize=6)
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("Isp (s)")
+        ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
+
+        # subplot 4: L*
+        ax = plt.subplot(2, 3, 4)
+        ax.plot(pc_values, Lstar_list, 'o-', label='L* (m)')
+        ax.plot(comparison_pc, Lstar_ref, 'ro', markersize=6)
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("L* (m)")
+        ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
+
+        # subplot 5: mdot
+        ax = plt.subplot(2, 3, 5)
+        ax.plot(pc_values, mdot_list, 'o-', label='mdot (kg/s)')
+        ax.plot(comparison_pc, mdot_ref, 'ro', markersize=6)
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("mdot (kg/s)")
+        ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
+
+        # subplot 6: fuel mdot
+        ax = plt.subplot(2, 3, 6)
+        ax.plot(pc_values, mdot_fuel_list, 'o-', label='fuel mdot (kg/s)')
+        ax.plot(comparison_pc, mdot_fuel_ref, 'ro', markersize=6)
+        ax.set_xlabel("Pc (psi)"); ax.set_ylabel("fuel mdot (kg/s)")
+        ax.set_xlim(x_min, x_max); ax.grid(True); ax.legend()
+
+        plt.tight_layout(rect=[0, 0.0, 1, 0.96])
+        plt.show()
+
+# =====================================================
 # === MAIN =============================================
 # =====================================================
 
@@ -216,7 +306,7 @@ if __name__ == "__main__":
             r_opt_isp = compute_sizing(target_thrust_N, pc, opt_Isp_OF)
             pretty_print(r_opt_isp)
 
-        # ====== Performance Plots ======
+        # ====== Performance Plots (original per-Pc figures) ======
         plt.figure(figsize=(10, 8))
         plt.suptitle(f"Performance at Pc={pc} psi")
 
@@ -238,7 +328,7 @@ if __name__ == "__main__":
 
         plt.tight_layout(); plt.show()
 
-        # ====== Geometry & Temp Plots ======
+        # ====== Geometry & Temp Plots (original per-Pc figures) ======
         plt.figure(figsize=(10, 8))
         plt.suptitle(f"Geometry & Temperature at Pc={pc} psi")
 
@@ -271,3 +361,15 @@ if __name__ == "__main__":
         ax1.legend(lines1 + lines2, labels1 + labels2, loc="best")
 
         plt.tight_layout(); plt.show()
+
+    # === generate Pc-sweep figures for a set of OF values ===
+    OF_values_to_plot = np.arange(1.25, 2.5 + 1e-9, OFSTEP)  # 1.25,1.5,...,2.5
+    sweep_Pc_and_plot_pcaxis(
+        of_list=OF_values_to_plot,
+        pc_min=300,
+        pc_max=700,
+        pc_step=25,
+        target_thrust_N=target_thrust_N,
+        comparison_pc=comparisonPc,
+        comparison_of=comparisonOF
+    )
