@@ -8,6 +8,15 @@ from rocketcea.cea_obj import CEA_Obj
 # === USER CONFIGURATION ===============================
 # =====================================================
 
+################################################################
+# INSTRUCTIONS: Run script to see performance and sizing, once you find an acceptable O/F ratio
+# and chamber pressure, either change the reference point to that value, or enter those values into ZephyrCharacteristicGenerator.py
+################################################################
+
+# --- COMPARISON REFERENCE POINT (PLEASE CHANGE) ---
+comparisonPc = 600
+comparisonOF = 1.5
+
 OXIDIZER = "LOX"
 FUEL = "RP1"
 
@@ -17,9 +26,7 @@ OF_TARGET = 1.5
 OF_RANGE = np.arange(1, 2.5 + 0.01, 0.01)
 
 
-# --- COMPARISON REFERENCE POINT (PLEASE CHANGE) ---
-comparisonPc = 600
-comparisonOF = 1.5
+
 
 AMBIENT_P_PSI = 14.7
 EFFICIENCY_FACTOR = .85
