@@ -17,7 +17,8 @@ function h_out = H_g_From_Temperature(temperature, fluid_information)
 
     %Unit conversion
     info(6,:) = (T_stag.* 1.8); %Conversion to Rankine
-    info(7,:) = info(7,:) .* 0.055997; %Conversion to lb/in-sec
+    info(7,:) = info(7,:) .* 0.0000671968994813 ./ 12; %Conversion to lb/in-sec 
+
     info(8,:) = info(8,:) .* 0.2388458966; %Conversion to BTU/lb-F
     info(9,:) = info(9,:) .* 14.503773800722; %Conversion to psia
     info(10,:) = info(10,:) .* 3.2808399; %Conversion to ft/s
