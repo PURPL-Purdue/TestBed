@@ -2,35 +2,25 @@
 updatedHeightValues = readmatrix("wallThicknessesGoated.xlsx");
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-widthArray = updatedHeightValues(7,2:46);
-heightArray = updatedHeightValues(6,2:46);
-wall_thicknessMatrix = updatedHeightValues(4,2:46);
+widthArray = [0.000508,0.000508,0.000508];%updatedHeightValues(7,2:46);
+heightArray =  [0.003175,0.001524,0.003175];%updatedHeightValues(6,2:46);
+wall_thicknessMatrix = [0.000762,0.000762,0.000762];
 heightStepNumber = 45;
-numChannels = 60;
+numChannels = 62;
 
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
 flowVelocityMatrix = zeros(heightStepNumber);
 flowPressureMatrix = zeros(heightStepNumber);
-%wall_thicknessMatrix = [];
-%geometryMap = zeros(length(widthArray), length(heightArray)); %will be used later on to see which channel dimension combos worked/failed
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
-%{syms x;
-%steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
-    %n = pi/heightStepNumber;
-    %step = 1;
-    %for i = 0:n:(pi-n)
-   %     heightStepArray(step) = int(steps,i,i+n);
-  %      step = step +1;
- %   end
-%heightStepArray = heightStepArray/39.37; % change to meters
+
 heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
 fluidProperties = readmatrix("CEAOutFzOF1.xlsx"); %pull all nasaCEA values into fluidProperties
 fluidProperties(1,:) = [];
-y = 1;
+y = 1; 
 r = 1;
 axialDist = (fluidProperties(:,1));
 newFluidProperties = zeros(length(heightStepArray),10);

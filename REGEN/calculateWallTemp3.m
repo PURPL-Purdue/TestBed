@@ -22,9 +22,9 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, u
     flowVelocity = flowVelocityMatrix;
     flowPressure = flowPressureMatrix;
     height_steps = heightStepArray;
-    T_target = 500; % target gas-side hotwall temp 530 for 7075, 773 for copper
+    T_target = 400; % target gas-side hotwall temp 530 for 7075, 773 for copper
     h_lMatrix = [];
-    
+    [T_target, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array] = SOLVER(14,21,chamberDiameterArray, length(heightStepArray), newFluidProperties, widthArray, heightArray, wall_thicknesses)
 
 for heightStepNumber = 1:1:length(height_steps)   
     %heightStepNumber = 1;
@@ -67,7 +67,7 @@ for heightStepNumber = 1:1:length(height_steps)
         end
         
         %% Call Tucker's Function HERE, update variables (coolant side hotwall temp, Heat flux, Wall thickness) (needs updated wall and dP)
-        [Q_dot, T_wallL, wall_thickness] = HeatFluxFunction(heightStepNumber,heightStepArray, width, hotWall_dP, k_w, T_target, newFluidProperties);
+        [Q_dot, T_wallL, wall_thickness] = HeatFluxFunction(chamberPressure,chamberDiameter,heightStepNumber,heightStepArray, width, hotWall_dP, k_w, T_target(heightStepNumber), newFluidProperties);
         
         if(T_wallL == -2)
             flowTemp(heightStepNumber) = -2;
@@ -242,7 +242,7 @@ for heightStepNumber = 1:1:length(height_steps)
              %[temperature2,indexTemp] = min((flowTemp(wInd,:,heightStepNumber)-(T_l_reqMatrix(wInd,:,heightStepNumber)-100))<0); % picks optimized height value
         
         %end
-           h_lMatrix(heightStepNumber) = h_l;
+        h_lMatrix(heightStepNumber) = h_l;
         updatedTemps(heightStepNumber) = flowTemp(heightStepNumber);
         updatedPressure(heightStepNumber) = flowPressure(heightStepNumber);
         updatedVelocity(heightStepNumber) = flowVelocity(heightStepNumber);

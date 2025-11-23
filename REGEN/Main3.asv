@@ -2,9 +2,9 @@
 updatedHeightValues = readmatrix("wallThicknessesGoated.xlsx");
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-widthArray = updatedHeightValues(8,:);
-heightArray = updatedHeightValues(7,:);
-wallthicknessArray = updatedHeightValues(5,:);
+widthArray = [0.]%updatedHeightValues(7,2:46);
+heightArray = updatedHeightValues(6,2:46);
+wall_thicknessMatrix = updatedHeightValues(4,2:46);
 heightStepNumber = 45;
 numChannels = 60;
 
@@ -41,7 +41,7 @@ T_l_reqMatrix = [];
 updatedTemps = [];
 updatedPressure = [];
 updatedVelocity = [];
-heightMatrix = [];
+%heightMatrix = zeros(heightStepNumber);
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
@@ -115,7 +115,8 @@ newFluidProperties = flip(newFluidProperties,1);
 %         width = widthArray(widthValue);
 %   
 % 
-        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity, heightMatrix] = calculateWallTemp3(updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties);
+        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity] = calculateWallTemp3(updatedTemps, updatedPressure, updatedVelocity, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties);
+        %[flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity, heightMatrix] = calculateWallTemp2(updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties)
         %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
         
         % if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(heightArray,widthValue,heightValue,length(heightStepArray)) == 0
@@ -123,7 +124,6 @@ newFluidProperties = flip(newFluidProperties,1);
         %     else
         %         geometryMap(widthValue, heightValue) = 1; %pass
         % end
-        
         %wallthicknessesGoated = wall_thicknessMatrix(1,10,:);
         
 % 
