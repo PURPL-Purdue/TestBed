@@ -1,10 +1,10 @@
 function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity] = calculateWallTemp3(updatedTemps, updatedPressure, updatedVelocity, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties)
     %% Inlet Condition Values
     T_start= 298; % K
-    P_start = 5516000; % Pa
-    rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
-    m_flow_total = 0.6109090909; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
-    channel_number = 60;
+    P_start = 2551000; % Pa
+    rho_start = 1000; %kg/m^3, changed coolant density to RP-1 at standard temp
+    m_flow_total = 2.26796; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
+    channel_number = 62;
     mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
     
     
@@ -12,8 +12,8 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, u
     
     
     
-    chamberPressure = 3447378.6466; % Chamber Pressure (Pa)
-    k_w = 130; % thermal conductivity of the wall (W/m*K) %copper 401, 7075 130
+    chamberPressure = 1551000; % Chamber Pressure (Pa)
+    k_w = 162; % thermal conductivity of the wall (W/m*K) %copper 401, 7075 130
     gravity = 9.83; %m/s^2
     
 

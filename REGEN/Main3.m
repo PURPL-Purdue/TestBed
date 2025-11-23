@@ -51,7 +51,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     while a <= length(axialDist)
         
         if a-r==0
-            sumDiameter = sumDiameter + chamberPlot(a,2);
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -64,7 +64,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
 
         elseif axialDist(a) < heightStepArray(y)
-            sumDiameter = sumDiameter + chamberPlot(a,2);
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -80,7 +80,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
         else
             divFactor = a-r;
-            chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
+            %chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
             newFluidProperties(y,2) = sumAEAT/divFactor;
             newFluidProperties(y,3) = sumPrandtl/divFactor;
             newFluidProperties(y,4) = sumMach/divFactor;
