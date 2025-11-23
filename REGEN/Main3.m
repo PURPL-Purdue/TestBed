@@ -2,12 +2,13 @@
 updatedHeightValues = readmatrix("wallThicknessesGoated.xlsx");
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-widthArray = [0.000508,0.000508,0.000508];%updatedHeightValues(7,2:46);
-heightArray =  [0.003175,0.001524,0.003175];%updatedHeightValues(6,2:46);
-wall_thicknessMatrix = [0.000762,0.000762,0.000762];
+widthArray = [0.0894,0.0591,0.1772]/39.37;%updatedHeightValues(7,2:46);
+heightArray =  [0.0894,0.0787,0.1181]/39.37;%updatedHeightValues(6,2:46);
+wall_thicknessMatrix = [0.0394,0.0295,0.0394]/39.37;
 heightStepNumber = 45;
 numChannels = 62;
-
+startConvInd = 28;
+throatInd = 36;
 %% Initialize all arrays and matrices
 flowTempMatrix = zeros(heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
 flowVelocityMatrix = zeros(heightStepNumber);
@@ -15,10 +16,10 @@ flowPressureMatrix = zeros(heightStepNumber);
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
 
-heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
+heightStepArray = linspace(0,0.227838000000000,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFzOF1.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
 fluidProperties(1,:) = [];
 y = 1; 
 r = 1;
@@ -26,7 +27,7 @@ axialDist = (fluidProperties(:,1));
 newFluidProperties = zeros(length(heightStepArray),10);
 newFluidProperties(:,1) = heightStepArray;
 chamberDiameter = [];
-chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
+%chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
 T_l_reqMatrix = [];
 updatedTemps = [];
 updatedPressure = [];
@@ -37,7 +38,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     
     a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
     
-    sumDiameter = 0;
+    %sumDiameter = 0;
     sumAEAT = 0;
     sumPrandtl = 0;
     sumMach = 0;
@@ -97,7 +98,26 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     end
     y=y+1;
 end
-chamberDiameter = flip(chamberDiameter);
+
+
+i = 1;
+
+for a = heightStepArray
+    
+    if((i)<=startConvInd)
+        chamberDiameter(i) = 0.09525; % set diameter in m
+        
+    elseif((i)<=throatInd)
+        chamberDiameter(i) = (((heightStepArray(i)-0.132334)*-1.245) +0.09525);
+    else
+        chamberDiameter(i) = (((heightStepArray(i)-0.178816)*0.5129) +0.037338);
+    end
+
+    i=i+1;
+end
+
+
+chamberDiameter = flip(chamberDiameter)';
 newFluidProperties = flip(newFluidProperties,1);
 %% Main Loop
 % for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array

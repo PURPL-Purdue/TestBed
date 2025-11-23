@@ -24,7 +24,7 @@ function [flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, u
     height_steps = heightStepArray;
     T_target = 400; % target gas-side hotwall temp 530 for 7075, 773 for copper
     h_lMatrix = [];
-    [T_target, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array] = SOLVER(14,21,chamberDiameterArray, length(heightStepArray), newFluidProperties, widthArray, heightArray, wall_thicknesses)
+    [T_target, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array] = SOLVER(10,18,chamberDiameterArray, length(heightStepArray), newFluidProperties, widthArray, heightArray, wall_thicknesses);
 
 for heightStepNumber = 1:1:length(height_steps)   
     %heightStepNumber = 1;
