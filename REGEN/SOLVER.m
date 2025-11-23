@@ -75,7 +75,7 @@ while (heightStep < heightStepNumber)
 
     end
 
-    T_wg_InitialGuess = 600; % Set initial guess to be upper threshold for wall temp
+    T_wg_InitialGuess = 700; % Set initial guess to be upper threshold for wall temp
     T_wg = T_wg_InitialGuess;
     
     
