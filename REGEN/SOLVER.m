@@ -20,17 +20,17 @@ exhaustTemps = newFluidInfo (:,6);
 chamberPressure = newFluidInfo(:,9)*100000; % Chamber Pressure (Pa)
 
 %material properties
-thermalConductivity = 130; % 7075 W/m*K
+thermalConductivity = 161; % 7075 W/m*K
 
 hotwallTemps = [];
 
 % calculateWallTemp Inputs
 T_start= 298; % K
-P_start = 5516000; % Pa
-rho_start = 810; %kg/m^3, changed coolant density to RP-1 at standard temp
+P_start = 2551000; % Pa
+rho_start = 1000; %kg/m^3, changed coolant density to RP-1 at standard temp
 
-m_flow_total = 0.6109090909; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
-channel_number = 60;
+m_flow_total = 2.26796; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
+channel_number = 62;
 mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
 v_start = mass_flow/(channelWidths(1) * channelHeights(1) * rho_start); %m/s
 
@@ -43,7 +43,7 @@ flowPressure = [P_start];
 updatedPressure = []; % if on a different height step, initialize as the previous height step's value
 updatedTemps = [];
 T_wgFinal = zeros(1,heightStepNumber);
-
+xz = 1;
 %% SOLVER
 
 
@@ -56,7 +56,7 @@ while (heightStep < heightStepNumber)
     width = channelWidths(heightStep);
 
 
-    heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
+    heightStepArray = linspace(0,8.97/39.37,heightStepNumber);
     currentHeightStep = heightStepArray(2)-heightStepArray(1);
     
     
@@ -96,10 +96,10 @@ while (heightStep < heightStepNumber)
             %% H_L finder
 
             hyd_diam = (2*width*height)/(height+width);
-            density = double(py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Dodecane'));
+            density = double(py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Water'));
         
             % Dynamic viscosity [Pa·s]
-            dyn_visc = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Dodecane'));%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
+            dyn_visc = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Water'));%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
         
         
             % Calculate Reynolds number
@@ -108,12 +108,12 @@ while (heightStep < heightStepNumber)
         
             % Calculate Prandtl Number
             % Thermal conductivity [W/(m·K)]
-            kf = double(py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Dodecane'));
+            kf = double(py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Water'));
             
             %^Use empirical data/curves found from papers in regen channel
         
             % Specific heat capacity [J/(kg·K)]
-            cp = double(py.CoolProp.CoolProp.PropsSI('CPMASS','P',pressure,'T',temp,'Dodecane'));
+            cp = double(py.CoolProp.CoolProp.PropsSI('CPMASS','P',pressure,'T',temp,'Water'));
             
             % Prandtl number [-]
             Pr = cp * dyn_visc / kf;
@@ -122,7 +122,7 @@ while (heightStep < heightStepNumber)
         
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wl,'Dodecane'));
+            mu_wall = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wl,'Water'));
             
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
@@ -156,17 +156,17 @@ while (heightStep < heightStepNumber)
             % Area of Wall on Coolant side (m^2)
             A_wallLiquid = currentHeightStep*width;
             A_wallL = A_wallLiquid+(A_fin*fin_efficiency);
-        
+        xz = xz+1;
         %Calculate required heat flux, qdotL_total
-        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(wallThicknesses(heightStep)*A_wallG)/1000;
-        
+        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(wallThicknesses(heightStep)*A_wallG);
+        display(xz)
         if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
             T_wgFinal(heightStep) = T_wg;
             notCorrect = false;
         elseif(Q_dotIN<Q_dotOUT)
-            T_wg = T_wg * 0.95;
+            T_wg = T_wg * 0.99;
         else
-            T_wg = T_wg * 1.05;
+            T_wg = T_wg * 1.01;
         end
         
     end
