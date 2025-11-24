@@ -12,8 +12,8 @@ OXIDIZER = "LOX"
 FUEL = "RP1"
 
 TARGET_THRUST_LBF = 5000.0
-CHAMBER_PRESSURES = [600]
-OF_TARGET = 2.0
+CHAMBER_PRESSURES = [400]
+OF_TARGET = 2.2
 OF_RANGE = np.linspace(0.5, 3.0, 50)
 
 AMBIENT_P_PSI = 14.7
@@ -31,7 +31,7 @@ WALL_NODES = 24            # number of 1D finite-difference nodes through thickn
 # GRCop-42 nominal approximate values (temperature-dependent k used)
 WALL_MATERIAL = {
     'name': 'GRCop-42',
-    'rho': 8790.0,   # kg/m3 (NASA data ~8.79 g/cc). Source/figure references in code where used.
+    'rho': 8790.0,   # kg/m3 (NASA data ~8.79 g/cc). 
     'cp': 385.0      # J/kg-K (approx typical copper-alloy cp)
 }
 

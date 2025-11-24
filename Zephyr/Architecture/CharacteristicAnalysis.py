@@ -15,14 +15,14 @@ from rocketcea.cea_obj import CEA_Obj
 
 # --- COMPARISON REFERENCE POINT (PLEASE CHANGE) ---
 comparisonPc = 600
-comparisonOF = 1.5
+comparisonOF = 2.2
 
 OXIDIZER = "LOX"
 FUEL = "RP1"
 
 TARGET_THRUST_LBF = 5000.0
 CHAMBER_PRESSURES = [600]
-OF_TARGET = 1.5
+OF_TARGET = 2.2
 OF_RANGE = np.arange(1, 2.5 + 0.01, 0.01)
 
 
@@ -332,14 +332,159 @@ def interactive_OF_plot(pc_min=300, pc_max=700, pc_step=25, target_thrust_N=None
             else:
                 lines[i].set_ydata(new[key])
 
-        fig.canvas.draw_idle()
+
 
     slider.on_changed(update)
     plt.show()
 
+# =====================================================
+# === NEW: PERCENT-CHANGE FIGURE (REFERENCE O/F ONLY) ==
+# =====================================================
+
+def make_percent_change_figure(pc_min, pc_max, pc_step, target_thrust_N):
+
+    # Build the Pc range to compare against
+    pc_values = np.arange(pc_min, pc_max + 1e-9, pc_step)
+
+    # --- Reference point ---
+    ref_result = compute_sizing(target_thrust_N, comparisonPc, comparisonOF)
+
+    ref_vals = {
+        "Tc": ref_result["Tc"],
+        "Dch": ref_result["D_chamber"] * 100.0,
+        "Isp": ref_result["Isp"],
+        "mdot": ref_result["mdot"],
+        "mdot_fuel": ref_result["mdot"] / (1.0 + comparisonOF),
+        "A_cyl": ref_result["A_cyl_wall"]
+    }
+
+    # --- Storage for percent-change curves ---
+    percent_data = {
+        "Tc": [],
+        "Dch": [],
+        "Isp": [],
+        "mdot": [],
+        "mdot_fuel": [],
+        "A_cyl": []
+    }
+
+    # Compute percent changes vs Pc at REFERENCE OF ONLY
+    for pc in pc_values:
+        r = compute_sizing(target_thrust_N, pc, comparisonOF)
+
+        current_vals = {
+            "Tc": r["Tc"],
+            "Dch": r["D_chamber"] * 100.0,
+            "Isp": r["Isp"],
+            "mdot": r["mdot"],
+            "mdot_fuel": r["mdot"] / (1.0 + comparisonOF),
+            "A_cyl": r["A_cyl_wall"]
+        }
+
+        # percent change formula
+        for key in percent_data:
+            pct = 100.0 * (current_vals[key] - ref_vals[key]) / ref_vals[key]
+            percent_data[key].append(pct)
+
+    # ------------------------------
+    # Create the percent-change figure
+    # ------------------------------
+    fig2, axs2 = plt.subplots(2, 3, figsize=(16, 9))
+    axes = axs2.ravel()
+
+    keys = ["Tc", "Dch", "Isp", "mdot", "mdot_fuel", "A_cyl"]
+    labels = [
+        "Tc (%)",
+        "Chamber Diameter (%)",
+        "Isp (%)",
+        "mdot (%)",
+        "Fuel mdot (%)",
+        "Surface Area Cyl (%)"
+    ]
+
+    # Determine GLOBAL y-limits to share across all
+    all_values = np.array([v for arr in percent_data.values() for v in arr])
+    ymin = np.min(all_values) * 1.05
+    ymax = np.max(all_values) * 1.05
+
+    for ax, key, label in zip(axes, keys, labels):
+        ax.plot(pc_values, percent_data[key], "o-")
+        ax.axhline(0, color="gray", linewidth=1)
+        ax.set_ylabel(label)
+        ax.set_xlabel("Pc (psi)")
+        ax.grid(True)
+        ax.set_ylim(ymin, ymax)
+
+    fig2.suptitle(
+        f"Percent Change vs Pc at Reference O/F = {comparisonOF}, Pc_ref = {comparisonPc} psi",
+        fontsize=16
+    )
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
 
 # =====================================================
-# === MAIN ============================================
+# === NEW: PERCENT-CHANGE TABLE =======================
+# =====================================================
+
+def print_percent_change_table(pc_min, pc_max, pc_step, target_thrust_N):
+
+    pc_values = np.arange(pc_min, pc_max + 1e-9, pc_step)
+
+    # Reference at comparisonPc, comparisonOF
+    ref_result = compute_sizing(target_thrust_N, comparisonPc, comparisonOF)
+
+    ref_vals = {
+        "Tc": ref_result["Tc"],
+        "Dch": ref_result["D_chamber"] * 100.0,
+        "Isp": ref_result["Isp"],
+        "mdot": ref_result["mdot"],
+        "mdot_fuel": ref_result["mdot"] / (1.0 + comparisonOF),
+        "A_cyl": ref_result["A_cyl_wall"]
+    }
+
+    # Header
+    print("\n==================== PERCENT CHANGE TABLE ====================")
+    print(f"Reference Point: Pc = {comparisonPc} psi,  O/F = {comparisonOF}")
+    print("All values reported as % change relative to reference.\n")
+
+    header = (
+        f"{'Pc (psi)':>8} | "
+        f"{'Tc (%)':>10} | {'Dch (%)':>10} | {'Isp (%)':>10} | "
+        f"{'mdot (%)':>10} | {'fuel mdot (%)':>15} | {'A_cyl (%)':>12}"
+    )
+    print(header)
+    print("-" * len(header))
+
+    # Compute and print each row
+    for pc in pc_values:
+        r = compute_sizing(target_thrust_N, pc, comparisonOF)
+
+        current_vals = {
+            "Tc": r["Tc"],
+            "Dch": r["D_chamber"] * 100.0,
+            "Isp": r["Isp"],
+            "mdot": r["mdot"],
+            "mdot_fuel": r["mdot"] / (1.0 + comparisonOF),
+            "A_cyl": r["A_cyl_wall"],
+        }
+
+        pct = {}
+        for key in ref_vals:
+            pct[key] = 100.0 * (current_vals[key] - ref_vals[key]) / ref_vals[key]
+
+        print(
+            f"{pc:8.1f} | "
+            f"{pct['Tc']:10.3f} | {pct['Dch']:10.3f} | {pct['Isp']:10.3f} | "
+            f"{pct['mdot']:10.3f} | {pct['mdot_fuel']:15.3f} | {pct['A_cyl']:12.3f}"
+        )
+
+    print("=" * len(header))
+    print()
+
+
+# =====================================================
+# === UPDATED MAIN ====================================
 # =====================================================
 
 if __name__ == "__main__":
@@ -347,8 +492,28 @@ if __name__ == "__main__":
 
     target_thrust_N = TARGET_THRUST_LBF * LBF_TO_N
 
+    # Print sizing for selected chamber pressures
     for pc in CHAMBER_PRESSURES:
         r = compute_sizing(target_thrust_N, pc, OF_TARGET)
         pretty_print(r)
 
+    # --- Original interactive figure (unchanged) ---
     interactive_OF_plot(target_thrust_N=target_thrust_N)
+
+    # --- NEW percent-change figure ---
+    # Uses same Pc range as interactive plot (default 300–700 psi)
+    make_percent_change_figure(
+        pc_min=300,
+        pc_max=600,
+        pc_step=5,
+        target_thrust_N=target_thrust_N
+    )
+        # --- NEW percent-change table ---
+    print_percent_change_table(
+        pc_min=300,
+        pc_max=600,
+        pc_step=5,
+        target_thrust_N=target_thrust_N
+    )
+
+
