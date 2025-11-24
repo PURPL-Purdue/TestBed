@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 # ============================================================
 # USER CONFIGURATION
 # ============================================================
-num_outlets = 40           # number of INPUT pipes feeding the ring (branches)
-ring_radius = 0.09273      # [m]
+num_outlets = 54           # number of INPUT pipes feeding the ring (branches)
+ring_radius = 0.07365      # [m]
 
 # Fluid properties (RP-1)
 rho = 810.0                # density [kg/m^3]
@@ -17,7 +17,7 @@ Q_total = m_dot_total / rho   # [m^3/s]
 
 # Branch (input pipe) properties
 Cd_branch = 0.65           # discharge coefficient for each inlet branch
-A_branch = 1.0e-4          # [m^2] fixed area of each inlet pipe
+A_branch = 1.5e-5          # [m^2] fixed area of each inlet pipe
 
 # Channel (upstream) pressure feeding the branches
 P_chan_psi = 954.43        # [psi]
