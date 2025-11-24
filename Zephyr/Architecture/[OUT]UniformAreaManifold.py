@@ -4,184 +4,202 @@ import matplotlib.pyplot as plt
 # ============================================================
 # USER CONFIGURATION
 # ============================================================
-num_outlets = 40           # total outlets spaced around 360°
-ring_radius = 0.5           # [m]
-segment_length = (2 * np.pi * ring_radius) / num_outlets  # segment length [m]
+num_outlets = 40           # number of INPUT pipes feeding the ring (branches)
+ring_radius = 0.09273      # [m]
 
-# Fluid properties (for LOX)
-rho_lox = 1140.0           # density [kg/m^3]
-mu_lox = 0.000197          # viscosity [Pa·s]
-f = 0.02                   # Darcy friction factor (approx.)
+# Fluid properties (RP-1)
+rho = 810.0                # density [kg/m^3]
+f = 0.02                   # Darcy friction factor (assumed constant)
 
-# Flow and pressure
-Q_total = 4.6979e-03       # total inlet flow [m³/s]
-P_out_target = 750.0      # desired outlet pressure [psi]
+# Total mass flow coming IN from the 40 channels
+m_dot_total = 3.0736       # [kg/s]
+Q_total = m_dot_total / rho   # [m^3/s]
 
-# Design constraints
-area_min = 1.0e-4          # [m²]
-area_max = 1.0e-2          # [m²]
+# Branch (input pipe) properties
+Cd_branch = 0.65           # discharge coefficient for each inlet branch
+A_branch = 1.0e-4          # [m^2] fixed area of each inlet pipe
 
-# Iteration control
-max_iter = 5000
-meet_tol = 1e3             # [Pa] pressure continuity tolerance
-mass_tol = 1e-6            # [m^3/s]
-
-# ============================================================
-# OUTLET SPECIFIC INPUTS
-# ============================================================
-V_desired = 4.0            # [m/s] Desired velocity constant (CHANGE THIS)
-A_desired = np.clip(Q_total / V_desired, area_min, area_max)
-
-Cd_branch = 0.65           #       Discharge efficiency factor, basically the efficiency of the flow from the inlet channels.
-A_branch = 1.0e-4          # [m^2] Area of each of the inlet channels 
-K_join = 0.0               #       Pressure loss from when each channel joins the main manifold area.
-# ============================================================
-# INITIALIZATION
-# ============================================================
+# Channel (upstream) pressure feeding the branches
+P_chan_psi = 954.43        # [psi]
 psi_to_pa = 6894.76
-P_out_target *= psi_to_pa
-P_chan = 954.43 * psi_to_pa
+P_chan = P_chan_psi * psi_to_pa   # [Pa]
 
-half_outlets = num_outlets // 2
+# Outlet pipe target velocity (this is the single OUTPUT pipe)
+V_out = 3.0                # [m/s] desired outlet velocity
 
-# Start with slightly tapered manifold areas to avoid zero imbalance
-area = np.linspace(4.2e-4, 3.8e-4, half_outlets)
+SAFETY_FACTOR = 1.5        # factor to oversize header vs outlet area
 
-# ============================================================
-# DUAL-FLOW SIMULATION (0° → ±180°)
-# ============================================================
-pressure_forward = np.full(half_outlets + 1, P_out_target) #Starts from the outlet channel. 
-pressure_backward = np.full(half_outlets + 1, P_out_target)
-
-area_forward = np.full(half_outlets, A_desired)
-area_backward = np.full(half_outlets, A_desired)
-
-converged = False
-
-for iteration in range(max_iter):
-    # --- Forward half (0° → 180°)
-    Q_running_f = 0.0
-    for i in range(half_outlets):
-        # Branch inflow into header at node i
-        dp_branch = max(P_chan - pressure_forward[i], 0.0)
-        q_in = Cd_branch  * A_branch * np.sqrt(2.0 * dp_branch / rho_lox)
-        Q_running_f += q_in
-
-        # tee/junction mixing loss
-        A_header = A_desired
-        D_header = np.sqrt(4.0 * A_header / np.pi)
-        v_header = np.clip(Q_running_f / A_header, 1e-9, 1e4)
-        dp_join = K_join * 0.5 * rho_lox * v_header**2
-        pressure_forward[i] -= dp_join
-
-        # propogating friction for the next node
-        dp_fric = 0.5 * f * rho_lox * v_header**2 * (segment_length / D_header)
-        pressure_forward[i+1] = pressure_forward[i] - dp_fric
-
-
-    # --- Backward half (0° → -180°)
-    Q_running_b = 0.0
-    for i in range(half_outlets):
-
-        dp_branch = max(P_chan - pressure_backward[i], 0.0)
-        q_in = Cd_branch * A_branch * np.sqrt(2.0 * dp_branch / rho_lox)
-        Q_running_b += q_in
-
-        A_header = A_desired
-        D_header = np.sqrt(4.0 * A_header / np.pi)
-        v_header = np.clip(Q_running_b / A_header, 1e-9, 1e4)
-        dp_join = K_join * 0.5 * rho_lox * v_header**2
-        pressure_backward[i] -= dp_join
-        
-        dp_fric = 0.5 * f * rho_lox * v_header**2 * (segment_length / D_header)
-        pressure_backward[i+1] = pressure_backward[i] - dp_fric
-
-    # Combine both sides for balancing (optional)
-    p_meet_f = pressure_forward[-1]
-    p_meet_b = pressure_backward[-1]
-    meet_err = abs(p_meet_f - p_meet_b)
-
-    Q_collected = Q_running_f + Q_running_b
-    mass_err = abs(Q_collected - Q_total)
-
-    if Q_collected > 0:
-        scale = np.sqrt(np.clip(Q_total / Q_collected, 0.2, 5.0))
-        A_branch *= np.clip(scale, 0.8, 1.25)
-
-    if (meet_err < meet_tol) and (mass_err < mass_tol): #Checks symmetry of both halves
-        converged = True
-        break
+free_zone_deg = 8.0        # total free zone width (e.g. 8° ⇒ -4°..+4°)
+half_free = free_zone_deg / 2.0
 
 # ============================================================
-# OUTLET CHANNEL DIMENSIONS
+# CONTINUITY: BRANCH FLOWS AND OUTLET AREA
+# ============================================================
+# Each of the 40 INPUT pipes carries equal flow
+Q_branch = Q_total / num_outlets          # [m^3/s]
+V_branch = Q_branch / A_branch            # [m/s] velocity in each input pipe
+
+# Outlet pipe area required to get the desired outlet velocity
+A_exit = Q_total / V_out                  # [m^2]
+D_exit = np.sqrt(4.0 * A_exit / np.pi)    # [m]
+
+# Manifold header area (collector ring)
+A_header = SAFETY_FACTOR * A_exit
+D_header = np.sqrt(4.0 * A_header / np.pi)
+
+# ============================================================
+# BASELINE MANIFOLD PRESSURE FROM ORIFICE EQUATION (NO FRICTION)
 # ============================================================
 
-# Pressure at the outlet node (180 degrees)
-P_exit = (0.5 * (pressure_forward[0] + pressure_backward[0]) )/ psi_to_pa # [Pa] Exit pressure in Pa
-v_exit = Q_total / A_desired   # [m/s] SHOULD be the same as the desired velocity
-d_exit = np.sqrt((A_desired * 4) / np.pi) *100 # [cm]
-
-print("\n=== Single Outlet Channel Conditions ===")
-print(f"P_exit = {P_exit:.2f} psi")
-print(f"A_exit = {A_desired:.2e} m^2")
-print(f"D_exit = {d_exit:.2f} cm")
-print(f"v_exit = {v_exit:.2f} m/s")
+deltaP_branch = 0.5 * rho * (Q_branch / (Cd_branch * A_branch))**2  # [Pa]
+P_man = P_chan - deltaP_branch                                      # [Pa]
+P_man_psi = P_man / psi_to_pa
 
 # ============================================================
-# MERGE INTO FULL 360° RING (manifold taper)
+# RING GEOMETRY AND FLOW PROFILE (COLLECTOR)
 # ============================================================
-pressure_half = 0.5 * (pressure_forward[1:] + pressure_backward[1:])
-area_half = np.full(half_outlets, A_desired)
+half_outlets = num_outlets // 2  # 20 per side
 
-# mirror to full ring
-pressure_full = np.concatenate((pressure_half, pressure_half[::-1]))
-area_full = np.concatenate((area_half, area_half[::-1]))
-D_full = np.sqrt(4.0 * area_full / np.pi)
+# Each branch occupies an equal angular spacing in the non-free arc
+arc_with_branches_deg = 360.0 - free_zone_deg
+dtheta_deg = arc_with_branches_deg / num_outlets  # degrees per branch spacing
+segment_length = ring_radius * np.deg2rad(dtheta_deg)  # [m] between branches
 
-# header flow & velocity profile around the ring (using same branch law)
-# build q_in per node for the half, then mirror
-q_in_half = Cd_branch * A_branch * np.sqrt(2.0 * np.maximum(P_chan - pressure_half, 0.0) / rho_lox)
-Q_profile_half = np.cumsum(q_in_half)
-Q_profile_full = np.concatenate((Q_profile_half, Q_profile_half[::-1]))
-v_header_full = Q_profile_full / np.clip(area_full, 1e-9, None)
+# Angles for branches:
+# Negative side: far (-180+half_free) -> near (-half_free)
+angles_neg = np.linspace(-180.0 + half_free, -half_free, half_outlets)
+# Positive side: near (+half_free) -> far (+180-half_free)
+angles_pos = np.linspace(half_free, 180.0 - half_free, half_outlets)
 
-# angles and plotting arrays
-angles_full = np.linspace(0, 360, num_outlets, endpoint=False)
+angles_full = np.concatenate((angles_neg, angles_pos))
+
+# Flow in header on each side (collector behavior):
+# From far end to near outlet, flow builds from Q_branch to Q_half:
+Q_half = half_outlets * Q_branch  # total per side at the outlet junction
+
+# For friction integration it's convenient to have flows from FAR -> NEAR:
+Q_neg_far_to_near = np.linspace(Q_branch, Q_half, half_outlets)  # negative side
+Q_pos_far_to_near = np.linspace(Q_branch, Q_half, half_outlets)  # positive side
+
+# For display, we want:
+#  - negative side: far -> near (as angles_neg is defined)
+#  - positive side: near -> far, so we reverse the "far_to_near" array
+Q_neg_display = Q_neg_far_to_near                          # far -> near
+Q_pos_display = Q_pos_far_to_near[::-1]                    # near -> far
+
+Q_profile_full = np.concatenate((Q_neg_display, Q_pos_display))  # [m^3/s]
+
+# Header velocity at each branch location (for display)
+V_header_full = Q_profile_full / A_header                  # [m/s]
+
+# ============================================================
+# FRICTION ESTIMATIONS ALONG THE RING (DARCY–WEISBACH)
+# ============================================================
+
+v_neg_seg = Q_neg_far_to_near / A_header  # [m/s]
+dp_neg_seg = f * (segment_length / D_header) * 0.5 * rho * v_neg_seg**2  # [Pa]
+
+v_pos_seg = Q_pos_far_to_near / A_header
+dp_pos_seg = f * (segment_length / D_header) * 0.5 * rho * v_pos_seg**2  # [Pa]
+
+# Pressures at branch locations:
+# Let P_far_neg = P_man, then pressure drops toward the outlet along each side.
+P_neg = np.zeros(half_outlets)
+P_pos = np.zeros(half_outlets)
+
+# Negative side: far (index 0) -> near (index N-1)
+P_neg[0] = P_man
+for j in range(1, half_outlets):
+    P_neg[j] = P_neg[j-1] - dp_neg_seg[j-1]
+
+# Positive side: far (index 0) -> near (index N-1)
+P_pos[0] = P_man
+for j in range(1, half_outlets):
+    P_pos[j] = P_pos[j-1] - dp_pos_seg[j-1]
+
+pressure_neg_display = P_neg                         # far -> near
+pressure_pos_display = P_pos[::-1]                   # near -> far
+
+pressure_full = np.concatenate((pressure_neg_display, pressure_pos_display))
 pressure_full_psi = pressure_full / psi_to_pa
-std_dev = np.std(pressure_full_psi)
+
+# Estimate far-end and near-outlet pressures for text ΔP
+P_far_avg = 0.5 * (P_neg[0] + P_pos[0])          # should be ~P_man
+P_near_out_avg = 0.5 * (P_neg[-1] + P_pos[-1])   # near outlet on both sides
+deltaP_fric = P_far_avg - P_near_out_avg         # [Pa]
+deltaP_fric_psi = deltaP_fric / psi_to_pa        # [psi]
 
 # ============================================================
-# OUTPUT
+# MANIFOLD FILL TIME
 # ============================================================
-if converged:
-    print(f"Converged after {iteration} iterations "
-          f"(meet_err={meet_err:.3e} Pa, mass_err={mass_err:.3e} m^3/s).")
-else:
-    print("Warning: did not fully converge after max iterations "
-          f"(meet_err={meet_err:.3e} Pa, mass_err={mass_err:.3e} m^3/s).")
+L_ring = 2 * np.pi * ring_radius               # total ring length [m]
+V_manifold = A_header * L_ring                 # volume of the manifold [m^3]
+t_fill = V_manifold / Q_total                  # fill time [s]
 
-print(f"{'Angle (deg)':>10s} | {'Area (cm^2)':>12s} | {'D (cm)':>8s} | {'Pressure (psi)':>14s} | {'Header v (m/s)':>14s}")
-print("-" * 90)
-for i in range(num_outlets):
-    print(f"{angles_full[i]:10.1f} | {area_full[i]*1e4:12.4f} | {D_full[i]*100:8.4f} | {pressure_full_psi[i]:14.3f} | {v_header_full[i]:14.3f}")
-print(f"\nOutlet pressure std dev around ring: {std_dev:.6f} psi")
+print("\nManifold Fill Time:")
+print(f"  Ring length (L_ring):      {L_ring:.3f} m")
+print(f"  Manifold volume:           {V_manifold:.6e} m^3")
+print(f"  Fill time (t_fill):        {t_fill*1000:.3f} ms")
 
 # ============================================================
-# PLOTS
+# OUTPUTS
 # ============================================================
-fig, ax = plt.subplots(3, 1, figsize=(8,12), sharex=True)
+print("\n=== Collector Manifold with Darcy–Weisbach Friction (40 IN → 1 OUT) ===")
+print(f"Upstream channel pressure (P_chan):       {P_chan_psi:.3f} psi")
+print(f"Baseline manifold pressure (no friction): {P_man_psi:.3f} psi")
+print(f"Estimated friction pressure loss (far → outlet): {deltaP_fric_psi:.6f} psi ({deltaP_fric:.3f} Pa)")
+print()
+print(f"Total mass flow (m_dot_total):            {m_dot_total:.6f} kg/s")
+print(f"Total volume flow (Q_total):              {Q_total:.6e} m^3/s")
+print()
+print(f"Each input pipe flow (Q_branch):          {Q_branch:.6e} m^3/s")
+print(f"Each input pipe velocity:                 {V_branch:.3f} m/s")
+print()
+print("Outlet pipe sizing from desired velocity:")
+print(f"  Desired outlet velocity (V_out):        {V_out:.3f} m/s")
+print(f"  Outlet cross-sectional area (A_exit):   {A_exit:.6e} m^2")
+print(f"  Outlet diameter (D_exit):               {D_exit*1000:.3f} mm")
+print()
+print("Header (ring manifold) geometry:")
+print(f"  Header cross-sectional area (A_header): {A_header:.6e} m^2")
+print(f"  Header diameter (D_header):             {D_header*1000:.3f} mm")
+print()
+print(f"Regen Channel free zone:                  ±{half_free:.1f}° around 0°")
 
-ax[0].plot(angles_full, pressure_full_psi, 'b-o', label='Header Pressure (psi)')
-ax[0].set_ylabel("Pressure (psi)"); ax[0].grid(True); ax[0].legend()
+# ============================================================
+# PLOTS OF PRESSURE + HEADER VELOCITY
+# ============================================================
 
-ax[1].plot(angles_full, D_full*100, 'r-o', label='Manifold Diameter (cm)')
-ax[1].set_ylabel("Diameter (cm)"); ax[1].grid(True); ax[1].legend()
+# Convert pressure to absolute psi
+pressure_full_abs_psi = pressure_full / psi_to_pa  # [psi]
 
-ax[2].plot(angles_full, v_header_full, 'g-o', label='Header Velocity (m/s)')
-ax[2].set_xlabel("Outlet angle (deg)")
-ax[2].set_ylabel("Velocity (m/s)")
-ax[2].grid(True); ax[2].legend()
+# Compute mean pressure to set a nice axis window
+P_mean = np.mean(pressure_full_abs_psi)
+y_lo = P_mean - 0.5  # show ±0.5 psi around the mean
+y_hi = P_mean + 0.5
 
-plt.suptitle("LOX Collector Ring — Pressure, Diameter, and Header Velocity")
-plt.tight_layout(rect=[0, 0, 1, 0.97])
+fig, axs = plt.subplots(2, 1, figsize=(10, 9))
+
+# ------------------------------------------------------------
+# 1) PRESSURE PLOT
+# ------------------------------------------------------------
+axs[0].plot(angles_full, pressure_full_abs_psi, 'b-o', linewidth=1.6, markersize=4)
+axs[0].set_title("Pressure Around Collector Manifold", fontsize=16, fontweight='bold')
+axs[0].set_ylabel("Pressure (psi)", fontsize=13)
+axs[0].set_xlabel(f"Angle Around Ring (0° = Outlet)", fontsize=13)
+axs[0].grid(True, linestyle='--', alpha=0.6)
+axs[0].tick_params(labelsize=11)
+axs[0].set_ylim(y_lo, y_hi)  # force visible absolute scale
+
+# ------------------------------------------------------------
+# 2) HEADER VELOCITY PLOT
+# ------------------------------------------------------------
+axs[1].plot(angles_full, V_header_full, 'g-o', linewidth=1.6, markersize=4)
+axs[1].set_title("Flow Velocity Around Collector Manifold", fontsize=16, fontweight='bold')
+axs[1].set_ylabel("Velocity (m/s)", fontsize=13)
+axs[1].set_xlabel(f"Angle Around Ring (0° = Outlet)", fontsize=13)
+axs[1].grid(True, linestyle='--', alpha=0.6)
+axs[1].tick_params(labelsize=11)
+
+plt.tight_layout()
 plt.show()
