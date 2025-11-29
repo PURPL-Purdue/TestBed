@@ -14,7 +14,7 @@ from rocketcea.cea_obj import CEA_Obj
 ################################################################
 
 # --- COMPARISON REFERENCE POINT (PLEASE CHANGE) ---
-comparisonPc = 600
+comparisonPc = 400
 comparisonOF = 2.2
 
 OXIDIZER = "LOX"
