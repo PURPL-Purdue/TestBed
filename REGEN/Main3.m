@@ -2,9 +2,9 @@
 updatedHeightValues = readmatrix("wallThicknessesGoated.xlsx");
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-widthArray = [0.0894,0.0591,0.1772]/39.37;%updatedHeightValues(7,2:46);
-heightArray =  [0.0894,0.0787,0.1181]/39.37;%updatedHeightValues(6,2:46);
-wall_thicknessMatrix = [0.0394,0.0295,0.0394]/39.37;
+widthArray = [0.059,0.0394,0.122]/39.37;%updatedHeightValues(7,2:46);
+heightArray =  [0.091,0.0394,0.059]/39.37;%updatedHeightValues(6,2:46);
+wall_thicknessMatrix = [0.0394,0.0197,0.0394]/39.37;
 heightStepNumber = 45;
 numChannels = 62;
 startConvInd = 28;
@@ -16,10 +16,13 @@ flowPressureMatrix = zeros(heightStepNumber);
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
 
-heightStepArray = linspace(0,0.227838000000000,heightStepNumber);
+heightStepArray = linspace(0,0.227382320000000,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEAOutFzPsp_IAC_11-23-25.xlsx"); %pull all nasaCEA values into fluidProperties
+% if newFluidProperties errors and cuts off a row, change the middle value
+% in the heightStepArray initialization call to be whatever the ACTUAL end
+% length is set to.
 fluidProperties(1,:) = [];
 y = 1; 
 r = 1;

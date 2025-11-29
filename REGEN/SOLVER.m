@@ -51,7 +51,7 @@ xz = 1;
 heightStep = 1; % current height step
 
 while (heightStep < heightStepNumber)
- 
+    xz = 0;
     height = channelHeights(heightStep);
     width = channelWidths(heightStep);
 
@@ -127,7 +127,7 @@ while (heightStep < heightStepNumber)
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
             
-            surfaceRoughness = 0.000002; % measure for how rough channels are after slit saw (chosen from engineering toolbox)
+            surfaceRoughness = 0.000006; % measure for how rough channels are after slit saw (chosen from engineering toolbox)
             frictionFactor = (1/(-1.8*log10(((surfaceRoughness/hyd_diam)/3.7)^(1.11)+(6.9/Re))))^2; %new friction factor which is so cool (from vincent and haaland)
             
             % Calculate convective heat transfer coefficient [W/(m^2·K)]
@@ -158,19 +158,19 @@ while (heightStep < heightStepNumber)
             A_wallL = A_wallLiquid+(A_fin*fin_efficiency);
         xz = xz+1;
         %Calculate required heat flux, qdotL_total
-        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(wallThicknesses(heightStep)*A_wallG);
-        display(xz)
-        if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
+        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(A_wallG);
+
+            if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
             T_wgFinal(heightStep) = T_wg;
             notCorrect = false;
-        elseif(Q_dotIN<Q_dotOUT)
-            T_wg = T_wg * 0.99;
-        else
-            T_wg = T_wg * 1.01;
-        end
+            elseif(Q_dotIN<Q_dotOUT)
+                T_wg = T_wg * 0.95;
+            else
+                T_wg = T_wg * 1.05;
+            end
         
     end
-    display(1)
+    display(xz)
         
     % Calculate Coolant Temp increase, delta_T (K)
     delta_T = Q_dotOUT*A_wallL/(mass_flow*cp);

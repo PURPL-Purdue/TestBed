@@ -75,7 +75,7 @@ while (heightStep < heightStepNumber)
 
     end
 
-    T_wg_InitialGuess = 600; % Set initial guess to be upper threshold for wall temp
+    T_wg_InitialGuess = 700; % Set initial guess to be upper threshold for wall temp
     T_wg = T_wg_InitialGuess;
     
     
@@ -158,19 +158,19 @@ while (heightStep < heightStepNumber)
             A_wallL = A_wallLiquid+(A_fin*fin_efficiency);
         xz = xz+1;
         %Calculate required heat flux, qdotL_total
-        Q_dotOUT = h_l*A_wallLh_l*(T_wl-temp)/(wallThicknesses(heightStep)*A_wallG);
-        display(xz)
-        if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
+        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(A_wallG);
+
+            if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
             T_wgFinal(heightStep) = T_wg;
             notCorrect = false;
-        elseif(Q_dotIN<Q_dotOUT)
-            T_wg = T_wg * 0.99;
-        else
-            T_wg = T_wg * 1.01;
-        end
+            elseif(Q_dotIN<Q_dotOUT)
+                T_wg = T_wg * 0.95;
+            else
+                T_wg = T_wg * 1.05;
+            end
         
     end
-    display(1)
+    display(xz)
         
     % Calculate Coolant Temp increase, delta_T (K)
     delta_T = Q_dotOUT*A_wallL/(mass_flow*cp);

@@ -16,10 +16,13 @@ flowPressureMatrix = zeros(heightStepNumber);
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
 
-heightStepArray = linspace(0,8.97/39.37,heightStepNumber);
+heightStepArray = linspace(0,0.227838000000000,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
 fluidProperties = readmatrix("CEAOutFz_PSP.xlsx"); %pull all nasaCEA values into fluidProperties
+% if newFluidProperties errors and cuts off a row, change the middle value
+% in the heightStepArray initialization call to be whatever the ACTUAL end
+% length is set to.
 fluidProperties(1,:) = [];
 y = 1; 
 r = 1;
