@@ -46,7 +46,7 @@ while a < length(OMaxs)
     sigma_rad(a) = comp_stress(a) + OMaxs(a);
     sigma_circ(a) = thermalStress(a) + hoopStress(a);
     sigma_long(a) = thermalStress(a);
-    vonMises(a) = sqrt(((sigma_rad+sigma_circ).^2)+((sigma_circ-sigma_long).^2) + ((sigma_rad + sigma_long).^2));
+    vonMises(a) = sqrt(((sigma_rad(a)+sigma_circ(a))^2)+((sigma_circ(a)-sigma_long(a))^2) + ((sigma_rad(a) + sigma_long(a))^2));
     if OEffectives(a) >= vonMises
         
         display(sigma_rad)
