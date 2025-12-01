@@ -27,7 +27,7 @@ while i <= length(T_wl)
     hoopStress(i) = chamberPressure(i)*chamberDiameter(i)/(2*wallThicknesses(i));
     
     OEffectives(i) = sum(calcPainArr .* wallThicknesses(i)) .* 1000000;  %Integrates yield strength array to find effective strength for each wall thickness in Pa
-    OMaxs(i) = sqrt((bendMaxs(i)));
+    OMaxs(i) = (bendMaxs(i));
 
     
     i = i + 1;
@@ -43,10 +43,10 @@ a = 0;
 while a < length(OMaxs)
     a = a + 1;
 
-    sigma_rad = comp_stress + OMaxs(a);
-    sigma_circ = thermalStress(a) + hoopStress(a);
-    sigma_long = thermalStress(a);
-    vonMises = sqrt(((sigma_rad+sigma_circ)^2)+((sigma_circ-sigma_long)^2) + ((sigma_rad + sigma_long)^2));
+    sigma_rad(a) = comp_stress(a) + OMaxs(a);
+    sigma_circ(a) = thermalStress(a) + hoopStress(a);
+    sigma_long(a) = thermalStress(a);
+    vonMises(a) = sqrt(((sigma_rad+sigma_circ).^2)+((sigma_circ-sigma_long).^2) + ((sigma_rad + sigma_long).^2));
     if OEffectives(a) >= vonMises
         
         display(sigma_rad)
