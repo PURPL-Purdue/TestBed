@@ -13,20 +13,20 @@ from pyfluids import Fluid, FluidsList, Input
 #  INPUTS
 # ──────────────────────────────────────────────────────────────
 
-F = 1.6 # Desired thrust of the torch (lbf)
-p_c = 140 # Optimal chamber pressure (psi)
+F = 1.6 # Nominal thrust of the torch (lbf)
+p_c = 140 # Nominal chamber pressure (psi)
 OF = 3 # Nominal OF Ratio
 
 fuel_choice = 'kerosene'
-# fuel_choice = 'methane'
+# =fuel_choice = 'methane'
 # fuel_choice = 'hydrogen'
 
 p_ox = 600 # Oxidizer feed pressure (psi)
-ox_orifice_num = 1 # Number of oxidizer orifices
+ox_orifice_num = 5 # Number of oxidizer orifices (N/A)
 Cd_ox = 0.8 # Oxidizer orifice anticipated C_d (N/A)
 
 p_fu = 740 # Fuel feed pressure (psi)
-fu_orifice_num = 1 # Number of fuel orifices
+fu_orifice_num = 1 # Number of fuel orifices (N/A)
 Cd_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 
 cstar_eff = 0.7 # C star efficiency factor (N/A)
@@ -70,7 +70,7 @@ def main(fuel_choice):
 
     if fuel_choice == 'kerosene':
         engine = CEA_Obj(oxName='GOX', fuelName='JetA')
-        rho_fu = Fluid(FluidsList.Methane).with_state(Input.pressure(p_fu_pa), Input.temperature(T-273.15)).density
+        rho_fu = 810 # Kerosene density (kg/m^3) @ STP
         m_dot_fu, m_dot_ox, cstar_real = get_mdots(engine,F,p_c,OF,cstar_eff)
         A_fu = get_liquid_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu)
 
