@@ -35,15 +35,20 @@ cstar_eff = 0.7 # C star efficiency factor (N/A)
 #  CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
-gamma_ox = 1.4 # GOx specific heat ratio
+gamma_o2 = 1.4 # Oxygen Specific heat ratio
+gamma_h2 = 1.41 # Hydrogen Specific heat ratio
+gamma_ch4 = 1.3 # Methane Specific heat ratio
+R_o2 = 259.8 # Oxygen Specific gas constant
+R_h2 = 4124 # Hydrogen Specific gas constant
+R_ch4 = 518.3 # Methane Specific gas constant
+T = 293.15 # Ambient temperature (K)
 
 # ──────────────────────────────────────────────────────────────
 #  UNIT CONVERSIONS
 # ──────────────────────────────────────────────────────────────
 
-lbf_to_N = 4.44822
+lbf_to_N = 4.4482
 psi_to_pa = 6894.76
 ft_to_m = 0.3048
 lb_to_kg = 0.453592
@@ -61,27 +66,27 @@ F_N = F * lbf_to_N # Desired thrust (N)
 def main(fuel_choice):
 
     # Oxygen density at manifold pressure and ambient temperature (kg/m^3)
-    rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(20)).density 
+    rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T-273.15)).density 
 
     if fuel_choice == 'kerosene':
         engine = CEA_Obj(oxName='GOX', fuelName='JetA')
-        rho_fu = Fluid(FluidsList.Methane).with_state(Input.pressure(p_fu_pa), Input.temperature(20)).density
+        rho_fu = Fluid(FluidsList.Methane).with_state(Input.pressure(p_fu_pa), Input.temperature(T-273.15)).density
         m_dot_fu, m_dot_ox, cstar_real = get_mdots(engine,F,p_c,OF,cstar_eff)
         A_fu = get_liquid_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu)
 
     elif fuel_choice == 'methane':
         engine = CEA_Obj(oxName='GOX', fuelName='CH4(g)')
-        rho_fu = Fluid(FluidsList.Methane).with_state(Input.pressure(p_fu_pa), Input.temperature(20)).density
+        rho_fu = Fluid(FluidsList.Methane).with_state(Input.pressure(p_fu_pa), Input.temperature(T-273.15)).density
         m_dot_fu, m_dot_ox, cstar_real = get_mdots(engine,F,p_c,OF,cstar_eff)
-        A_fu = get_gas_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu, 1.3, 518.3, 293.15)
+        A_fu = get_gas_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu, gamma_ch4, R_ch4, T)
 
     elif fuel_choice == 'hydrogen':
         engine = CEA_Obj(oxName='GOX', fuelName='H2(g)')
-        rho_fu = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(p_fu_pa), Input.temperature(20)).density
+        rho_fu = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(p_fu_pa), Input.temperature(T-273.15)).density
         m_dot_fu, m_dot_ox, cstar_real = get_mdots(engine,F,p_c,OF,cstar_eff)
-        A_fu = get_gas_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu, 1.41, 4124, 293.15)
+        A_fu = get_gas_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu, gamma_h2, R_h2, T)
 
-    A_ox = get_gas_inj_area(m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, 1.4, 259.8, 293.15) 
+    A_ox = get_gas_inj_area(m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2, R_o2, T) 
     A_t = (m_dot_fu + m_dot_ox) * (cstar_real * ft_to_m) / p_c_pa
 
     d_fu = 2 * np.sqrt((A_fu / fu_orifice_num) / np.pi) # Fuel orifice diameter (m)
