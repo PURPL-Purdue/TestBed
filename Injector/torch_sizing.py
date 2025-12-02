@@ -13,9 +13,9 @@ from pyfluids import Fluid, FluidsList, Input
 #  INPUTS
 # ──────────────────────────────────────────────────────────────
 
-F = 1.5 # Desired thrust of the torch (lbf)
+F = 1.6 # Desired thrust of the torch (lbf)
 p_c = 140 # Optimal chamber pressure (psi)
-OF = 3.5 # Nominal OF Ratio
+OF = 3 # Nominal OF Ratio
 
 # fuel_choice = 'methane'
 # fuel_choice = 'methane'
@@ -29,7 +29,7 @@ p_fu = 740 # Fuel feed pressure (psi)
 fu_orifice_num = 1 # Number of fuel orifices
 Cd_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 
-cstar_eff = 0.75 # C star efficiency factor (N/A)
+cstar_eff = 0.9 # C star efficiency factor (N/A)
 
 # ──────────────────────────────────────────────────────────────
 #  CONSTANTS
@@ -130,7 +130,7 @@ print(f"Total mass flow: {m_dot_fu + m_dot_ox:.4f} kg/s")
 print(f"Fuel mass flow: {m_dot_fu:.4f} kg/s")
 print(f"Ox mass flow: {m_dot_ox:.4f} kg/s")
 
-print(f"\nThroat diameter: {d_t * m_to_in:.2f} in")
+print(f"\nThroat diameter: {d_t * m_to_in:.3f} in")
 
 print(f"\nTotal fuel injection area: {A_fu:.6f} m^2")
 print(f"Fuel orifice diameter: {d_fu * m_to_in:.3f} in")
