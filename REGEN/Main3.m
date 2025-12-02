@@ -2,52 +2,63 @@
 updatedHeightValues = readmatrix("wallThicknessesGoated.xlsx");
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-widthArray = updatedHeightValues(7,2:46);
-heightArray = updatedHeightValues(6,2:46);
-wall_thicknessMatrix = updatedHeightValues(4,2:46);
+widthArray = [0.059,0.0394,0.122]/39.37;%updatedHeightValues(7,2:46);
+heightArray =  [0.091,0.0394,0.059]/39.37;%updatedHeightValues(6,2:46);
+wall_thicknessMatrix = [0.0394,0.0197,0.0394]/39.37;
 heightStepNumber = 45;
-numChannels = 60;
+numChannels = 62;
+converge_index = 18;
+throat_index = 10;
 
-%% Initialize all arrays and matrices
-flowTempMatrix = zeros(heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
-flowVelocityMatrix = zeros(heightStepNumber);
-flowPressureMatrix = zeros(heightStepNumber);
-%wall_thicknessMatrix = [];
-%geometryMap = zeros(length(widthArray), length(heightArray)); %will be used later on to see which channel dimension combos worked/failed
+T_start= 298; % Flow Initial Temp in degrees K 
+P_start = 2551000; % Flow initial Pressure in Pa
+rho_start = 1000; % Coolant initial density in kg/m^3
+m_flow_total = 2.26796; % total coolant mass flow in kg/s
+T_target = 700; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
+k_w = 161; % thermal conductivity of the wall (W/m*K) %copper 401, 7075 130
+surfaceRoughness = 0.000006; % average height of roughness (chosen from engineering toolbox/elementum) in m
+CTE = 0.0000252; % Material's coefficient of thermal expansion in (%change/K)
+youngsModulus = 71700000000;
+mass_flow = m_flow_total/numChannels; % Precalcuated mass flow based on # of channels in Malestrom
+throatDiameter = 1.47; % throat diameter in (in)
+chamberRad = 0.61625; % chamber converging radius in (in)
+
+inputValues = [T_start, P_start, rho_start, mass_flow, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, chamberRad ];
+
+%% Initialize all arrays and matrices,
+flowTempArray = zeros(1,heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
+flowVelocityArray = zeros(1,heightStepNumber);
+flowPressureArray = zeros(1,heightStepNumber);
 
 %% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
-%{syms x;
-%steps = piecewise(x >= 0 & x <= 0.50777934936 * pi,(-2 * sin(x+(0.192 * pi)))+3.14856, x > 0.50777934936 * pi & x <= pi, 3.14856);
-    %n = pi/heightStepNumber;
-    %step = 1;
-    %for i = 0:n:(pi-n)
-   %     heightStepArray(step) = int(steps,i,i+n);
-  %      step = step +1;
- %   end
-%heightStepArray = heightStepArray/39.37; % change to meters
-heightStepArray = linspace(0,7.07/39.37,heightStepNumber);
+
+heightStepArray = linspace(0,0.227382320000000,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFzOF1.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEAOutFzPsp_IAC_11-23-25.xlsx"); %pull all nasaCEA values into fluidProperties
+% if newFluidProperties errors and cuts off a row, change the middle value
+% in the heightStepArray initialization call to be whatever the ACTUAL end
+% length is set to.
 fluidProperties(1,:) = [];
-y = 1;
+y = 1; 
 r = 1;
 axialDist = (fluidProperties(:,1));
 newFluidProperties = zeros(length(heightStepArray),10);
 newFluidProperties(:,1) = heightStepArray;
 chamberDiameter = [];
-chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
+%chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
 T_l_reqMatrix = [];
 updatedTemps = [];
 updatedPressure = [];
 updatedVelocity = [];
 %heightMatrix = zeros(heightStepNumber);
+%% New fluid Properties
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
     
     a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
     
-    sumDiameter = 0;
+    %sumDiameter = 0;
     sumAEAT = 0;
     sumPrandtl = 0;
     sumMach = 0;
@@ -61,7 +72,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     while a <= length(axialDist)
         
         if a-r==0
-            sumDiameter = sumDiameter + chamberPlot(a,2);
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -74,7 +85,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
 
         elseif axialDist(a) < heightStepArray(y)
-            sumDiameter = sumDiameter + chamberPlot(a,2);
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
             sumAEAT = sumAEAT+fluidProperties(a,2);
             sumPrandtl = sumPrandtl+fluidProperties(a,3);
             sumMach = sumMach+fluidProperties(a,4);
@@ -90,7 +101,7 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
         else
             divFactor = a-r;
-            chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
+            %chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
             newFluidProperties(y,2) = sumAEAT/divFactor;
             newFluidProperties(y,3) = sumPrandtl/divFactor;
             newFluidProperties(y,4) = sumMach/divFactor;
@@ -107,30 +118,27 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     end
     y=y+1;
 end
-chamberDiameter = flip(chamberDiameter);
-newFluidProperties = flip(newFluidProperties,1);
-%% Main Loop
-% for widthValue = 1:length(widthArray) %width value sent to calculateWallTemp from width array
-% 
-%         width = widthArray(widthValue);
-%   
-% 
-        [flowTempMatrix,flowVelocityMatrix, flowPressureMatrix,T_l_reqMatrix, wall_thicknessMatrix, updatedTemps, updatedPressure, updatedVelocity] = calculateWallTemp3(updatedTemps, updatedPressure, updatedVelocity, heightArray,T_l_reqMatrix, chamberDiameter,wall_thicknessMatrix,numChannels, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties);
-        %[flowTemp,flowVelocity,flowPressure, T_l_reqMatrix, wall_thicknesses, updatedTemps,updatedPressure,updatedVelocity, heightMatrix] = calculateWallTemp2(updatedTemps, updatedPressure, updatedVelocity, heightMatrix, heightArray,T_l_reqMatrix, chamberDiameterArray, wall_thicknesses,channelNum, heightStepArray, flowTempMatrix, flowVelocityMatrix, flowPressureMatrix, widthArray, newFluidProperties)
-        %Flow Temp, Pressure, Velocity are outputted arrays which contain values for *1* channel dimension combination
-        
-        % if flowTempMatrix(widthValue,heightValue,length(heightStepArray)) == -1 || flowTempMatrix(heightArray,widthValue,heightValue,length(heightStepArray)) == 0
-        %         geometryMap(widthValue, heightValue) = 0;%fail
-        %     else
-        %         geometryMap(widthValue, heightValue) = 1; %pass
-        % end
-        %wallthicknessesGoated = wall_thicknessMatrix(1,10,:);
-        
-% 
-% 
-% 
-% end
 
-%create geometry map
+
+i = 1;
+
+for a = heightStepArray
+    
+    if((i)<=(heightStepNumber-converge_index + 1))
+        chamberDiameter(i) = 0.09525; % set diameter in m
+        
+    elseif((i)<= (heightStepNumber - throat_index + 1))
+        chamberDiameter(i) = (((heightStepArray(i)-0.132334)*-1.245) +0.09525);
+    else
+        chamberDiameter(i) = (((heightStepArray(i)-0.178816)*0.5129) +0.037338);
+    end
+
+    i=i+1;
+end
+newFluidProperties = flip(newFluidProperties,1);
+chamberDiameter = flip(chamberDiameter)';
+%% Calculate Wall Temp
+[flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = calculateWallTemp3(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);
+
         
            

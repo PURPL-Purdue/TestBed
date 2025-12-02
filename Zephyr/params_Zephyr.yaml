@@ -35,32 +35,34 @@
 #######################################
 
 # Zephyr Chamber Performance (INPUTS)
-OF_ratio: 1.500 
-Chamber_pressure: 600 # (psi)
+OF_ratio: 2.200 # 
+Chamber_pressure: 400 # (psi) Artem Smagin
 Thrust: 5000 # (lb/f)
 
 # Zephyr Chamber Outputs (OUTPUTS BASED ON 85% EFFICIENCY FROM INJECTOR)
-Expansion_ratio: 5.579
-Champer_temperature: 2521.1 # (K)
-Isp: 253.87 # (sec)
-Exit_velocity: 2116.1 # (m/s)
-Characteristic_velocity (c*): 1653.5 # (m/s)
-mdot: 10.510 # (kg/s)
+Expansion_ratio: 4.897 # Artem Smagin
+Champer_temperature(gas): 3424.7 # (K) Artem Smagin
+Isp: 271.29 # (sec) Artem Smagin
+Exit_velocity: 2261.3 # (m/s) Artem Smagin
+Characteristic_velocity (c*): 1796.6 # (m/s) Artem Smagin
+Mdot: 9.835 # (kg/s) Artem Smagin
+RP1_mdot: 3.0736 # (kg/s) Artem Smagin
+Lox_mdot: 6.7616 # (kg/s) Artem Smagin
 
 # Zephyr Geometry
-Throat_diameter: 6.74 # (cm)
-Exit_diameter: 15.93 # (cm)
-Full_chamber_length: 25.29 # (cm)
-Chamber_volume: 5018.02 # (cm^3) (w/converging section)
-Chamber_diameter: 14.73 # (cm)
-Chamber_length: 29.46 # (cm)
-Characteristic_Length_Cylinder (L*): 1.405 # (m) 
-Characteristic_Length_with_converging (L*): 1.511 # (m)
-Nozzle_length: 17.14 # (cm)
-# Based on the ZephyrCharacteristicGenerator.py, throat length is a value of 5.95 cm. In the future, throat length will likely be 0 cm
+Throat_diameter: 8.33 # (cm) Artem Smagin
+Exit_diameter_conical: 18.43 # (cm) Artem Smagin
+Full_chamber_length: 31.66 # (cm) Artem Smagin
+Chamber_volume: 5990.73 # (cm^3) (w/converging section) Artem Smagin
+Chamber_diameter: 16.65 # (cm) Artem Smagin
+Chamber_length: 27.50 # (cm) Artem Smagin
+Characteristic_Length_Cylinder (L*): 1.1 # (m)  Artem Smagin
+Characteristic_Length_with_converging (L*): 1.197 # (m) Artem Smagin
+Nozzle_length_conical: 18.85 # (cm) Artem Smagin
+Nozzle_length_Bell: 15.08 # (cm) Artem Smagin
 
 #Calculated Hotfire Values (Based on 30s requirement)
-Fuel: 126.12 # (kg) (41.13 gal)
-Oxidizer: 189.18 # (kg) (43.84 gal)
+Fuel: 92.21 # (kg) (30.07 gal) Artem Smagin
+Oxidizer: 202.85 # (kg) (47.01 gal) Artem Smagin
 
 

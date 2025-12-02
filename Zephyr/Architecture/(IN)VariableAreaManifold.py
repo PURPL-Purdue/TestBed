@@ -1,161 +1,139 @@
-import numpy as np
+import math
 import matplotlib.pyplot as plt
 
-# ============================================================
-# USER CONFIGURATION
-# ============================================================
-num_outlets = 40           # total outlets spaced around 360°
-ring_radius = 0.5           # [m]
-segment_length = (2 * np.pi * ring_radius) / num_outlets  # segment length [m]
+# =============================
+# 🧰 USER CONFIGURATION
+# =============================
 
-# Fluid properties
-rho_lox = 813.18            # density [kg/m^3]
-mu_lox = 0.000197          # viscosity [Pa·s]
-f = 0.02                   # Darcy friction factor (approx.)
+CONFIG = {
+    "num_outlets_total": 40,       # total number of outlet holes (full ring)
+    "P_res_psi": 1000.0,           # fixed pump pressure, PSI
+    "P_chamber_psi": 600.0,        # downstream chamber pressure, PSI
+    "A_outlet_cm2": .150,           # outlet area (cm²)
+    "rho": 810.0,                  # fluid density (kg/m³)
+    "mass_flow_kg_s": 4.204,       # total inlet mass flow (kg/s)
+    "verbose": True
+}
 
-# Flow and pressure
-Q_total = 4.6979e-03       # total inlet flow [m³/s]
-P_in = 1000.0              # inlet pressure [psi]
-P_out_target = 995.0       # desired outlet pressure [psi]
+# =============================
+# 📏 UNIT CONVERSIONS
+# =============================
 
-# Design constraints
-area_min = 1.0e-4          # [m²]
-area_max = 1.0e-2          # [m²]
+PSI_TO_PA = 6894.75729
+CM2_TO_M2 = 1e-4
 
-# Iteration control
-max_iter = 10000
-tolerance = 1e-3
-relax = 0.1   # slightly stronger relaxation
+def psi_to_pa(psi): return psi * PSI_TO_PA
+def m2_to_cm2(a): return a / CM2_TO_M2
+def cm2_to_m2(a): return a * CM2_TO_M2
 
-# --- Constant outlet area
-A_outlet = 1.0e-4  # [m²]
+# =============================
+# 💨 HALF-RING CONSTANT VELOCITY MANIFOLD
+# =============================
 
-# ============================================================
-# INITIALIZATION
-# ============================================================
-psi_to_pa = 6894.76
-P_in *= psi_to_pa
-P_out_target *= psi_to_pa
+def ring_manifold_half(cfg):
+    n_total = cfg["num_outlets_total"]
+    n_half = n_total // 2                # number of outlets in one half
+    m_total = cfg["mass_flow_kg_s"]
+    m_half = m_total / 2                 # mass flow in one half
+    rho = cfg["rho"]
+    A_outlet = cm2_to_m2(cfg["A_outlet_cm2"])
+    P_res = psi_to_pa(cfg["P_res_psi"])
+    P_chamber = psi_to_pa(cfg["P_chamber_psi"])
 
-half_outlets = num_outlets // 2
-Q_half = Q_total / 2
-Q_per_outlet = Q_total / num_outlets
+    # Target velocity for each outlet
+    v_target = m_half / (rho * n_half * A_outlet)
 
-# Start with slightly tapered manifold areas to avoid zero imbalance
-area = np.linspace(4.2e-4, 3.8e-4, half_outlets)
+    A_plenum = []
+    outlet_velocities = []
+    outlet_massflows = []
 
-# ============================================================
-# DUAL-FLOW SIMULATION (0° → ±180°)
-# ============================================================
-pressure_forward = np.full(half_outlets + 1, P_in)
-pressure_backward = np.full(half_outlets + 1, P_in)
-area_forward = np.copy(area)
-area_backward = np.copy(area)
-converged = False
+    for i in range(n_half):
+        # Remaining mass flow in this half
+        m_remain = m_half - i * (m_half / n_half)
+        # Tapered plenum area
+        A_i_m2 = m_remain / (rho * v_target)
+        A_i_cm2 = m2_to_cm2(A_i_m2)
+        A_plenum.append(A_i_cm2)
 
-for iteration in range(max_iter):
-    # --- Forward half (0° → 180°)
-    Q_down = Q_half
-    for i in range(half_outlets):
-        v = np.clip(Q_down / A_outlet, 1e-6, 1e4)  # velocity using constant outlet area
-        dp_fric = 0.5 * f * rho_lox * v**2 * (segment_length / np.sqrt(4 * A_outlet / np.pi))
-        pressure_forward[i+1] = pressure_forward[i] - dp_fric
+        outlet_velocities.append(v_target)
+        outlet_massflows.append(m_half / n_half)
 
-        # manifold area above this outlet
-        A_manifold = Q_down / np.clip(v, 1e-6, 1e4)
-        area_forward[i] = A_manifold
+        if cfg["verbose"]:
+            print(f"Outlet {i+1:02d}: "
+                  f"{v_target:.3f} m/s | "
+                  f"{m_half/n_half:.3f} kg/s | "
+                  f"Plenum {A_i_cm2:.3f} cm²")
 
-        Q_down -= Q_per_outlet
+    # ============================================================
+    # ✨ NEW FUNCTIONALITY: SCALE AREAS TO 5 mm SEMICIRCLE HEIGHT
+    # ============================================================
+    target_radius_mm = 5.0
+    target_radius_m = target_radius_mm / 1000.0
 
-    # --- Backward half (0° → -180°)
-    Q_down = Q_half
-    for i in range(half_outlets):
-        v = np.clip(Q_down / A_outlet, 1e-6, 1e4)
-        dp_fric = 0.5 * f * rho_lox * v**2 * (segment_length / np.sqrt(4 * A_outlet / np.pi))
-        pressure_backward[i+1] = pressure_backward[i] - dp_fric
+    # Smallest and largest plenum areas (in m²)
+    A_min_m2 = cm2_to_m2(A_plenum[-1])
+    A_max_m2 = cm2_to_m2(A_plenum[0])
 
-        A_manifold = Q_down / np.clip(v, 1e-6, 1e4)
-        area_backward[i] = A_manifold
+    # Compute current smallest semicircle radius
+    r_min_m = math.sqrt((2 * A_min_m2) / math.pi)
 
-        Q_down -= Q_per_outlet
+    # Scale factor for all areas (so smallest becomes 5 mm)
+    scale_factor = (target_radius_m / r_min_m) ** 2
+    A_plenum_scaled = [a * scale_factor for a in A_plenum]
 
-    # Combine both sides for balancing (optional)
-    P_local = 0.5 * (pressure_forward[1:] + pressure_backward[1:])
-    dp = np.maximum(P_local - P_out_target, 0.0)
-    capacity = np.sqrt(dp + 1e-12) * np.sqrt(area_forward + area_min)
-    if np.all(capacity <= 0):
-        capacity = np.ones_like(capacity)
-    Q_out = capacity / np.sum(capacity) * Q_half
+    # Compute radii (mm) for key points
+    def semicircle_radius_mm(area_cm2):
+        return math.sqrt((2 * cm2_to_m2(area_cm2)) / math.pi) * 1000.0
 
-    imbalance = (Q_out - Q_per_outlet) / (Q_per_outlet + 1e-15)
-    area_forward *= np.clip(1.0 - relax * imbalance, 0.5, 1.5)
-    area_backward *= np.clip(1.0 - relax * imbalance, 0.5, 1.5)
+    r_small = semicircle_radius_mm(A_plenum_scaled[-1])
+    r_large = semicircle_radius_mm(A_plenum_scaled[0])
+    r_mid = semicircle_radius_mm(A_plenum_scaled[len(A_plenum_scaled)//2])
 
-    # --- Enforce decreasing taper from inlet to far end
-    taper_factor = np.linspace(1.0, 0.6, half_outlets)
-    area_forward = np.clip(area_forward * taper_factor, area_min, area_max)
-    area_backward = np.clip(area_backward * taper_factor, area_min, area_max)
-    
+    print("\n--- Scaled Plenum Geometry ---")
+    print(f"Scale factor applied: {scale_factor:.6f}")
+    print(f"Largest radius : {r_large:.3f} mm")
+    print(f"Midpoint radius: {r_mid:.3f} mm")
+    print(f"Smallest radius: {r_small:.3f} mm (set to target height)")
+    print("--------------------------------\n")
 
-    if np.max(np.abs(imbalance)) < tolerance:
-        converged = True
-        break
+    return outlet_velocities, outlet_massflows, A_plenum_scaled
+    # ============================================================
 
-pressure_half = 0.5 * (pressure_forward[1:] + pressure_backward[1:])
-area_half = 0.5 * (area_forward + area_backward)
 
-# ============================================================
-# MERGE INTO FULL 360° RING (manifold taper)
-# ============================================================
-angles_full = np.linspace(0, 360, num_outlets)
-# Manifold area above each outlet: taper high at 0°, low at 180°, back high at 360°
-taper_factor_full = np.linspace(1.0, 0.6, num_outlets//2)
-taper_factor_full = np.concatenate((taper_factor_full, taper_factor_full[::-1]))
-area_full = np.clip(taper_factor_full * area_max, area_min, area_max)
-D_full = np.sqrt(4 * area_full / np.pi)
+# =============================
+# 📊 PLOTTING FUNCTION
+# =============================
 
-pressure_full = np.concatenate((pressure_half, pressure_half[::-1]))
+def plot_half_ring(A_plenum):
+    n_half = len(A_plenum)
+    # Degrees for negative side (-180 to 0), mirrored
+    degrees_left = [-180 + (180 * i / n_half) for i in range(n_half)]
+    areas_left = A_plenum[::-1]  # reverse for correct taper
+    # Degrees for positive side (0 to 180)
+    degrees_right = [0 + (180 * i / n_half) for i in range(n_half)]
+    areas_right = A_plenum
 
-# Outlet velocity uses constant outlet area
-velocity_full = Q_per_outlet / A_outlet
-pressure_full_psi = pressure_full / psi_to_pa
-std_dev = np.std(pressure_full_psi)
+    # Combine for full ring
+    degrees = degrees_left + degrees_right
+    areas = areas_left + areas_right
 
-# ============================================================
-# OUTPUT
-# ============================================================
-if converged:
-    print(f"Converged after {iteration} iterations (max rel imbalance {np.max(np.abs(imbalance)):.3e}).\n")
-else:
-    print("Warning: did not fully converge after max iterations.\n")
+    plt.figure(figsize=(10,5))
+    plt.plot(degrees, areas, marker='o', color='purple')
+    plt.xlabel("Degrees around ring (-180° to 180°)")
+    plt.ylabel("Plenum cross-sectional area (cm²)")
+    plt.title("Half-Ring Manifold Plenum Area (mirrored)")
+    plt.grid(True)
+    plt.show()
 
-print(f"{'Outlet Angle':>10s} | {'Area (cm^2)':>12s} | {'D (cm)':>8s} | {'Pressure (psi)':>14s} | {'Velocity (m/s)':>14s}")
-print("-" * 90)
-for i in range(num_outlets):
-    print(f"{angles_full[i]:10.1f} | {area_full[i]*1e4:12.4f} | {D_full[i]*100:8.4f} | {pressure_full_psi[i]:14.3f} | {velocity_full:14.3f}")
-print(f"\nOutlet pressure standard deviation: {std_dev:.6f} psi")
 
-# ============================================================
-# PLOTS (ALL IN ONE FIGURE)
-# ============================================================
-fig, ax = plt.subplots(3, 1, figsize=(8,12), sharex=True)
+# =============================
+# ▶️ MAIN EXECUTION
+# =============================
 
-ax[0].plot(angles_full, pressure_full_psi, 'b-o', label='Pressure (psi)')
-ax[0].set_ylabel("Pressure (psi)")
-ax[0].grid(True)
-ax[0].legend()
+if __name__ == "__main__":
+    v_out, m_out, A_plenum = ring_manifold_half(CONFIG)
+    print("\nSimulation complete ✅\n")
+    print("Note: this is one half of the ring manifold. The other half is symmetrical.")
 
-ax[1].plot(angles_full, D_full*100, 'r-o', label='Manifold Diameter (cm)')
-ax[1].set_ylabel("Diameter (cm)")
-ax[1].grid(True)
-ax[1].legend()
-
-ax[2].plot(angles_full, [velocity_full]*num_outlets, 'g-o', label='Outlet Velocity (m/s)')
-ax[2].set_xlabel("Outlet angle (deg)")
-ax[2].set_ylabel("Velocity (m/s)")
-ax[2].grid(True)
-ax[2].legend()
-
-plt.suptitle("LOX Ring Outlet Flow Characteristics (Manifold Area Displayed)")
-plt.tight_layout(rect=[0, 0, 1, 0.97])
-plt.show()
+    # Plot plenum area around the ring
+    plot_half_ring(A_plenum)
