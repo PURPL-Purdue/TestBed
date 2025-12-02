@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Arc
 from bisect import bisect_left
 
-#Modified based on design by ___
+#Modified based on design by ravi4ram
+# https://github.com/ravi4ram/Bell-Nozzle
 
 """
  Bell Nozzle Generator with high-precision angle display (degrees)
@@ -178,8 +179,8 @@ if __name__=="__main__":
     
     #USER CONFIG
     k = 1.21
-    l_percent = 80      #60, 80, or 90
-    aratio = 4.897
+    l_percent = 80              #60, 80, or 90
+    aratio = 4.897              #Expansion ratio from characteristic generator
     throat_radius = 83.3/2
     angles, contour = bell_nozzle(k, aratio, throat_radius, l_percent)
     title = f'Bell Nozzle [Area Ratio = {aratio:.4f}, Throat Radius = {throat_radius:.4f}]'
