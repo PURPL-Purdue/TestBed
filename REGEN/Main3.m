@@ -20,8 +20,10 @@ surfaceRoughness = 0.000006; % average height of roughness (chosen from engineer
 CTE = 0.0000252; % Material's coefficient of thermal expansion in (%change/K)
 youngsModulus = 71700000000;
 mass_flow = m_flow_total/numChannels; % Precalcuated mass flow based on # of channels in Malestrom
+throatDiameter = 1.47; % throat diameter in (in)
+chamberRad = 0.61625; % chamber converging radius in (in)
 
-inputValues = [T_start, P_start, rho_start, mass_flow, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus];
+inputValues = [T_start, P_start, rho_start, mass_flow, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, chamberRad ];
 
 %% Initialize all arrays and matrices,
 flowTempArray = zeros(1,heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp

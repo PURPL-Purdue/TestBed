@@ -13,7 +13,7 @@ function [T_wgFinal, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, 
 
 
 %combustion properties
-exhaustTemps = newFluidInfo (:,6);
+exhaustTemps = newFluidInfo(:,6);
 
 % calculateWallTemp Inputs
 T_start= inputFlowValues(1); % K
@@ -76,7 +76,7 @@ while (heightStep <= heightStepNumber)
 
     while(notCorrect)
         %hot side
-        h_g = H_g_From_Temperature(T_wg, newFluidInfo);
+        h_g = H_g_From_Temperature(T_wg, newFluidInfo, inputFlowValues);
         T_r = exhaustTemps(heightStep);
         Q_dotIN = h_g(heightStep)*(T_r-T_wg);
         

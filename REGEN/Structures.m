@@ -14,6 +14,7 @@ hoopStress = zeros(length(T_wl),1);
 i = 1;
 while i <= length(T_wl)
     temperatureDist(:) = linspace(T_wg(i),T_wl(i),length(wallThicknesses)); %Temperature distribution for integration
+    %% **CHANGE BELOW** Correlations for Yield strength vs temp for material. Only used in comparison, not used for calculations
     %Correlation between copper's yield/ultimate tensile strength in MPa and temperature in K
     %Copper:
     %calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3).* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3; %
@@ -23,7 +24,7 @@ while i <= length(T_wl)
     %6061 T6 
     %calcPainArr = ;
 
-    thermalStress(i) = sum(CTE.* (temperatureDist-293) .* youngsModulus)/length(T_wl);
+    thermalStress(i) = sum(CTE.* (temperatureDist-293) .* youngsModulus)/length(T_wl); % Longitudinal thermal stress given as FL/EA = alpha * L *dT, therefore, F/A = E * alpha *deltaT
     hoopStress(i) = chamberPressure(i)*chamberDiameter(i)/(2*wallThicknesses(i));
     
     OEffectives(i) = sum(calcPainArr .* wallThicknesses(i)) .* 1000000;  %Integrates yield strength array to find effective strength for each wall thickness in Pa
@@ -34,7 +35,7 @@ while i <= length(T_wl)
 end
 
 comp_stress = (chamberPressure*2) + deltaP;
-
+maxCompressive = deltaP.*chamberDiameter./wallThicknesses;
 
 
 %Searches and finds coolant wall temperature and Wmin that *just* meets the
