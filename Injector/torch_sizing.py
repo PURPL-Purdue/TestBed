@@ -17,9 +17,9 @@ F = 1.6 # Desired thrust of the torch (lbf)
 p_c = 140 # Optimal chamber pressure (psi)
 OF = 3 # Nominal OF Ratio
 
+fuel_choice = 'kerosene'
 # fuel_choice = 'methane'
-# fuel_choice = 'methane'
-fuel_choice = 'hydrogen'
+# fuel_choice = 'hydrogen'
 
 p_ox = 600 # Oxidizer feed pressure (psi)
 ox_orifice_num = 1 # Number of oxidizer orifices
@@ -29,7 +29,7 @@ p_fu = 740 # Fuel feed pressure (psi)
 fu_orifice_num = 1 # Number of fuel orifices
 Cd_fu = 0.8 # Fuel orifice anticipated C_d (N/A)
 
-cstar_eff = 0.9 # C star efficiency factor (N/A)
+cstar_eff = 0.7 # C star efficiency factor (N/A)
 
 # ──────────────────────────────────────────────────────────────
 #  CONSTANTS
