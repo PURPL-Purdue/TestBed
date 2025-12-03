@@ -1,4 +1,4 @@
-function [vonMises,sigma_long, sigma_circ, sigma_rad, output] = Structures(T_wl, T_wg, wallThicknesses, channelWidths, chamberPressure, chamberDiameter, deltaP, Qdot, inputValues)
+function [vonMises,sigma_long, sigma_circ, sigma_rad, output] = FINAL_STRUCTURES(T_wl, T_wg, wallThicknesses, channelWidths, chamberPressure, chamberDiameter, deltaP, Qdot, inputValues)
 %Note: Function returns [Qdot, -1, -1] if a wall thickness could not be
 %found that meets the strength requirements
 
