@@ -44,12 +44,12 @@ T = 293.15 # Fuel and oxidizer temperature (K)
 K_ox = data["gox_stiffness"] # Desired Ox injector stiffness (N/A)
 ox_orifice_num = data["gox_orifice_number"] # Number of oxidizer orifices (N/A)
 Cd_ox = data["gox_discharge_coeff"] # Gox orifice anticipated C_d (N/A)
-d_line_ox = 0.65 # Oxidizer line diameter (in)
+d_line_ox = data["gox_tube_inner_dia"] # Oxidizer line diameter (in)
 
 K_fu = data["rp_stiffness"] # Desired Ox injector stiffness (N/A)
 fu_orifice_num = data["rp_orifice_number"] # Number of fuel orifices (N/A)
 Cd_fu = data["rp_discharge_coeff"] # Fuel orifice anticipated C_d (N/A)
-d_line_fu = 0.4 # Fuel Line diameter (in)
+d_line_fu = data["rp_tube_inner_dia"] # Oxidizer line diameter (in)
 
 cstar_eff = data["cstar_eff"] # C star efficiency factor (N/A)
 Isp_eff = data["isp_eff"] # Nozzle efficiency factor (N/A)
@@ -75,8 +75,6 @@ ft_to_m = 0.3048
 lb_to_kg = 0.453592
 m_to_in = 39.3701
 
-p_c_pa = p_c * psi_to_pa # Chamber pressure (Pa)
-
 # ──────────────────────────────────────────────────────────────
 #  FUNCTION DEFINITIONS
 # ──────────────────────────────────────────────────────────────
@@ -85,8 +83,9 @@ def main():
 
     engine = CEA_Obj(oxName='GOX', fuelName='JetA')
 
-    p_ox_pa = p_c * (1 + K_ox) * psi_to_pa
-    p_fu_pa = p_c * (1 + K_fu) * psi_to_pa
+    p_c_pa = p_c * psi_to_pa # Chamber pressure (Pa)
+    p_ox_pa = p_c * (1 + K_ox) * psi_to_pa # Oxidizer injector feed pressure (Pa)
+    p_fu_pa = p_c * (1 + K_fu) * psi_to_pa # Fuel injector feed pressure (Pa)
 
     # Oxygen density at manifold pressure and ambient temperature (kg/m^3)
     rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T-273.15)).density 
@@ -146,7 +145,6 @@ def main():
     data["gox_SCFM"] = float(np.round(SCFM_ox, 2))
     data["n2_SCFM"] = float(np.round(SCFM_n2, 2))
     
-
     with open(yaml_path, "w") as f:
         yaml.dump(data, f)
 

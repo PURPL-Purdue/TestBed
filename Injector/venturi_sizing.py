@@ -14,7 +14,7 @@ from pyfluids import Fluid, FluidsList, Input
 #  CONSTANTS
 # ──────────────────────────────────────────────────────────────
 
-C_d = 0.98 # Discharge coefficient guess (based on PSP Liquids' testing) https://purdue-space-program.atlassian.net/wiki/spaces/PL/pages/936903267/Successful+Water+Flow+1
+C_d = 0.931 # Discharge coefficient (based on prototype testing)
 p_1 = 750 # Pressure downstream of cavitating venturi (psi)
 x = 0.9 # Anticipated pressure recovery across the venturi
 m_dot_kg = 0.60962815 # Desired mass flow (kg/s)
