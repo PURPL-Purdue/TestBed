@@ -2,7 +2,7 @@
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 widthArray = [0.02,0.02,0.02]/39.37;%updatedHeightValues(7,2:46);
-heightArray =  [0.09,0.02,0.090]/39.37;%updatedHeightValues(6,2:46);
+heightArray =  [0.125,0.02,0.125]/39.37;%updatedHeightValues(6,2:46);
 wall_thicknessMatrix = [0.03,0.03,0.03]/39.37;
 heightStepNumber = 45;
 numChannels = 60;
@@ -10,7 +10,7 @@ converge_index = 23;
 throat_index = 14;
 
 T_start= 298; % Flow Initial Temp in degrees K 
-P_start = 2757900; % Flow initial Pressure in Pa
+P_start = 5102000; % Flow initial Pressure in Pa
 rho_start = 810; % Coolant initial density in kg/m^3
 m_flow_total = 0.58967; % total coolant mass flow in kg/s
 mass_flow = m_flow_total/numChannels; % Precalcuated mass flow based on # of channels in Malestrom
