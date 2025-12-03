@@ -137,8 +137,10 @@ for a = heightStepArray
 
     i=i+1;
 end
+throatArea = pi*(throatDiameter/(2*39.37))^2;
+chamberDiameter1 = 2*sqrt((throatArea*newFluidProperties(:,2))/pi);
 newFluidProperties = flip(newFluidProperties,1);
-chamberDiameter = flip(chamberDiameter)';
+chamberDiameter = flip(chamberDiameter1);
 %% Calculate Wall Temp
 [flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = calculateWallTemp3(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);
 

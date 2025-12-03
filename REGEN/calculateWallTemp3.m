@@ -30,7 +30,7 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         p3 = plot(axialDist, structuresOutput(1,:),  '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         % Axis labels
-        xlabel('Location [in]', 'FontSize', 12);
+        xlabel('Location [m]', 'FontSize', 12);
         ylabel('Circumferential stress [MPa]', 'FontSize', 12);
         
         % Grid and ticks
@@ -38,7 +38,9 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         grid minor;
         set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on', ...
                  'FontSize', 11, 'LineWidth', 1);
-        xlim([axialDist(1) axialDist(end)]);
+        xlim([0, axialDist(1)]);
+        
+        ylim([0, max(sigma_circ)*1.1]);
         % Legend
         legend([p1 p2 p3], {'Total Stress', 'Pressure Load', 'Thermal Load'}, ...
                'Location', 'best', 'Box', 'off');
@@ -54,7 +56,7 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         h3 = plot(axialDist, wallThicknesses, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         % Axis labels
-        xlabel('Location [in]', 'FontSize', 12);
+        xlabel('Location [m]', 'FontSize', 12);
         ylabel('Channel Dimensions [mm]', 'FontSize', 12);
         
         % Grid and ticks
@@ -62,12 +64,72 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         grid minor;
         set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on', ...
                  'FontSize', 11, 'LineWidth', 1);
-        xlim([axialDist(1) axialDist(end)]);
+        xlim([0,axialDist(1)]);
+        
+        ylim([0, max(channelWidths)*1.1]);
         % Legend
         legend([h1 h2 h3], {'Channel Height', 'Channel Width', 'Wall Thickness'}, ...
                'Location', 'best', 'Box', 'off');
     
-
+    % Von Mises vs Yield
+        yieldStrength = (-(1.57*10^-5)*(T_wgFinal.^3) + (0.0139 * (T_wgFinal.^2)) - 4.21*(T_wgFinal) + 762)*1000000;
+        UTS =  (-(1.31*10^-5)*(T_wgFinal.^3) + (0.0113 * (T_wgFinal.^2)) - 3.45*(T_wgFinal) + 719)*1000000;
+            
+        % Create figure
+        figure;
+        box on;
+        
+        % LEFT Y-AXIS: Strength & Stress [MPa]
+        yyaxis left
+        hold on;
+        
+        % Muted, contrasting colors: blue, orange, gray
+        h1 = plot(axialDist, vonMises,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
+        h2 = plot(axialDist, yieldStrength,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
+        h3 = plot(axialDist, UTS, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
+        
+        ylabel('Strength & Stress [MPa]', 'FontSize', 12);
+        
+        
+        allY_left = [UTS,vonMises];
+        ylim([0, max(allY_left)*1.1]);
+        
+        
+        %% RIGHT Y-AXIS: Contour (Radial Distance [m])
+        yyaxis right
+        
+        h4 = plot(axialDist, chamberDiameterArray/2, 'k--', 'LineWidth', 1.8);
+        ylabel('Radial Distance [m]', 'FontSize', 12);
+        
+        % --- Control RIGHT Y limits: 0 to next grid mark above max Contour ---
+        
+      
+        ylim([0, max(chamberDiameterArray)*1.1]);
+       
+        
+        %% Common X-axis
+        xlabel('Axial Distance', 'FontSize', 12);
+        
+        % X limits: start and end at data bounds
+        xlim([0,axialDist(1)]);
+        
+        %% Grid, ticks, formatting
+        grid on;
+        grid minor;
+        
+        ax = gca;
+        set(ax, 'XMinorTick', 'on', ...
+                'YMinorTick', 'on', ...
+                'FontSize', 11, ...
+                'LineWidth', 1);
+        
+        % Make both y-axes use dark text
+        ax.YColor = [0 0 0];
+        
+        %% Legend
+        legend([h1 h2 h3 h4], ...
+               {'Effective Stress', 'Yield Strength', 'Ultimate Tensile Strength', 'Contour'}, ...
+               'Location', 'best', 'Box', 'off');    
 
 
 end
