@@ -28,7 +28,7 @@ timestep_2 = 1 # Length of second set of water flow tests (s)
 
 # Test-specific mass collected (g) and fixed durations (s)
 mass_data = {
-    1: (162, timestep_1), 3: (467, timestep_1), 4: (490, timestep_1), 5: (480, timestep_1),
+    3: (467, timestep_1), 4: (490, timestep_1), 5: (480, timestep_1),
     6: (328, timestep_1), 7: (331, timestep_1), 8: (282, timestep_1),
     9: (278, timestep_2), 10: (277, timestep_2), 11: (279, timestep_2), 12: (399, timestep_2),
     13: (202, timestep_2), 14: (356, timestep_2), 15: (355, timestep_2), 16: (355, timestep_2),
