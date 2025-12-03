@@ -4,11 +4,11 @@ clc;
 clear;
 
 recycle on;
-%delete("CEAOut.xlsx");
+% Delete("CEAOut.xlsx");
 
-%Engine Variables
-engineContour = readmatrix("PSP_Engine_Contour.xlsx");
-%engineContour = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
+% Engine Variables
+% engineContour = readmatrix("PSP_Engine_Contour.xlsx");
+engineContour = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
 p_c = 250; %PSI
 OF = 1.2; %Unitless
 fuelTemperature = 293.15; %K
@@ -20,7 +20,6 @@ throatArea = 0.00097314; %m^2
 mode = 'fz'; %Options are 'eq' and 'fz'
 FAC = 'false';
 
-
 %Engine Reactant Definitions
 reactants =   [                                           ...
             
@@ -28,7 +27,6 @@ reactants =   [                                           ...
  %                   'Type','Fuel',                     ...
   %                   'T',DimVar(fuelTemperature,'K'),             ...         
    %                  'Q',DimVar(1,'kg'),'E',-DimVar(200,'J/mol'),'rho',DimVar(0.786,'g/cm3'))
-
 
 CEA.Reactant('C2H5OH(L)',                           ...
                      'Type','Fuel',                     ...
