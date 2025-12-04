@@ -7,14 +7,14 @@ recycle on;
 % Delete("CEAOut.xlsx");
 
 % Engine Variables
-% engineContour = readmatrix("PSP_Engine_Contour.xlsx");
-engineContour = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
+engineContour = readmatrix("PSP_Engine_Contour.xlsx");
+% engineContour = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
 p_c = 250; %PSI
 OF = 1.2; %Unitless
 fuelTemperature = 293.15; %K
 oxTemperature = 90; %K
-subSonicARatios = engineContour(1:790,3)';%[linspace(10.496,1.1,300),linspace(1.101,1,200)];
-superSonicARatios = engineContour(779:end,3)';% [linspace(1.001,1.1,200),linspace(1.101,5.005,300)];
+subSonicARatios = engineContour(1:784,3)';%[linspace(10.496,1.1,300),linspace(1.101,1,200)];
+superSonicARatios = engineContour(785:end,3)';% [linspace(1.001,1.1,200),linspace(1.101,5.005,300)];
 compressionRatio = 11; %Unitless (for Finite Area Combustor option)
 throatArea = 0.00097314; %m^2
 mode = 'fz'; %Options are 'eq' and 'fz'
@@ -41,7 +41,8 @@ CEA.Reactant('C2H5OH(L)',                           ...
 % CEA.Reactant('C3H8O,2-propanol',                           ...
  %                    'Type','Fuel',                     ...
   %                   'T',DimVar(fuelTemperature,'K'),             ...         
-   %                  'Q',DimVar(1,'kg'),'E',-DimVar(200,'J/mol'),'rho',DimVar(0.786,'g/cm3'))          
+   %                  'Q',DimVar(1,'kg'),'E',-DimVar(200,'J/mol'),'rho',DimVar(0.786,'g/cm3'))
+
 a = 1;
 tempSub = [];
 tempSup = [];
@@ -80,12 +81,10 @@ while a <= length(combined)/10
     end
     
     %% Data extraction
-    rawData = readtable("Detn.out",'Filetype','text');
-    
+    rawData = readtable("Detn.out", 'FileType','text', 'VariableNamingRule','preserve');
     
     %Variables to extract
-%    targets = ["Ae/At",,"PRANDTL","MACH","GAMMAs","T","VISC","Cp","P","CSTAR","RHO","SON","Isp"];
-    targets = ["Ae/At","Ae","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
+    targets = ["Ae","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
     
     % Data reader
     out = [];
@@ -162,8 +161,8 @@ contour = [engineContour(:,4:5), engineContour(:,3)];
 
  %gigaMatrix = [gigaMatrix(1:695,:);gigaMatrix(708:end,:)];
 
-subSonicContour = contour(1:784,:)%contour(1:783,:);
-supSonicContour = contour(785:end,:)%contour(784:end,:);
+subSonicContour = contour(1:784,:);%contour(1:783,:);
+supSonicContour = contour(785:end,:);%contour(784:end,:);
 
 axPos = [];
 change = 0;
@@ -207,10 +206,11 @@ while currentOutNum <= length(gigaMatrix(:,1))
     end
     currentOutNum = currentOutNum + 1;
 end
-gigaMatrix = [[contour(1:end-2,1)']',gigaMatrix];
+
+gigaMatrix = [contour(:,1), gigaMatrix];
 
 %Write output to table
-temp = [0,targets];
+temp = [0,"Ae/At","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
 options = ["",sprintf("Mode: %s",mode),sprintf("Fac: %s",FAC),sprintf("Compression Ratio: %f",compressionRatio),sprintf("OF: %f",OF),sprintf("P_c: %f",p_c),sprintf("Point Density: 1000"),"","","","","",""];
-writematrix([options;temp;gigaMatrix],"CEAOutFzPsp_IAC_11-23-25.xlsx")
+writematrix([options;temp;gigaMatrix],"CEA_Test.xlsx")
 %end
