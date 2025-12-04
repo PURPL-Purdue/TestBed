@@ -60,7 +60,6 @@ Lstar = data["Lstar"] # Characteristic length (in)
 # ──────────────────────────────────────────────────────────────
 
 gamma_o2 = 1.4 # GOx specific heat ratio
-R_o2 = 259.8 # GOx Specific gas constant
 g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
 rho_fu = 810 # RP-1 density at ambient temp and pressure (may want to update this to match manifold press), (kg/m^3)
@@ -91,7 +90,7 @@ def main():
     rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T-273.15)).density 
     m_dot_fu, m_dot_ox, cstar_real, Isp = get_mdots(engine,F,p_c,OF,cstar_eff)
     A_fu = get_liquid_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu)
-    A_ox = get_gas_inj_area(m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2, R_o2, T) 
+    A_ox = get_gas_inj_area(m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2) 
     A_t = (m_dot_fu + m_dot_ox) * (cstar_real * ft_to_m) / p_c_pa
 
     molwt, gamma = engine.get_Chamber_MolWt_gamma(Pc=p_c, MR=OF)
@@ -160,13 +159,13 @@ def get_mdots(engine,F,p_c,OF,cstar_eff):
 
     return m_dot_fu, m_dot_ox, cstar_real, Isp
 
-def get_gas_inj_area(mdot, p_feed, p_c, rho, Cd, gamma, R, T0):
+def get_gas_inj_area(mdot, p_feed, p_c, rho, Cd, gamma):
 
     p_cr = (2 / (gamma + 1)) ** (gamma / (gamma -1))
     if p_feed / p_c > p_cr: # Choked condition
         area = mdot / (Cd * np.sqrt(gamma * rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
     else: # Unchoked condition
-        area = mdot / (Cd * p_c * np.sqrt((gamma/(R*T0)) * (2/(gamma-1)) * ((p_feed/p_c)**(2/gamma) - (p_feed/p_c)**((gamma+1)/gamma))))
+        area = mdot / (Cd * np.sqrt(2 * rho * p_feed * (gamma / (gamma-1)) * (((p_c/p_feed) ** (2/gamma)) - ((p_c/p_feed) ** ((gamma + 1)/gamma)))))
 
     return area
 
