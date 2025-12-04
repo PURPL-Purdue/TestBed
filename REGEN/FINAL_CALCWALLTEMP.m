@@ -93,9 +93,9 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         hold on;
         
         % Muted, contrasting colors: blue, orange, gray
-        h1 = plot(axialDist, vonMises/1e6,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
-        h2 = plot(axialDist, yieldStrength/1e6,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
-        h3 = plot(axialDist, UTS/1e6, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
+        h1 = plot(axialDist * 39.3701, vonMises/1e6,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
+        h2 = plot(axialDist * 39.3701, yieldStrength/1e6,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
+        h3 = plot(axialDist * 39.3701, UTS/1e6, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         ylabel('Strength & Stress [MPa]', 'FontSize', 12);
         
@@ -108,20 +108,20 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         %% RIGHT Y-AXIS: Contour (Radial Distance [m])
         yyaxis right
         
-        h4 = plot(axialDist, chamberDiameterArray/2, 'k--', 'LineWidth', 1.8);
-        ylabel('Radial Distance [m]', 'FontSize', 12);
+        h4 = plot(axialDist * 39.3701, chamberDiameterArray/2 * 39.3701, 'k--', 'LineWidth', 1.8);
+        ylabel('Radial Distance [in]', 'FontSize', 12);
         
         % --- Control RIGHT Y limits: 0 to next grid mark above max Contour ---
         
       
-        ylim([0, max(chamberDiameterArray)*1.1]);
+        ylim([0, max(chamberDiameterArray)*1.1 * 39.3701]);
        
         
         %% Common X-axis
-        xlabel('Axial Distance', 'FontSize', 12);
+        xlabel('Axial Distance [in]', 'FontSize', 12);
         
         % X limits: start and end at data bounds
-        xlim([0,axialDist(1)]);
+        xlim([0,axialDist(1) * 39.3701]);
         
         %% Grid, ticks, formatting
         grid on;

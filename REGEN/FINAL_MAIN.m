@@ -1,19 +1,25 @@
 %% Main Compiled Code
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
-widthArray = [0.02,0.02,0.02]/39.37;%updatedHeightValues(7,2:46);
-heightArray =  [0.125,0.03,0.125]/39.37;%updatedHeightValues(6,2:46);
-wall_thicknessMatrix = [0.05,0.05,0.05]/39.37;
+
+clc; clear;
+
+m_to_in = 39.3701;
+
+widthArray = [0.02,0.02,0.02] / m_to_in ;% updatedHeightValues(7,2:46);
+heightArray =  [0.125,0.03,0.125] / m_to_in;% updatedHeightValues(6,2:46);
+wall_thicknessMatrix = [0.05,0.05,0.05] / m_to_in;
 heightStepNumber = 45;
 numChannels = 60;
 converge_index = 23;
 throat_index = 14;
-generate_new_CEA = true;
+generate_new_CEA = false;
 
 p_c = 250; % Main chamber pressure (psi)
 OF = 1; % OF Ratio (N/A)
 m_dot = 1.2637083; % Total mass flow (kg/s)
 contour_name = "Engine Contour Cleaned and Sorted (Metric).csv";
+engineContour = readmatrix(contour_name);
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 5102000; % Flow initial Pressure in Pa
@@ -28,9 +34,11 @@ CTE = 0.0000232; % Material's coefficient of thermal expansion in (%change/K)
 youngsModulus = 71700000000; %Pa
 poissonsRatio = 0.33; %
 
-throatDiameter = 0.93; % throat diameter in (in)
+idx = engineContour(:,3) == 1;        % Look for the point in the chamber where the area ratio is 1
+throatDiameter = engineContour(idx,5) * 2 * m_to_in;  % Obtain the throat diameter value (in)
+
 chamberRad = 0.23; % chamber converging radius in (in)
-chamberLength = 7.07; %chamber length in (in)
+chamberLength = floor((engineContour(end,4) - (engineContour(1,4))) * m_to_in*100) / 100; % Chamber length (in), contencated 
 
 inputValues = [T_start, P_start, rho_start, mass_flow, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, chamberRad,poissonsRatio,chamberLength];
 
@@ -114,7 +122,6 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
             a=a+1;
         else
             divFactor = a-r;
-            %chamberDiameter(y,1) = 2*(sumDiameter/divFactor);
             newFluidProperties(y,2) = sumAEAT/divFactor;
             newFluidProperties(y,3) = sumPrandtl/divFactor;
             newFluidProperties(y,4) = sumMach/divFactor;
@@ -137,5 +144,6 @@ throatArea = pi*(throatDiameter/(2*39.37))^2;
 chamberDiameter1 = 2*sqrt((throatArea*newFluidProperties(:,2))/pi);
 newFluidProperties = flip(newFluidProperties,1);
 chamberDiameter = flip(chamberDiameter1);
+% diametercontour = engineContour(:,5);
 %% Calculate Wall Temp
 [flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);
