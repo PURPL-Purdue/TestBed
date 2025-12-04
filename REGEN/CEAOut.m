@@ -1,22 +1,21 @@
 %% Main
 function [] = CEAOut(p_c, OF, contour_name)
     
-    % Get the folder where this script lives
-    repoDir = fileparts(mfilename('fullpath'));
-
-    % Add the subfolder dynamically
-    addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin'));
+    repoDir = fileparts(mfilename('fullpath')); % This is required so MATLAB knows where the CEA Output file lives
+    addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin')); 
     
     recycle on;
-    % Delete("CEAOut.xlsx");
 
     % Engine Variables
-    % engineContour = readmatrix(contour_name);
     engineContour = readmatrix(contour_name);
     fuelTemperature = 293.15; %K
     oxTemperature = 293.15; %K
-    subSonicARatios = engineContour(1:696,3)';%[linspace(10.496,1.1,300),linspace(1.101,1,200)];
-    superSonicARatios = engineContour(697:end,3)';% [linspace(1.001,1.1,200),linspace(1.101,5.005,300)];
+
+    idx = find(engineContour(:,3) == 1, 1); % Look for the point in the chamber contour where the area ratio is 1
+
+    subSonicARatios = engineContour(1:(idx-1),3)'; % Split up area ratios into subsonic and supersonic
+    superSonicARatios = engineContour(idx:end,3)'; % based on the throat position found w the idx
+
     compressionRatio = 11; %Unitless (for Finite Area Combustor option)
     mode = 'fz'; % Options are 'eq' and 'fz'
     FAC = 'false';
@@ -24,19 +23,21 @@ function [] = CEAOut(p_c, OF, contour_name)
     %Engine Reactant Definitions
     reactants =   [                                         ...
                 CEA.Reactant('RP-1',                        ...
-                        'Type','Fuel',                     ...
-                        'T',DimVar(fuelTemperature,'K'),   ...         
-                        'Q',DimVar(1,'kg'))                ...
-                CEA.Reactant('O2',                       ...
+                        'Type','Fuel',                      ...
+                        'T',DimVar(fuelTemperature,'K'),    ...         
+                        'Q',DimVar(1,'kg'))                 ...
+                CEA.Reactant('O2',                          ...
                         'Type','ox',                        ...
                         'T',DimVar(oxTemperature,'K'),      ...         
                         'Q',DimVar(1,'kg'))                 ...
                 ];
 
-    % CEA.Reactant('C3H8O,2-propanol',                           ...
-    %                    'Type','Fuel',                     ...
-    %                   'T',DimVar(fuelTemperature,'K'),             ...         
-    %                  'Q',DimVar(1,'kg'),'E',-DimVar(200,'J/mol'),'rho',DimVar(0.786,'g/cm3'))
+    % CEA.Reactant('C3H8O,2-propanol',                     ...
+    %                   'Type','Fuel',                     ...
+    %                   'T',DimVar(fuelTemperature,'K'),   ...        
+    %                   'Q',DimVar(1,'kg'),                ...
+    %                   'E',-DimVar(200,'J/mol')           ...
+    %                   'rho',DimVar(0.786,'g/cm3'));      ...
 
     a = 1;
     tempSub = [];
@@ -144,22 +145,18 @@ function [] = CEAOut(p_c, OF, contour_name)
             end
             targetNum = targetNum + 1;
         end
-        %Save output to temperary array
+        %Save output to temporary array
         gigaMatrix = vertcat(gigaMatrix, out);
+
         clc;
-        fprintf(a + "/100 CEA iterations finished")
+        fprintf('%d/100 CEA iterations finished\r', a);
         a = a + 1;
     end
 
     %% Add Axial positions to area ratios
     contour = [engineContour(:,4:5), engineContour(:,3)];
-    %gigaMatrix = [gigaMatrix(1:695,:);gigaMatrix(708:end,:)];
-    %contour = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
-
-    %gigaMatrix = [gigaMatrix(1:695,:);gigaMatrix(708:end,:)];
-
-    subSonicContour = contour(1:696,:); % contour(1:783,:);
-    supSonicContour = contour(697:end,:); % contour(784:end,:);
+    subSonicContour = contour(1:(idx-1),:); % contour(1:783,:);
+    supSonicContour = contour(idx:end,:); % contour(784:end,:);
 
     axPos = [];
     change = 0;
