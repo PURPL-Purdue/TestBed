@@ -2,12 +2,17 @@
 %widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 widthArray = [0.02,0.02,0.02]/39.37;%updatedHeightValues(7,2:46);
-heightArray =  [0.125,0.02,0.125]/39.37;%updatedHeightValues(6,2:46);
-wall_thicknessMatrix = [0.03,0.03,0.03]/39.37;
+heightArray =  [0.125,0.03,0.125]/39.37;%updatedHeightValues(6,2:46);
+wall_thicknessMatrix = [0.04,0.04,0.04]/39.37;
 heightStepNumber = 45;
 numChannels = 60;
 converge_index = 23;
 throat_index = 14;
+generate_new_CEA = false;
+
+p_c = 250; % Main chamber pressure (psi)
+OF = 1; % OF Ratio (N/A)
+contour_name = "Engine Contour Cleaned and Sorted (Metric).csv";
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 5102000; % Flow initial Pressure in Pa
@@ -38,7 +43,12 @@ flowPressureArray = zeros(1,heightStepNumber);
 heightStepArray = linspace(0,chamberLength/39.37,heightStepNumber);
 
 %% Run NASA CEA and retrieve values
-fluidProperties = readmatrix("CEAOutFzOF1.xlsx"); %pull all nasaCEA values into fluidProperties
+
+if generate_new_CEA == true
+    CEAOut(p_c,OF,contour_name)
+end
+
+fluidProperties = readmatrix("CEA_Maelstrom.xlsx"); %pull all nasaCEA values into fluidProperties
 % if newFluidProperties errors and cuts off a row, change the middle value
 % in the heightStepArray initialization call to be whatever the ACTUAL end
 % length is set to.
@@ -48,16 +58,15 @@ r = 1;
 axialDist = (fluidProperties(:,1));
 newFluidProperties = zeros(length(heightStepArray),10);
 newFluidProperties(:,1) = heightStepArray;
-chamberDiameter = [];
 %chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
 T_l_reqMatrix = [];
 updatedTemps = [];
 updatedPressure = [];
 updatedVelocity = [];
 %heightMatrix = zeros(heightStepNumber);
+
 %% New fluid Properties
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
-    
     
     a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
     
@@ -129,6 +138,3 @@ newFluidProperties = flip(newFluidProperties,1);
 chamberDiameter = flip(chamberDiameter1);
 %% Calculate Wall Temp
 [flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);
-
-        
-           
