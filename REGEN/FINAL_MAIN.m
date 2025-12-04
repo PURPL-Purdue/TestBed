@@ -3,21 +3,22 @@
 %heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
 widthArray = [0.02,0.02,0.02]/39.37;%updatedHeightValues(7,2:46);
 heightArray =  [0.125,0.03,0.125]/39.37;%updatedHeightValues(6,2:46);
-wall_thicknessMatrix = [0.04,0.04,0.04]/39.37;
+wall_thicknessMatrix = [0.05,0.05,0.05]/39.37;
 heightStepNumber = 45;
 numChannels = 60;
 converge_index = 23;
 throat_index = 14;
-generate_new_CEA = false;
+generate_new_CEA = true;
 
 p_c = 250; % Main chamber pressure (psi)
 OF = 1; % OF Ratio (N/A)
+m_dot = 1.2637083; % Total mass flow (kg/s)
 contour_name = "Engine Contour Cleaned and Sorted (Metric).csv";
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 5102000; % Flow initial Pressure in Pa
 rho_start = 810; % Coolant initial density in kg/m^3
-m_flow_total = 0.58967; % total coolant mass flow in kg/s
+m_flow_total = m_dot / (1 + OF); % total coolant mass flow in kg/s
 mass_flow = m_flow_total/numChannels; % Precalcuated mass flow based on # of channels in Malestrom
 T_target = 400; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 

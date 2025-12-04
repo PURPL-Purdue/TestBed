@@ -93,15 +93,16 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         hold on;
         
         % Muted, contrasting colors: blue, orange, gray
-        h1 = plot(axialDist, vonMises,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
-        h2 = plot(axialDist, yieldStrength,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
-        h3 = plot(axialDist, UTS, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
+        h1 = plot(axialDist, vonMises/1e6,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
+        h2 = plot(axialDist, yieldStrength/1e6,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
+        h3 = plot(axialDist, UTS/1e6, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         ylabel('Strength & Stress [MPa]', 'FontSize', 12);
         
         
-        allY_left = [UTS,vonMises];
+        allY_left = [UTS,vonMises]/1e6;   % divide by 1e6 here too
         ylim([0, max(allY_left)*1.1]);
+
         
         
         %% RIGHT Y-AXIS: Contour (Radial Distance [m])

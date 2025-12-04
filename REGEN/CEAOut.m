@@ -1,6 +1,12 @@
 %% Main
 function [] = CEAOut(p_c, OF, contour_name)
+    
+    % Get the folder where this script lives
+    repoDir = fileparts(mfilename('fullpath'));
 
+    % Add the subfolder dynamically
+    addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin'));
+    
     recycle on;
     % Delete("CEAOut.xlsx");
 
@@ -140,6 +146,8 @@ function [] = CEAOut(p_c, OF, contour_name)
         end
         %Save output to temperary array
         gigaMatrix = vertcat(gigaMatrix, out);
+        clc;
+        fprintf(a + "/100 CEA iterations finished")
         a = a + 1;
     end
 
