@@ -164,7 +164,7 @@ def get_gas_inj_area(mdot, p_feed, p_c, rho, Cd, gamma, R, T0):
 
     p_cr = (2 / (gamma + 1)) ** (gamma / (gamma -1))
     if p_feed / p_c > p_cr: # Choked condition
-        area = mdot / (Cd * np.sqrt(rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
+        area = mdot / (Cd * np.sqrt(gamma * rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
     else: # Unchoked condition
         area = mdot / (Cd * p_c * np.sqrt((gamma/(R*T0)) * (2/(gamma-1)) * ((p_feed/p_c)**(2/gamma) - (p_feed/p_c)**((gamma+1)/gamma))))
 
