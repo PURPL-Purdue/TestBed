@@ -9,21 +9,27 @@ parentDir = fullfile(repoDir, '..');
 addpath(parentDir);
 
 m_to_in = 39.3701;
+lb_to_kg = 0.453592;
 
-p_c = 250; % Main chamber pressure (psi)
-OF = 1; % OF Ratio (N/A)
-mdot = 1.2637083; % Total mass flow (kg/s)
+% p_c = 250; % Main chamber pressure (psi)
+% OF = 1; % OF Ratio (N/A)
+% mdot_coolant = 0.573208442786; % Coolant mass flow (kg/s)
+% throatDiameter  = 1;   % (in)
+% exitDiameter    = 2;   % (in)
+% convergingAngle = 45;  % (deg)
+% divergingAngle  = 13.5;% (deg)
+% totalLength     = 7.2; % (in)
+% convergingFillet= 0.5; % (in)
+% throatFillet    = 0.4; % (in)
 
-throatDiameter  = 1;   % (in)
-exitDiameter    = 2;   % (in)
-convergingAngle = 45;  % (deg)
-divergingAngle  = 13.5;% (deg)
-totalLength     = 7.2; % (in)
-convergingFillet= 0.5; % (in)
-throatFillet    = 0.4; % (in)
+file_name = "Maelstrom";
 
-yaml_struct = py.yaml.safe_load(fileread("params.yaml"));
+yaml_struct = py.yaml.safe_load(fileread(filename + ".yaml"));
 data = struct(yaml_struct);
+
+p_c             = double(data.chamber_pressure);
+OF              = double(data.of_ratio);
+mdot_coolant    = double(data.rp_design_mdot);
 
 chamberDiameter = double(data.chamber_diameter);
 totalLength     = double(data.total_length);
@@ -47,7 +53,6 @@ heightStepNumber = 45;
 converge_index = 23;
 throat_index = 14;
 contourResolution = 250; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
-file_name = "Test";
 generate_new_CEA = true;
 generate_new_Contour = true;
 
@@ -59,7 +64,7 @@ CTE = 0.0000232; % Material's coefficient of thermal expansion in (%change/K)
 youngsModulus = 71700000000; %Pa
 poissonsRatio = 0.33; %
 
-mdot_coolant = mdot / (1 + OF); % Total coolant mass flow (kg/s)
+mdot_coolant = mdot_coolant * lb_to_kg; % Total coolant mass flow (kg/s)
 mdot_channel = mdot_coolant/numChannels; % Coolant mass flow in a single channel (kg/s)
 
 hotwallGeometry = [chamberDiameter, throatDiameter, exitDiameter, ...

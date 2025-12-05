@@ -14,7 +14,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 import yaml
 
-def find_yaml(filename="params.yaml", start_dir=None):
+def find_yaml(filename="Maelstrom.yaml", start_dir=None):
     start_dir = Path(start_dir or Path.cwd())
     for path in start_dir.rglob(filename):
         return path
