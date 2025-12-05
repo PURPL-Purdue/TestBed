@@ -71,7 +71,7 @@ isp: 143 # (s) Dominik Sloup
 
 throat_diameter: 1.182 # (in) Dominik Sloup
 exit_diameter: 2.041 # (in) Dominik Sloup
-total_length: 6.0  # (in)  Dominik Sloup
+total_length: 7.7  # (in)  Dominik Sloup
 chamber_volume: 60.4 # (in^3) Dominik Sloup
 
 # Maelstrom Impinging Jet Injector parameters
