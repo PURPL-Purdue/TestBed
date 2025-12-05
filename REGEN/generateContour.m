@@ -1,9 +1,6 @@
 function [] = generateContour(hotwallGeometry, filename, resolution)
-
+    
     in_to_m = 0.0254;
-
-    filename = 'Test';
-    resolution = 100;
 
     % Extract parameters
     chamberDiameter = hotwallGeometry(1);
@@ -39,30 +36,34 @@ function [] = generateContour(hotwallGeometry, filename, resolution)
     % FIND THROAT RADIUS DIRECTLY FROM CONTOUR DATA
     %──────────────────────────────────────────────────────────────
     r_throat = min(r_points);      % NO THROAT DIAMETER USED
-    A_throat = pi * r_throat^2;
-
-    %──────────────────────────────────────────────────────────────
-    % COMPUTE AREA RATIO FOR EACH ROW
-    %──────────────────────────────────────────────────────────────
     area_ratio = (r_points ./ r_throat).^2;
 
     %──────────────────────────────────────────────────────────────
     % EXPORT: x, r, area_ratio (NO HEADERS, RAWDOGGED)
     %──────────────────────────────────────────────────────────────
     outData = [x_points(:), r_points(:), area_ratio(:)];
-    outName = "Contour_" + filename + ".xlsx";
-    writematrix(outData, outName);
+
+    repoDir = fileparts(mfilename('fullpath'));   % folder the .m file lives in
+    outName = fullfile(repoDir, "Contour_" + filename + ".xlsx");
+
+    % Delete old file if it exists
+    if isfile(outName)
+        delete(outName);
+    end
+
+    writematrix(outData, outName, 'FileType', 'spreadsheet');
+
 
     %──────────────────────────────────────────────────────────────
     % PLOT
     %──────────────────────────────────────────────────────────────
-    figure;
-    plot(x_points, r_points, 'b-', 'LineWidth', 2);
-    xlabel('Axial Distance (m)');
-    ylabel('Radial Distance (m)');
-    title('Nozzle Contour');
-    grid on;
-    axis equal;
+    % figure;
+    % plot(x_points, r_points, 'b-', 'LineWidth', 2);
+    % xlabel('Axial Distance (m)');
+    % ylabel('Radial Distance (m)');
+    % title('Nozzle Contour');
+    % grid on;
+    % axis equal;
 end
 
 
@@ -99,9 +100,9 @@ function r = contour(x, cR, tR, eR, tL, cF, tF, cA, dA)
     x_convergeStart= B;
     x_throat       = (tF + tR - tF*cos(dA) - eR + tL*tan(dA))/tan(dA);
 
+
     if x < x_flatEnd
         r = cR;
-
     elseif x < x_filletEnd
         r = rc + sqrt(cF^2 - (x - xc).^2);
 
@@ -111,7 +112,7 @@ function r = contour(x, cR, tR, eR, tL, cF, tF, cA, dA)
     elseif x < x_throat
         r = k - sqrt(tF^2 - (x - h).^2);
 
-    else
+    elseif x <= tL
         r = tan(dA)*x + (eR - tL*tan(dA));
     end
 end

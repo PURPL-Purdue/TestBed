@@ -4,13 +4,16 @@
 
 clc; clear;
 
+repoDir = fileparts(mfilename('fullpath'));
+parentDir = fullfile(repoDir, '..');
+addpath(parentDir);
+
 m_to_in = 39.3701;
 
 p_c = 250; % Main chamber pressure (psi)
 OF = 1; % OF Ratio (N/A)
 mdot = 1.2637083; % Total mass flow (kg/s)
 
-chamberDiameter = 3.4; % (in)
 throatDiameter  = 1;   % (in)
 exitDiameter    = 2;   % (in)
 convergingAngle = 45;  % (deg)
@@ -18,6 +21,18 @@ divergingAngle  = 13.5;% (deg)
 totalLength     = 7.2; % (in)
 convergingFillet= 0.5; % (in)
 throatFillet    = 0.4; % (in)
+
+yaml_struct = py.yaml.safe_load(fileread("params.yaml"));
+data = struct(yaml_struct);
+
+chamberDiameter = double(data.chamber_diameter);
+totalLength     = double(data.total_length);
+throatDiameter  = double(data.throat_diameter);
+exitDiameter    = double(data.exit_diameter);
+convergingAngle = double(data.converging_angle);
+divergingAngle  = double(data.diverging_angle);
+convergingFillet= double(data.converging_fillet);
+throatFillet    = double(data.throat_fillet);
 
 numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
@@ -31,7 +46,7 @@ T_target = 400; % target gas-side hotwall temp in degrees K (530 for 7075, 773 f
 heightStepNumber = 45;
 converge_index = 23;
 throat_index = 14;
-contourResolution = 100
+contourResolution = 250; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
 file_name = "Test";
 generate_new_CEA = true;
 generate_new_Contour = true;

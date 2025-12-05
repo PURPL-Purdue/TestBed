@@ -206,8 +206,16 @@ function [] = CEAOut(p_c, OF, filename)
     %Write output to table
     temp = [0,"Ae/At","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
     options = ["",sprintf("Mode: %s",mode),sprintf("Fac: %s",FAC),sprintf("Compression Ratio: %f",compressionRatio),sprintf("OF: %f",OF),sprintf("P_c: %f",p_c),sprintf("Point Density: 1000"),"","","","","",""];
-    writematrix([options;temp;gigaMatrix],"CEA_" + filename + ".xlsx")
 
-    fprintf("CEA Values Obtained Successfully.")
+    outName = fullfile(repoDir, "CEA_" + filename + ".xlsx");
+
+    % Delete old file if it exists
+    if isfile(outName)
+        delete(outName);
+    end
+
+    writematrix([options; temp; gigaMatrix], outName, 'FileType', 'spreadsheet');
+    
+    fprintf("CEA Values Obtained Successfully.\n");
 
 end
