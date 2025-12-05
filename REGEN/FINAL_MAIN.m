@@ -24,7 +24,7 @@ lb_to_kg = 0.453592;
 
 file_name = "Maelstrom";
 
-yaml_struct = py.yaml.safe_load(fileread(filename + ".yaml"));
+yaml_struct = py.yaml.safe_load(fileread(file_name + ".yaml"));
 data = struct(yaml_struct);
 
 p_c             = double(data.chamber_pressure);
