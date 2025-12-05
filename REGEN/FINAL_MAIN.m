@@ -9,8 +9,8 @@ m_to_in = 39.3701;
 p_c = 250; % Main chamber pressure (psi)
 OF = 1; % OF Ratio (N/A)
 mdot = 1.2637083; % Total mass flow (kg/s)
-% contour_name = "Contour_Maelstrom.csv";
 contour_name = "Contour_Tadpole.xlsx";
+% contour_name = "Contour_Tadpole.xlsx";
 numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
 heightArray =  [0.125,0.03,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
@@ -39,7 +39,8 @@ mdot_channel = mdot_coolant/numChannels; % Coolant mass flow in a single channel
 engineContour = readmatrix(contour_name);
 idx = find(engineContour(:,3) == 1, 1); % Look for the point in the chamber contour where the area ratio is 1
 throatDiameter = engineContour(idx,5) * 2 * m_to_in;  % Obtain the throat diameter value (in)
-chamberLength = floor((engineContour(end,4) - (engineContour(1,4))) * m_to_in*100) / 100; % Chamber length (in)
+chamberLength = ((engineContour(end,4)) * m_to_in * 100) / 100; % Chamber length (in)
+fprintf('%0.2f', chamberLength)
 filletRad = 0.23; % chamber converging radius (in)
 
 inputValues = [T_start, P_start, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
