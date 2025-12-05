@@ -1,10 +1,6 @@
 %% Main
 function [] = CEAOut(p_c, OF, filename)
 
-    filename = 'Tadpole';
-    p_c = 500;
-    OF = 1;
-
     repoDir = fileparts(mfilename('fullpath')); % This is required so MATLAB knows where the CEA Output file lives
     addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin')); 
     
