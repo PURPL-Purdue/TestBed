@@ -2,19 +2,6 @@ function [] = generateContour(hotwallGeometry, filename, resolution)
 
     in_to_m = 0.0254;
 
-    chamberDiameter = 3.4; % (in)
-    throatDiameter  = 1;   % (in)
-    exitDiameter    = 2;   % (in)
-    convergingAngle = 45;  % (deg)
-    divergingAngle  = 13.5;% (deg)
-    totalLength     = 7.2; % (in)
-    convergingFillet= 0.5; % (in)
-    throatFillet    = 0.4; % (in)
-
-    hotwallGeometry = [chamberDiameter, throatDiameter, exitDiameter, ...
-                       convergingAngle, divergingAngle, totalLength, ...
-                       convergingFillet, throatFillet];
-
     filename = 'Test';
     resolution = 100;
 
