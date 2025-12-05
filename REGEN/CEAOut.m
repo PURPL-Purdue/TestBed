@@ -1,13 +1,17 @@
 %% Main
-function [] = CEAOut(p_c, OF, contour_name)
-    
+function [] = CEAOut(p_c, OF, filename)
+
+    filename = 'Tadpole';
+    p_c = 500;
+    OF = 1;
+
     repoDir = fileparts(mfilename('fullpath')); % This is required so MATLAB knows where the CEA Output file lives
     addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin')); 
     
     recycle on;
 
     % Engine Variables
-    engineContour = readmatrix(contour_name);
+    engineContour = readmatrix("Contour_" + filename + ".xlsx");
     fuelTemperature = 293.15; %K
     oxTemperature = 293.15; %K
 
@@ -44,6 +48,7 @@ function [] = CEAOut(p_c, OF, contour_name)
     tempSup = [];
     combined = [subSonicARatios,superSonicARatios];
     gigaMatrix = [];
+
     while a <= length(combined)/10
         if a <= length(subSonicARatios)/10
             tempSub = subSonicARatios(((a-1)*10)+1:a*10);
@@ -78,7 +83,6 @@ function [] = CEAOut(p_c, OF, contour_name)
         
         %% Data extraction
         rawData = readtable("Detn.out", 'FileType','text', 'VariableNamingRule','preserve');
-        
         %Variables to extract
         targets = ["Ae","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
         
@@ -154,7 +158,7 @@ function [] = CEAOut(p_c, OF, contour_name)
     end
 
     %% Add Axial positions to area ratios
-    contour = [engineContour(:,4:5), engineContour(:,3)];
+    contour = [engineContour(1:end,1:2), engineContour(1:end,2)];
     subSonicContour = contour(1:(idx-1),:); % contour(1:783,:);
     supSonicContour = contour(idx:end,:); % contour(784:end,:);
 
@@ -206,7 +210,7 @@ function [] = CEAOut(p_c, OF, contour_name)
     %Write output to table
     temp = [0,"Ae/At","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
     options = ["",sprintf("Mode: %s",mode),sprintf("Fac: %s",FAC),sprintf("Compression Ratio: %f",compressionRatio),sprintf("OF: %f",OF),sprintf("P_c: %f",p_c),sprintf("Point Density: 1000"),"","","","","",""];
-    writematrix([options;temp;gigaMatrix],"CEA_Maelstrom.xlsx")
+    writematrix([options;temp;gigaMatrix],"CEA_" + filename + ".xlsx")
 
     fprintf("CEA Values Obtained Successfully.")
 
