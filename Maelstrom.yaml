@@ -42,6 +42,12 @@ cstar_eff: 0.7 # (N/A) Dominik Sloup
 isp_eff: 1 # (N/A) Dominik Sloup
 Lstar: 55 # (in) Dominik Sloup
 
+chamber_diameter: 3.4   # (in)  Dominik Sloup
+converging_angle: 45    # (deg) Dominik Sloup
+diverging_angle: 13.5   # (deg) Dominik Sloup
+converging_fillet: 0.5  # (in)  Dominik Sloup
+throat_fillet: 0.4     # (in)   Dominik Sloup
+
 gox_stiffness: 1.2  # (N/A) Dominik Sloup
 gox_orifice_number: 24 # (N/A) Dominik Sloup
 gox_discharge_coeff: 0.8 # (N/A) Dominik Sloup
@@ -65,6 +71,7 @@ isp: 143 # (s) Dominik Sloup
 
 throat_diameter: 1.182 # (in) Dominik Sloup
 exit_diameter: 2.041 # (in) Dominik Sloup
+total_length: 7.7  # (in)  Dominik Sloup
 chamber_volume: 60.4 # (in^3) Dominik Sloup
 
 # Maelstrom Impinging Jet Injector parameters
@@ -76,7 +83,7 @@ rp_line_velocity: 31.57 # (ft/s) Dominik Sloup
 n2_SCFM: 1149.14 # (ft^3/min) Dominik Sloup
 
 gox_design_mdot: 1.393 # (lb/s) Dominik Sloup
-gox_orifice_dia: 0.09  # (in) Dominik Sloup
+gox_orifice_dia: 0.083 # (in) Dominik Sloup
 gox_feed_pressure: 550  # (psi) Dominik Sloup
 gox_line_velocity: 189.73 # (ft/s) Dominik Sloup
 gox_SCFM: 1005.68 # (ft^3/min) Dominik Sloup

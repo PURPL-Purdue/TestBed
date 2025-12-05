@@ -4,13 +4,42 @@
 
 clc; clear;
 
-m_to_in = 39.3701;
+repoDir = fileparts(mfilename('fullpath'));
+parentDir = fullfile(repoDir, '..');
+addpath(parentDir);
 
-p_c = 250; % Main chamber pressure (psi)
-OF = 1; % OF Ratio (N/A)
-mdot = 1.2637083; % Total mass flow (kg/s)
-% contour_name = "Contour_Maelstrom.csv";
-contour_name = "Contour_Tadpole.xlsx";
+m_to_in = 39.3701;
+lb_to_kg = 0.453592;
+
+% p_c = 250; % Main chamber pressure (psi)
+% OF = 1; % OF Ratio (N/A)
+% mdot_coolant = 0.573208442786; % Coolant mass flow (kg/s)
+% throatDiameter  = 1;   % (in)
+% exitDiameter    = 2;   % (in)
+% convergingAngle = 45;  % (deg)
+% divergingAngle  = 13.5;% (deg)
+% totalLength     = 7.2; % (in)
+% convergingFillet= 0.5; % (in)
+% throatFillet    = 0.4; % (in)
+
+file_name = "Maelstrom";
+
+yaml_struct = py.yaml.safe_load(fileread(file_name + ".yaml"));
+data = struct(yaml_struct);
+
+p_c             = double(data.chamber_pressure);
+OF              = double(data.of_ratio);
+mdot_coolant    = double(data.rp_design_mdot);
+
+chamberDiameter = double(data.chamber_diameter);
+totalLength     = double(data.total_length);
+throatDiameter  = double(data.throat_diameter);
+exitDiameter    = double(data.exit_diameter);
+convergingAngle = double(data.converging_angle);
+divergingAngle  = double(data.diverging_angle);
+convergingFillet= double(data.converging_fillet);
+throatFillet    = double(data.throat_fillet);
+
 numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
 heightArray =  [0.125,0.03,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
@@ -23,7 +52,9 @@ T_target = 400; % target gas-side hotwall temp in degrees K (530 for 7075, 773 f
 heightStepNumber = 45;
 converge_index = 23;
 throat_index = 14;
-generate_new_CEA = false;
+contourResolution = 250; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
+generate_new_CEA = true;
+generate_new_Contour = true;
 
 %% Chamber Wall Material Properties
 
@@ -33,13 +64,21 @@ CTE = 0.0000232; % Material's coefficient of thermal expansion in (%change/K)
 youngsModulus = 71700000000; %Pa
 poissonsRatio = 0.33; %
 
-mdot_coolant = mdot / (1 + OF); % Total coolant mass flow (kg/s)
+mdot_coolant = mdot_coolant * lb_to_kg; % Total coolant mass flow (kg/s)
 mdot_channel = mdot_coolant/numChannels; % Coolant mass flow in a single channel (kg/s)
 
-engineContour = readmatrix(contour_name);
+hotwallGeometry = [chamberDiameter, throatDiameter, exitDiameter, ...
+                       convergingAngle, divergingAngle, totalLength, ...
+                       convergingFillet, throatFillet];
+
+if generate_new_Contour == true
+    generateContour(hotwallGeometry, file_name, contourResolution)
+end
+
+engineContour = readmatrix("Contour_" + file_name + ".xlsx");
 idx = find(engineContour(:,3) == 1, 1); % Look for the point in the chamber contour where the area ratio is 1
-throatDiameter = engineContour(idx,5) * 2 * m_to_in;  % Obtain the throat diameter value (in)
-chamberLength = floor((engineContour(end,4) - (engineContour(1,4))) * m_to_in*100) / 100; % Chamber length (in)
+throatDiameter = engineContour(idx,2) * 2 * m_to_in;  % Obtain the throat diameter value (in)
+chamberLength = floor((engineContour(end,1)) * m_to_in * 100) / 100; % Chamber length (in)
 filletRad = 0.23; % chamber converging radius (in)
 
 inputValues = [T_start, P_start, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
@@ -56,10 +95,10 @@ heightStepArray = linspace(0,chamberLength / m_to_in ,heightStepNumber);
 %% Run NASA CEA and retrieve values
 
 if generate_new_CEA == true
-    CEAOut(p_c,OF,contour_name)
+    CEAOut(p_c,OF,file_name)
 end
 
-fluidProperties = readmatrix("CEA_Maelstrom.xlsx"); %pull all nasaCEA values into fluidProperties
+fluidProperties = readmatrix("CEA_" + file_name + ".xlsx"); %pull all nasaCEA values into fluidProperties
 % if newFluidProperties errors and cuts off a row, change the middle value
 % in the heightStepArray initialization call to be whatever the ACTUAL end
 % length is set to.

@@ -8,14 +8,13 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from rocketcea.cea_obj import CEA_Obj
-import CEA_Wrap as CEA
 from matplotlib.widgets import TextBox
 from pyfluids import Fluid, FluidsList, Input
 from pathlib import Path
 from ruamel.yaml import YAML
 import yaml
 
-def find_yaml(filename="params.yaml", start_dir=None):
+def find_yaml(filename="Maelstrom.yaml", start_dir=None):
     start_dir = Path(start_dir or Path.cwd())
     for path in start_dir.rglob(filename):
         return path
@@ -40,6 +39,13 @@ p_e = data["exhaust_pressure"] # Exhaust pressure (psi)
 dp_regen = data["regen_pressure_drop"] # Pressure drop across regenerative nozzle 
 OF = data["of_ratio"] # Nominal OF Ratio
 T = 293.15 # Fuel and oxidizer temperature (K)
+
+chamber_dia = data['chamber_diameter'] # Chamber diameter at injector (in)
+cA = data['converging_angle']
+dA = data['diverging_angle']
+cR = chamber_dia / 2
+tF = data['throat_fillet']
+tR = data['throat_diameter'] / 2
 
 K_ox = data["gox_stiffness"] # Desired Ox injector stiffness (N/A)
 ox_orifice_num = data["gox_orifice_number"] # Number of oxidizer orifices (N/A)
@@ -102,7 +108,19 @@ def main():
     d_t = 2 * np.sqrt(A_t / np.pi) # Throat diameter (m)
     d_e = 2 * np.sqrt(A_e / np.pi) # Exit diameter (m)
 
+    eR = d_e / 2 * m_to_in # Exit radius (in)
+
     V_chamber = Lstar * A_t * m_to_in ** 2
+
+    total_length = (V_chamber/(np.pi * cR**2) # This is some ChatGPT Voodoo magic bro I could not derive this math
+      + 2*cR/(3*np.tan(cA))
+      + eR/np.tan(dA)
+      - tF/np.tan(dA)
+      - tF/np.tan(cA)
+      + tF/np.sin(dA)
+      + tF/np.sin(cA)
+      - tR/np.tan(dA)
+      - tR/np.tan(cA))
 
     # Chamber sizing process
 
@@ -132,6 +150,7 @@ def main():
     data["throat_diameter"] = float(np.round(d_t * m_to_in, 3))
     data["exit_diameter"] = float(np.round(d_e * m_to_in, 3))
     data["chamber_volume"] = float(np.round(V_chamber, 1))
+    data["total_length"] = float(np.round(total_length, 1))
  
     data["rp_orifice_dia"] = float(np.round(d_fu * m_to_in, 3))
     data["gox_orifice_dia"] = float(np.round(d_ox * m_to_in, 3))
