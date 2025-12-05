@@ -9,7 +9,16 @@ m_to_in = 39.3701;
 p_c = 250; % Main chamber pressure (psi)
 OF = 1; % OF Ratio (N/A)
 mdot = 1.2637083; % Total mass flow (kg/s)
-file_name = "Maelstrom";
+
+chamberDiameter = 3.4; % (in)
+throatDiameter  = 1;   % (in)
+exitDiameter    = 2;   % (in)
+convergingAngle = 45;  % (deg)
+divergingAngle  = 13.5;% (deg)
+totalLength     = 7.2; % (in)
+convergingFillet= 0.5; % (in)
+throatFillet    = 0.4; % (in)
+
 numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
 heightArray =  [0.125,0.03,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
@@ -22,7 +31,10 @@ T_target = 400; % target gas-side hotwall temp in degrees K (530 for 7075, 773 f
 heightStepNumber = 45;
 converge_index = 23;
 throat_index = 14;
+contourResolution = 100
+file_name = "Test";
 generate_new_CEA = true;
+generate_new_Contour = true;
 
 %% Chamber Wall Material Properties
 
@@ -34,6 +46,14 @@ poissonsRatio = 0.33; %
 
 mdot_coolant = mdot / (1 + OF); % Total coolant mass flow (kg/s)
 mdot_channel = mdot_coolant/numChannels; % Coolant mass flow in a single channel (kg/s)
+
+hotwallGeometry = [chamberDiameter, throatDiameter, exitDiameter, ...
+                       convergingAngle, divergingAngle, totalLength, ...
+                       convergingFillet, throatFillet];
+
+if generate_new_Contour == true
+    generateContour(hotwallGeometry, file_name, contourResolution)
+end
 
 engineContour = readmatrix("Contour_" + file_name + ".xlsx");
 idx = find(engineContour(:,3) == 1, 1); % Look for the point in the chamber contour where the area ratio is 1
