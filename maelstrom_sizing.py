@@ -181,7 +181,7 @@ def get_mdots(engine,F,p_c,OF,cstar_eff):
 def get_gas_inj_area(mdot, p_feed, p_c, rho, Cd, gamma):
 
     p_cr = (2 / (gamma + 1)) ** (gamma / (gamma -1))
-    if p_feed / p_c > p_cr: # Choked condition
+    if p_c / p_feed < p_cr: # Choked condition
         area = mdot / (Cd * np.sqrt(gamma * rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
     else: # Unchoked condition
         area = mdot / (Cd * np.sqrt(2 * rho * p_feed * (gamma / (gamma-1)) * (((p_c/p_feed) ** (2/gamma)) - ((p_c/p_feed) ** ((gamma + 1)/gamma)))))

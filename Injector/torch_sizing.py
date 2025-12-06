@@ -161,7 +161,7 @@ class Torch_Sizer():
 
         p_cr = (2 / (gamma + 1)) ** (gamma / (gamma -1))
 
-        if p_c / p_feed > p_cr: # Choked condition
+        if p_c / p_feed < p_cr: # Choked condition
             area = mdot / (Cd * np.sqrt(gamma * rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
 
         else: # Unchoked condition
