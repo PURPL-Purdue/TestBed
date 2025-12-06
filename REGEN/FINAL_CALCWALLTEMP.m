@@ -18,8 +18,8 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
     %% Plotter: Structures
     
     % Circ stress
-        axialDist = newFluidProperties(:,1);
-    
+        axialDist = newFluidProperties(:,1)* 39.3701;
+        
     
         figure;
         hold on; box on;
@@ -30,7 +30,7 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         p3 = plot(axialDist, structuresOutput(1,:),  '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         % Axis labels
-        xlabel('Location [m]', 'FontSize', 12);
+        xlabel('Location [in]', 'FontSize', 12);
         ylabel('Circumferential stress [MPa]', 'FontSize', 12);
         
         % Grid and ticks
@@ -56,7 +56,7 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         h3 = plot(axialDist, wallThicknesses, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         % Axis labels
-        xlabel('Location [m]', 'FontSize', 12);
+        xlabel('Location [in]', 'FontSize', 12);
         ylabel('Channel Dimensions [mm]', 'FontSize', 12);
         
         % Grid and ticks
@@ -64,9 +64,9 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         grid minor;
         set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on', ...
                  'FontSize', 11, 'LineWidth', 1);
-        xlim([0,axialDist(1)]);
+        xlim([0, axialDist(1)]);
         
-        ylim([0, max(channelWidths)*1.1]);
+        ylim([0, max([channelWidths,channelHeights,wallThicknesses])*1.1]);
         % Legend
         legend([h1 h2 h3], {'Channel Height', 'Channel Width', 'Wall Thickness'}, ...
                'Location', 'best', 'Box', 'off');
@@ -141,5 +141,92 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
                {'Effective Stress', 'Yield Strength', 'Ultimate Tensile Strength', 'Contour'}, ...
                'Location', 'best', 'Box', 'off');    
 
+        
 
+
+    % Temperatures Plot
+        
+    figure;
+
+        % Plot with muted, contrasting colors (blue, orange, gray)
+        plot(axialDist, flowTemp, '-', 'LineWidth', 1.8, 'Color', [0 0.45 0.74]);  % blue
+        hold on;
+        plot(axialDist, T_wgFinal, '-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]);   % orange
+        plot(axialDist, T_wl_Array, '-', 'LineWidth', 1.8, 'Color', [0.4 0.4 0.4]);     % gray
+        plot(axialDist, newFluidProperties(6), '-', 'LineWidth', 1.8, 'Color', [0.49 0.18 0.56]);     % purple
+        
+        hold off;
+        
+        % Axes labels
+        xlabel('Location [in]', 'FontSize', 12);
+        ylabel('Temperature [K]', 'FontSize', 12);
+        ylim([0,max([T_wl_Array,T_wgFinal,newFluidProperties(:,6),flowTemp])*1.1])
+        % Title
+        title('Fluid and Wall Temperatures along Chamber', ...
+              'FontSize', 14, 'FontWeight', 'bold');
+        
+        % Legend
+        legend({'Flow Temp', 'Gas Hotwall Temp', 'Liquid Hotwall Temp'}, ...
+               'Location', 'best', 'Box', 'off');
+        
+        % Grid and ticks formatting
+        grid on;
+        grid minor;
+        set(gca, 'LineWidth', 1, 'FontSize', 11, 'TickDir', 'out', 'Box', 'on');
+
+        yyaxis right
+        
+        plot(axialDist, chamberDiameterArray/2 * 39.3701, 'k--', 'LineWidth', 1.8);
+        ylabel('Radial Distance [in]', 'FontSize', 12);
+        
+        % --- Control RIGHT Y limits: 0 to next grid mark above max Contour ---
+        
+      
+        ylim([0, max(chamberDiameterArray)*1.1 * 39.3701]);
+        legend({'Flow Temp', 'Gas Hotwall Temp', 'Liquid Hotwall Temp','Exhaust Temp' ,'Contour'}, ...
+               'Location', 'best', 'Box', 'off');
+
+    %Flow Pressure and Velocity
+        figure;
+
+        % Plot with muted, contrasting colors (blue, orange, gray)
+        plot(axialDist, flowPressure/6895, '-', 'LineWidth', 1.8, 'Color', [0 0.45 0.74]);  % blue
+        hold on;
+        plot(axialDist, chamberPressure/6895, '-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]);   % orange
+        
+        hold off;
+        
+        % Axes labels
+        xlabel('Location [in]', 'FontSize', 12);
+        ylabel('Pressure [psi]', 'FontSize', 12);
+        ylim([0,max([flowPressure,chamberPressure])*1.1])
+        % Title
+        title('Coolant & Exhaust Pressures & Velocity', ...
+              'FontSize', 14, 'FontWeight', 'bold');
+        
+        % Legend
+        legend({'Flow Temp', 'Gas Hotwall Temp', 'Liquid Hotwall Temp'}, ...
+               'Location', 'best', 'Box', 'off');
+        
+        % Grid and ticks formatting
+        grid on;
+        grid minor;
+        set(gca, 'LineWidth', 1, 'FontSize', 11, 'TickDir', 'out', 'Box', 'on');
+
+        yyaxis right
+        
+        plot(axialDist, chamberDiameterArray/2 * 39.3701, 'k--', 'LineWidth', 1.8);
+        ylabel('Radial Distance [in]', 'FontSize', 12);
+        
+        % --- Control RIGHT Y limits: 0 to next grid mark above max Contour ---
+        
+      
+        ylim([0, max(chamberDiameterArray)*1.1 * 39.3701]);
+        legend({'Flow Temp', 'Gas Hotwall Temp', 'Liquid Hotwall Temp','Exhaust Temp' ,'Contour'}, ...
+               'Location', 'best', 'Box', 'off');
+
+    
+    % h_l, h_g
+
+    % fin_width, height, efficiency
 end
