@@ -191,7 +191,9 @@ if __name__ == '__main__':
     print(f"\nThroat diameter: {d_t * m_to_in:.3f} in")
 
     print(f"\nTotal fuel injection area: {A_fu:.6f} m^2")
+    print(f"Total fuel orifice area (in^2): {(d_fu * m_to_in) ** 2 * np.pi:.3f} in^2")
     print(f"Fuel orifice diameter: {d_fu * m_to_in:.3f} in")
 
     print(f"\nTotal oxidizer injection area: {A_ox:.6f} m^2")
+    print(f"Total oxidizer orifice area (in^2): {(d_ox * m_to_in) ** 2 * np.pi:.3f} in^2")
     print(f"Oxidizer orifice diameter: {d_ox * m_to_in:.3f} in")
