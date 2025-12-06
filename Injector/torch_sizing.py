@@ -17,9 +17,6 @@ g0 = 32.174 # Gravitational constant (ft/s^2)
 gamma_o2 = 1.4 # Oxygen Specific heat ratio
 gamma_h2 = 1.41 # Hydrogen Specific heat ratio
 gamma_ch4 = 1.3 # Methane Specific heat ratio
-R_o2 = 259.8 # Oxygen Specific gas constant
-R_h2 = 4124 # Hydrogen Specific gas constant
-R_ch4 = 518.3 # Methane Specific gas constant
 T = 293.15 # Ambient temperature (K)
 
 
@@ -130,15 +127,15 @@ class Torch_Sizer():
             engine = CEA_Obj(oxName='GOX', fuelName='CH4(g)')
             rho_fu = Fluid(FluidsList.Methane).with_state(Input.pressure(self.p_fu_pa), Input.temperature(T-273.15)).density
             m_dot_fu, m_dot_ox, cstar_real = self.get_mdots(engine,self.F,self.p_c,self.OF,self.cstar_eff)
-            A_fu = self.get_gas_inj_area(m_dot_fu, self.p_fu_pa, self.p_c_pa, rho_fu, self.Cd_fu, gamma_ch4, R_ch4, T)
+            A_fu = self.get_gas_inj_area(m_dot_fu, self.p_fu_pa, self.p_c_pa, rho_fu, self.Cd_fu, gamma_ch4)
 
         elif self.fuel_choice == 'hydrogen':
             engine = CEA_Obj(oxName='GOX', fuelName='H2(g)')
             rho_fu = Fluid(FluidsList.Hydrogen).with_state(Input.pressure(self.p_fu_pa), Input.temperature(T-273.15)).density
             m_dot_fu, m_dot_ox, cstar_real = self.get_mdots(engine,self.F,self.p_c,self.OF,self.cstar_eff)
-            A_fu = self.get_gas_inj_area(m_dot_fu, self.p_fu_pa, self.p_c_pa, rho_fu, self.Cd_fu, gamma_h2, R_h2, T)
+            A_fu = self.get_gas_inj_area(m_dot_fu, self.p_fu_pa, self.p_c_pa, rho_fu, self.Cd_fu, gamma_h2)
 
-        A_ox = self.get_gas_inj_area(m_dot_ox, self.p_ox_pa, self.p_c_pa, rho_ox, self.Cd_ox, gamma_o2, R_o2, T) 
+        A_ox = self.get_gas_inj_area(m_dot_ox, self.p_ox_pa, self.p_c_pa, rho_ox, self.Cd_ox, gamma_o2) 
         A_t = (m_dot_fu + m_dot_ox) * (cstar_real * ft_to_m) / self.p_c_pa
 
         d_fu = 2 * np.sqrt((A_fu / self.fu_orifice_num) / np.pi) # Fuel orifice diameter (m)
@@ -160,11 +157,11 @@ class Torch_Sizer():
 
         return m_dot_fu, m_dot_ox, cstar_real
 
-    def get_gas_inj_area(self, mdot, p_feed, p_c, rho, Cd, gamma, R, T0):
+    def get_gas_inj_area(self, mdot, p_feed, p_c, rho, Cd, gamma):
 
         p_cr = (2 / (gamma + 1)) ** (gamma / (gamma -1))
 
-        if p_feed / p_c > p_cr: # Choked condition
+        if p_c / p_feed > p_cr: # Choked condition
             area = mdot / (Cd * np.sqrt(gamma * rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
 
         else: # Unchoked condition
