@@ -1,6 +1,6 @@
 import numpy as np
 
-def get_injection_area(state, mdot, p_feed, p_c, rho, Cd, gamma):
+def get_area_from_mdot(state, mdot, p_feed, p_c, rho, Cd, gamma=None):
 
     if state == 'gas':
 
@@ -14,6 +14,9 @@ def get_injection_area(state, mdot, p_feed, p_c, rho, Cd, gamma):
 
         return area
 
-    elif state == 'liqud':
+    elif state == 'liquid':
 
         return mdot / (Cd * np.sqrt(2 * rho * (p_feed - p_c))) # Total fuel injection area (m^2)
+    
+    else:
+        raise ValueError("Invalid state: choose 'gas' or 'liquid'")
