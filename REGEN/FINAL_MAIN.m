@@ -10,6 +10,7 @@ addpath(parentDir);
 
 m_to_in = 39.3701;
 lb_to_kg = 0.453592;
+psi_to_pa = 6894.76;
 
 % p_c = 250; % Main chamber pressure (psi)
 % OF = 1; % OF Ratio (N/A)
@@ -46,7 +47,7 @@ heightArray =  [0.125,0.03,0.125] / m_to_in;       % Height of coolant channel a
 wall_thicknessMatrix = [0.05,0.05,0.05] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
-P_start = 5102000; % Flow initial Pressure in Pa
+P_start = 520; % Coolant inlet pressure (psi)
 rho_start = 810; % Coolant initial density in kg/m^3
 T_target = 400; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 45;
@@ -81,7 +82,7 @@ throatDiameter = engineContour(idx,2) * 2 * m_to_in;  % Obtain the throat diamet
 chamberLength = floor((engineContour(end,1)) * m_to_in * 100) / 100; % Chamber length (in)
 filletRad = 0.23; % chamber converging radius (in)
 
-inputValues = [T_start, P_start, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
+inputValues = [T_start, P_start * 6894.76, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
 
 %% Initialize all arrays and matrices,
 flowTempArray = zeros(1,heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp

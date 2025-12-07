@@ -3,7 +3,7 @@
 # First Created: 06/06/2025
 # Last Updated: 06/06/2025
 # Calculations done in SI units
-import os 
+
 import numpy as np
 import math
 import matplotlib.pyplot as plt
@@ -12,6 +12,7 @@ from matplotlib.widgets import TextBox
 from pyfluids import Fluid, FluidsList, Input
 from pathlib import Path
 from ruamel.yaml import YAML
+from Injector.get_area_from_mdot import get_area_from_mdot
 import yaml
 
 def find_yaml(filename="Maelstrom.yaml", start_dir=None):
@@ -36,7 +37,6 @@ with open(yaml_path, "r") as f:
 F = data["thrust"] # Nominal thrust of the torch (lbf)
 p_c = data["chamber_pressure"] # Nominal chamber pressure (psi)
 p_e = data["exhaust_pressure"] # Exhaust pressure (psi)
-dp_regen = data["regen_pressure_drop"] # Pressure drop across regenerative nozzle 
 OF = data["of_ratio"] # Nominal OF Ratio
 T = 293.15 # Fuel and oxidizer temperature (K)
 
@@ -95,8 +95,8 @@ def main():
     # Oxygen density at manifold pressure and ambient temperature (kg/m^3)
     rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T-273.15)).density 
     m_dot_fu, m_dot_ox, cstar_real, Isp = get_mdots(engine,F,p_c,OF,cstar_eff)
-    A_fu = get_liquid_inj_area(m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu)
-    A_ox = get_gas_inj_area(m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2) 
+    A_fu = get_area_from_mdot('liquid',m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu)
+    A_ox = get_area_from_mdot('gas',m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2)
     A_t = (m_dot_fu + m_dot_ox) * (cstar_real * ft_to_m) / p_c_pa
 
     molwt, gamma = engine.get_Chamber_MolWt_gamma(Pc=p_c, MR=OF)
@@ -112,7 +112,7 @@ def main():
 
     V_chamber = Lstar * A_t * m_to_in ** 2
 
-    total_length = (V_chamber/(np.pi * cR**2) # This is some ChatGPT Voodoo magic bro I could not derive this math
+    total_length = (V_chamber/(np.pi * cR**2) # Calculates the length of the chamber based on the required chamber volume
       + 2*cR/(3*np.tan(cA))
       + eR/np.tan(dA)
       - tF/np.tan(dA)
@@ -121,8 +121,6 @@ def main():
       + tF/np.sin(cA)
       - tR/np.tan(dA)
       - tR/np.tan(cA))
-
-    # Chamber sizing process
 
     d_line_fu_m = d_line_fu * 0.0254
     d_line_ox_m = d_line_ox * 0.0254
@@ -157,7 +155,7 @@ def main():
     data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
     data["rp_design_mdot"] = float(np.round(m_dot_fu / lb_to_kg, 3))
     data["gox_feed_pressure"] = int(p_ox_pa / psi_to_pa)
-    data["rp_feed_pressure"] = int(p_fu_pa / psi_to_pa + dp_regen)
+    data["rp_injector_feed_pressure"] = int(p_fu_pa / psi_to_pa)
     data["gox_line_velocity"] = float(np.round(v_ox_ft, 2))
     data["rp_line_velocity"] = float(np.round(v_fu_ft, 2))
     data["gox_SCFM"] = float(np.round(SCFM_ox, 2))
@@ -177,22 +175,5 @@ def get_mdots(engine,F,p_c,OF,cstar_eff):
     m_dot_ox = m_dot - m_dot_fu # Oxidizer mass flow (kg/s)
 
     return m_dot_fu, m_dot_ox, cstar_real, Isp
-
-def get_gas_inj_area(mdot, p_feed, p_c, rho, Cd, gamma):
-
-    p_cr = (2 / (gamma + 1)) ** (gamma / (gamma -1))
-    if p_feed / p_c > p_cr: # Choked condition
-        area = mdot / (Cd * np.sqrt(gamma * rho * p_feed * (2 / (gamma + 1)) ** ((gamma + 1)/(gamma - 1))))
-    else: # Unchoked condition
-        area = mdot / (Cd * np.sqrt(2 * rho * p_feed * (gamma / (gamma-1)) * (((p_c/p_feed) ** (2/gamma)) - ((p_c/p_feed) ** ((gamma + 1)/gamma)))))
-
-    return area
-
-def get_liquid_inj_area(mdot, p_feed, p_c, rho, Cd):
-
-    return mdot / (Cd * np.sqrt(2 * rho * (p_feed - p_c))) # Total fuel injection area (m^2)
-
-def clc():
-    os.system('cls' if os.name == 'nt' else 'clear')
 
 main()
