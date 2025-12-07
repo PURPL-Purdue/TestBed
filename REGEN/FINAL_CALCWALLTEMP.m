@@ -160,7 +160,7 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         % Axes labels
         xlabel('Location [in]', 'FontSize', 12);
         ylabel('Temperature [K]', 'FontSize', 12);
-        ylim([0,max([T_wl_Array,T_wgFinal,newFluidProperties(:,6),flowTemp])*1.1])
+        ylim([0,max([T_wl_Array,T_wgFinal,newFluidProperties(:,6)',flowTemp])*1.1])
         % Title
         title('Fluid and Wall Temperatures along Chamber', ...
               'FontSize', 14, 'FontWeight', 'bold');

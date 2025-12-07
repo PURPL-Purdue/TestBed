@@ -23,7 +23,7 @@ psi_to_pa = 6894.76;
 % convergingFillet= 0.5; % (in)
 % throatFillet    = 0.4; % (in)
 
-file_name = "Zephyr";
+file_name = "Maelstrom";
 
 yaml_struct = py.yaml.safe_load(fileread(file_name + ".yaml"));
 data = struct(yaml_struct);
@@ -47,9 +47,9 @@ heightArray =  [0.125,0.03,0.125] / m_to_in;       % Height of coolant channel a
 wall_thicknessMatrix = [0.05,0.05,0.05] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
-P_start = 700; % Coolant inlet pressure (psi)
+P_start = 520; % Coolant inlet pressure (psi)
 rho_start = 810; % Coolant initial density in kg/m^3
-T_target = 500; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
+T_target = 400; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 45;
 
 contourResolution = 250; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
@@ -58,11 +58,11 @@ generate_new_Contour = true;
 
 %% Chamber Wall Material Properties
 
-k_w = 323; % thermal conductivity of the wall (W/m*K) %copper 323, 7075 130
-surfaceRoughness = 0.000035; % average height of roughness (chosen from engineering toolbox/elementum) in m
-CTE = 0.0000172; % Material's coefficient of thermal expansion in (%change/K) 0.0000212 for 7075
-youngsModulus = 129.7; %Pa 71700000000 for 7075
-poissonsRatio = 0.33; %SAME FOR 7075
+k_w = 130; % thermal conductivity of the wall (W/m*K) %copper 401, 7075 130
+surfaceRoughness = 0.000002; % average height of roughness (chosen from engineering toolbox/elementum) in m
+CTE = 0.0000232; % Material's coefficient of thermal expansion in (%change/K)
+youngsModulus = 71700000000; %Pa
+poissonsRatio = 0.33; %
 
 mdot_coolant = mdot_coolant * lb_to_kg; % Total coolant mass flow (kg/s)
 mdot_channel = mdot_coolant/numChannels; % Coolant mass flow in a single channel (kg/s)
@@ -176,14 +176,11 @@ while y <= length(heightStepArray) % translating CEA outputs to height step numb
     end
     y=y+1;
 end
-
+[converge_index,b] = find(newFluidProperties(:,2));= 23;
+[throat_index,a] = min(newFluidProperties(:,2));
 throatArea = pi*(throatDiameter/(2*39.37))^2;
 chamberDiameter1 = 2*sqrt((throatArea*newFluidProperties(:,2))/pi);
 newFluidProperties = flip(newFluidProperties,1);
-
-converge_index = find(newFluidProperties(:,2) == newFluidProperties(end,2), 1, 'first' );
-[a, throat_index] = min(newFluidProperties(:,2));
-
 chamberDiameter = flip(chamberDiameter1);
 
 %% Calculate Wall Temp
