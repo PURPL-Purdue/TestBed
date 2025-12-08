@@ -40,7 +40,17 @@ function Execute()
     for p = 1:length(CEAPaths)
         currentPath = cd(CEAPaths{p});
         if ispc
-            system('start CEA600.exe');
+            psi = System.Diagnostics.ProcessStartInfo;
+            psi.FileName = 'CEA600.exe';
+            psi.Arguments = '';
+            psi.WorkingDirectory = pwd;
+            psi.UseShellExecute = false;
+            psi.CreateNoWindow = true;
+            psi.RedirectStandardInput = true;
+
+            p = System.Diagnostics.Process.Start(psi);
+            p.StandardInput.WriteLine('');
+            p.WaitForExit();
         elseif isunix
             error('CEA:Execute','UNIX not supported yet');
         else
