@@ -149,7 +149,7 @@ function [] = CEAOut(p_c, OF, filename)
         gigaMatrix = vertcat(gigaMatrix, out);
 
         clc;
-        fprintf('%d/100 CEA iterations finished\r', a);
+        fprintf('%d/%d CEA iterations finished\r', a, length(engineContour) / 10);
         a = a + 1;
     end
 
