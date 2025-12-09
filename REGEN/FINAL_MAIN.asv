@@ -42,9 +42,9 @@ convergingFillet= double(data.converging_fillet);
 throatFillet    = double(data.throat_fillet);
 
 numChannels = 70;
-widthArray = [0.125,0.04,0.12] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
-heightArray =  [0.125,0.06,0.12] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
-wall_thicknessMatrix = [0.1,0.03,0.03] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
+widthArray = [0.125,0.04,0.125] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
+heightArray =  [0.125,0.06,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
+wall_thicknessMatrix = [0.09,0.03,0.03] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 720; % Coolant inlet pressure (psi)
