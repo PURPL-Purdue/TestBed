@@ -120,7 +120,7 @@ def pressure_map(minOF, maxOF, maxPc, resolution, cstar_eff,
                  throat_area, fuel_CdA, ox_CdA,
                  rho_fuel=800.0):
     
-    engine = CEA_Obj(oxName="GOX", fuelName="JetA")
+    engine = CEA_Obj(oxName="GOX", fuelName="C2H5OH")
 
     pc_scale = np.linspace(1.0, maxPc, resolution) # psi
     OF_scale = np.linspace(minOF, maxOF, resolution)  # n/a
