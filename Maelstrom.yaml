@@ -33,8 +33,8 @@
 ###### MAELSTROM ENGINE INPUTS #######
 ######################################
 
-thrust: 450 # (lbf) Dominik Sloup
-of_ratio: 1 # (N/A) Dominik Sloup
+thrust: 500 # (lbf) Dominik Sloup
+of_ratio: 1.25 # (N/A) Dominik Sloup
 chamber_pressure: 250 # (psi) Dominik Sloup
 exhaust_pressure: 14.7 # (psi) Dominik Sloup
 regen_pressure_drop: 100 # (psi) James Nida
@@ -64,26 +64,29 @@ rp_tube_inner_dia: 0.4 # (in) Dominik Sloup
 
 # Expected performance parameters
 
-cstar: 1103 # (m/s) Dominik Sloup
-isp: 164 # (s) Dominik Sloup
+cstar: 1212 # (m/s) Dominik Sloup
+isp: 179 # (s) Dominik Sloup
 
 # Maelstrom Chamber geometry
 
-throat_diameter: 1.254 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
-total_length: 8.6  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
-exit_diameter: 2.165 # (in) Dominik Sloup
-chamber_volume: 67.9  # (in^3) Dominik Sloup
+throat_diameter: 1.326 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
+throat_area: 1.382
+total_length: 9.5  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
+exit_diameter: 2.261 # (in) Dominik Sloup
+chamber_volume: 76.0  # (in^3) Dominik Sloup
 
 # Maelstrom Impinging Jet Injector parameters
 
-rp_design_mdot: 1.371 # (lb/s) Dominik Sloup
-rp_orifice_dia: 0.041 # (in) Dominik Sloup
-rp_feed_pressure: 420 # (psi) Dominik Sloup
-rp_line_velocity: 31.07 # (ft/s) Dominik Sloup
-n2_SCFM: 1131.18 # (ft^3/min) Dominik Sloup
+rp_design_mdot: 1.241 # (lb/s) Dominik Sloup
+rp_orifice_dia: 0.039 # (in) Dominik Sloup
+rp_CdA: 0.031212
+rp_injector_feed_pressure: 320
+rp_line_velocity: 28.13 # (ft/s) Dominik Sloup
+n2_SCFM: 1024.09 # (ft^3/min) Dominik Sloup
 
-gox_design_mdot: 1.371 # (lb/s) Dominik Sloup
-gox_orifice_dia: 0.059 # (in) Dominik Sloup
+gox_design_mdot: 1.552 # (lb/s) Dominik Sloup
+gox_CdA: 0.078349
+gox_orifice_dia: 0.062 # (in) Dominik Sloup
 gox_feed_pressure: 800  # (psi) Dominik Sloup
-gox_line_velocity: 66.31  # (ft/s) Dominik Sloup
-gox_SCFM: 989.96  # (ft^3/min) Dominik Sloup
+gox_line_velocity: 75.05  # (ft/s) Dominik Sloup
+gox_SCFM: 1120.31 # (ft^3/min) Dominik Sloup
