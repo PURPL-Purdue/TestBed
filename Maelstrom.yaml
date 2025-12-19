@@ -34,7 +34,7 @@
 ######################################
 
 thrust: 500 # (lbf) Dominik Sloup
-of_ratio: 0.9 # (N/A) Dominik Sloup
+of_ratio: 0.85 # (N/A) Dominik Sloup
 chamber_pressure: 250 # (psi) Dominik Sloup
 exhaust_pressure: 14.7 # (psi) Dominik Sloup
 regen_pressure_drop: 100 # (psi) James Nida
