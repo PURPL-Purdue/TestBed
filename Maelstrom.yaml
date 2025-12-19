@@ -46,7 +46,7 @@ chamber_diameter: 3.4   # (in)  Dominik Sloup
 converging_angle: 45    # (deg) Dominik Sloup
 diverging_angle: 13.5   # (deg) Dominik Sloup
 converging_fillet: 0.5  # (in)  Dominik Sloup
-throat_fillet: 0.4     # (in)   Dominik Sloup
+throat_fillet: 0.55     # (in)   Dominik Sloup
 
 gox_stiffness: 2.2  # (N/A) Dominik Sloup
 gox_orifice_number: 32 # (N/A) Dominik Sloup
