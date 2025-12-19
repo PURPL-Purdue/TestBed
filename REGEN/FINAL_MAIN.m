@@ -48,13 +48,13 @@ wall_thicknessMatrix = [0.05,0.03,0.03] / m_to_in; % Hotwall thickness at inject
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 500; % Coolant inlet pressure (psi)
-rho_start = 810; % Coolant initial density in kg/m^3
+rho_start = 791.26; % Coolant initial density in kg/m^3
 T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 60; %computation accuracy
 
 contourResolution = 700; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
-generate_new_CEA = false;
-generate_new_Contour = false;
+generate_new_CEA = true;
+generate_new_Contour = true;
 
 %% Chamber Wall Material Properties
 

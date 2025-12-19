@@ -87,10 +87,10 @@ while (heightStep <= heightStepNumber)
             %% H_L finder
 
             hyd_diam = (2*width*height)/(height+width);
-            density = double(py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Dodecane'));
+            density = double(py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Ethanol'));
         
             % Dynamic viscosity [Pa·s]
-            dyn_visc = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Dodecane'));%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
+            dyn_visc = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Ethanol'));%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
         
         
             % Calculate Reynolds number
@@ -99,12 +99,12 @@ while (heightStep <= heightStepNumber)
         
             % Calculate Prandtl Number
             % Thermal conductivity [W/(m·K)]
-            kf = double(py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Dodecane'));
+            kf = double(py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Ethanol'));
             
             %^Use empirical data/curves found from papers in regen channel
         
             % Specific heat capacity [J/(kg·K)]
-            cp = double(py.CoolProp.CoolProp.PropsSI('CPMASS','P',pressure,'T',temp,'Dodecane'));
+            cp = double(py.CoolProp.CoolProp.PropsSI('CPMASS','P',pressure,'T',temp,'Ethanol'));
             
             % Prandtl number [-]
             Pr = cp * dyn_visc / kf;
@@ -113,7 +113,7 @@ while (heightStep <= heightStepNumber)
         
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wl,'Dodecane'));
+            mu_wall = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wl,'Ethanol'));
             
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
