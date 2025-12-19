@@ -48,7 +48,9 @@ while a < length(chamberDiameter)
 
     sigma_rad(a) = comp_stress(a); % radially acting stress (outward from centerpoint) Can delete!
     sigma_circ(a) = thermal_circ(a)+ compress_circ(a); %hoopStress(a) + thermal_circ(a) % circumferential hoop stress, acting tangential to walls. Dependent on OD boundary conditions.
-    sigma_long(a) = thermalStress(a); % acting along the centerline of engine.
+    
+        sigma_long(a) = thermalStress(a); % acting along the centerline of engine.
+    
     vonMises(a) = sqrt(((sigma_rad(a)+sigma_circ(a))^2)+((sigma_circ(a)-sigma_long(a))^2) + ((sigma_rad(a) + sigma_long(a))^2));
   
     output = [thermal_circ;compress_circ;calcPainArr;temperatureDist;];

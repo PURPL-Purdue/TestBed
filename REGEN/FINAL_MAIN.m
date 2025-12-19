@@ -42,9 +42,9 @@ convergingFillet= double(data.converging_fillet);
 throatFillet    = double(data.throat_fillet);
 
 numChannels = 62;
-widthArray = [0.020,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
-heightArray =  [0.125,0.06,0.08] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
-wall_thicknessMatrix = [0.05,0.03,0.03] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
+widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
+heightArray =  [0.125,0.04,0.06] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
+wall_thicknessMatrix = [0.04,0.04,0.04] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 500; % Coolant inlet pressure (psi)
@@ -71,7 +71,7 @@ hotwallGeometry = [chamberDiameter, throatDiameter, exitDiameter, ...
                        convergingAngle, divergingAngle, totalLength, ...
                        convergingFillet, throatFillet];
 
-if generate_new_Contour == true
+if generate_new_Contour
     generateContour(hotwallGeometry, file_name, contourResolution)
 end
 
@@ -184,7 +184,7 @@ converge_index = find(newFluidProperties(:,2) == newFluidProperties(end,2), 1, '
 
 chamberDiameter = flip(chamberDiameter1);
 
-inputValues = [T_start, P_start * psi_to_pa, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
+inputValues = [T_start, P_start * psi_to_pa, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength,throat_index];
 
 %% Calculate Wall Temp
 [flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);

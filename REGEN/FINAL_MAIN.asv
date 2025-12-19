@@ -42,19 +42,19 @@ convergingFillet= double(data.converging_fillet);
 throatFillet    = double(data.throat_fillet);
 
 numChannels = 62;
-widthArray = [0.020,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
-heightArray =  [0.125,0.06,0.08] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
-wall_thicknessMatrix = [0.05,0.03,0.03] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
+widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
+heightArray =  [0.125,0.04,0.06] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
+wall_thicknessMatrix = [0.04,0.04,0.04] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 500; % Coolant inlet pressure (psi)
-rho_start = 700; % Coolant initial density in kg/m^3
+rho_start = 791.26; % Coolant initial density in kg/m^3
 T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 60; %computation accuracy
 
 contourResolution = 700; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
-generate_new_CEA = true;
-generate_new_Contour = true;
+generate_new_CEA = false;
+generate_new_Contour = false;
 
 %% Chamber Wall Material Properties
 
