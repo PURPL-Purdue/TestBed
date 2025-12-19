@@ -41,27 +41,27 @@ divergingAngle  = double(data.diverging_angle);
 convergingFillet= double(data.converging_fillet);
 throatFillet    = double(data.throat_fillet);
 
-numChannels = 60;
-widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
-heightArray =  [0.125,0.03,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
-wall_thicknessMatrix = [0.05,0.05,0.05] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
+numChannels = 70;
+widthArray = [0.125,0.04,0.12] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
+heightArray =  [0.125,0.06,0.12] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
+wall_thicknessMatrix = [0.1,0.03,0.03] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
-P_start = 700; % Coolant inlet pressure (psi)
+P_start = 720; % Coolant inlet pressure (psi)
 rho_start = 810; % Coolant initial density in kg/m^3
-T_target = 500; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
-heightStepNumber = 45;
+T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
+heightStepNumber = 60; %computation accuracy
 
-contourResolution = 250; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
-generate_new_CEA = true;
-generate_new_Contour = true;
+contourResolution = 700; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
+generate_new_CEA = false;
+generate_new_Contour = false;
 
 %% Chamber Wall Material Properties
 
 k_w = 323; % thermal conductivity of the wall (W/m*K) %copper 323, 7075 130
-surfaceRoughness = 0.000035; % average height of roughness (chosen from engineering toolbox/elementum) in m
+surfaceRoughness = 0.000020; % per additive industries average height of roughness (chosen from engineering toolbox/elementum) in m
 CTE = 0.0000172; % Material's coefficient of thermal expansion in (%change/K) 0.0000212 for 7075
-youngsModulus = 129.7; %Pa 71700000000 for 7075
+youngsModulus = 129000000000; %Pa 71700000000 for 7075
 poissonsRatio = 0.33; %SAME FOR 7075
 
 mdot_coolant = mdot_coolant * lb_to_kg; % Total coolant mass flow (kg/s)
@@ -80,8 +80,6 @@ idx = find(engineContour(:,3) == 1, 1); % Look for the point in the chamber cont
 throatDiameter = engineContour(idx,2) * 2 * m_to_in;  % Obtain the throat diameter value (in)
 chamberLength = floor((engineContour(end,1)) * m_to_in * 100) / 100; % Chamber length (in)
 filletRad = 0.23; % chamber converging radius (in)
-
-inputValues = [T_start, P_start * 6894.76, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
 
 %% Initialize all arrays and matrices,
 flowTempArray = zeros(1,heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
@@ -185,6 +183,8 @@ converge_index = find(newFluidProperties(:,2) == newFluidProperties(end,2), 1, '
 [a, throat_index] = min(newFluidProperties(:,2));
 
 chamberDiameter = flip(chamberDiameter1);
+
+inputValues = [T_start, P_start * 6894.76, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength];
 
 %% Calculate Wall Temp
 [flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);
