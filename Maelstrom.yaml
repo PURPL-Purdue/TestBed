@@ -34,7 +34,7 @@
 ######################################
 
 thrust: 500 # (lbf) Dominik Sloup
-of_ratio: 0.8 # (N/A) Dominik Sloup
+of_ratio: 1 # (N/A) Dominik Sloup
 chamber_pressure: 250 # (psi) Dominik Sloup
 exhaust_pressure: 14.7 # (psi) Dominik Sloup
 regen_pressure_drop: 100 # (psi) James Nida
@@ -64,30 +64,30 @@ rp_tube_inner_dia: 0.4 # (in) Dominik Sloup
 
 # Expected performance parameters
 
-cstar: 1160 # (m/s) Dominik Sloup
-isp: 172 # (s) Dominik Sloup
+cstar: 1282 # (m/s) Dominik Sloup
+isp: 190 # (s) Dominik Sloup
 
 # Maelstrom Chamber geometry
 
-throat_diameter: 1.324 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
-throat_area: 1.376
+throat_diameter: 1.322 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
+throat_area: 1.372
 total_length: 9.4  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
-exit_diameter: 2.3   # (in) Dominik Sloup
-chamber_volume: 75.7  # (in^3) Dominik Sloup
+exit_diameter: 2.348 # (in) Dominik Sloup
+chamber_volume: 75.5  # (in^3) Dominik Sloup
 
 # Maelstrom Impinging Jet Injector parameters
 
-rp_design_mdot: 1.615 # (lb/s) Dominik Sloup
-rp_orifice_dia: 0.045 # (in) Dominik Sloup
-rp_CdA: 0.041078
+rp_design_mdot: 1.311 # (lb/s) Dominik Sloup
+rp_orifice_dia: 0.041 # (in) Dominik Sloup
+rp_CdA: 0.033358
 rp_feed_pressure: 420 # (psi) Dominik Sloup
-rp_line_velocity: 37.46 # (ft/s) Dominik Sloup
-n2_SCFM: 1332.1  # (ft^3/min) Dominik Sloup
+rp_line_velocity: 30.42 # (ft/s) Dominik Sloup
+n2_SCFM: 1081.78 # (ft^3/min) Dominik Sloup
 
-gox_design_mdot: 1.292 # (lb/s) Dominik Sloup
-gox_CdA: 0.065225
+gox_design_mdot: 1.311 # (lb/s) Dominik Sloup
+gox_CdA: 0.06621
 gox_orifice_dia: 0.057 # (in) Dominik Sloup
 gox_feed_pressure: 800  # (psi) Dominik Sloup
-gox_line_velocity: 62.47  # (ft/s) Dominik Sloup
-gox_SCFM: 932.64  # (ft^3/min) Dominik Sloup
+gox_line_velocity: 63.42  # (ft/s) Dominik Sloup
+gox_SCFM: 946.73  # (ft^3/min) Dominik Sloup
 rp_injector_feed_pressure: 320
