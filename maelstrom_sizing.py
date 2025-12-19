@@ -68,7 +68,7 @@ Lstar = data["Lstar"] # Characteristic length (in)
 gamma_o2 = 1.4 # GOx specific heat ratio
 g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
-rho_fu = 810 # RP-1 density at ambient temp and pressure (may want to update this to match manifold press), (kg/m^3)
+# rho_fu = 810 # RP-1 density at ambient temp and pressure (may want to update this to match manifold press), (kg/m^3)
 
 # ──────────────────────────────────────────────────────────────
 #  UNIT CONVERSIONS
@@ -86,7 +86,7 @@ m_to_in = 39.3701
 
 def main():
 
-    engine = CEA_Obj(oxName='GOX', fuelName='JetA')
+    engine = CEA_Obj(oxName='GOX', fuelName='C2H5OH')
 
     p_c_pa = p_c * psi_to_pa # Chamber pressure (Pa)
     p_ox_pa = p_c * (1 + K_ox) * psi_to_pa # Oxidizer injector feed pressure (Pa)
@@ -94,9 +94,11 @@ def main():
 
     # Oxygen density at manifold pressure and ambient temperature (kg/m^3)
     rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T-273.15)).density 
+    rho_fu = Fluid(FluidsList.Ethanol).with_state(Input.pressure(p_fu_pa), Input.temperature(T-273.15)).density
+    print(rho_fu)
     m_dot_fu, m_dot_ox, cstar_real, Isp = get_mdots(engine,F,p_c,OF,cstar_eff)
-    A_fu = get_area_from_mdot('liquid',m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu)
-    A_ox = get_area_from_mdot('gas',m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2)
+    A_fu = get_area_from_mdot('liquid',m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu) # Fuel injection area (m^2)
+    A_ox = get_area_from_mdot('gas',m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2) # Oxidizer injection area (m^2)
     A_t = (m_dot_fu + m_dot_ox) * (cstar_real * ft_to_m) / p_c_pa
 
     molwt, gamma = engine.get_Chamber_MolWt_gamma(Pc=p_c, MR=OF)
@@ -142,10 +144,14 @@ def main():
     SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
     SCFM_n2 = (m_dot_fu / rho_fu) * (rho_fu / 1.165) * 35.3147 * 60
 
+    CdA_fu = Cd_fu * A_fu * (m_to_in) ** 2
+    CdA_ox = Cd_ox * A_ox * (m_to_in) ** 2
+
     data["cstar"] = int(cstar_real * ft_to_m)
     data["isp"] = int(Isp)
 
     data["throat_diameter"] = float(np.round(d_t * m_to_in, 3))
+    data["throat_area"] = float(np.round(A_t * (m_to_in ** 2), 3))
     data["exit_diameter"] = float(np.round(d_e * m_to_in, 3))
     data["chamber_volume"] = float(np.round(V_chamber, 1))
     data["total_length"] = float(np.round(total_length, 1))
@@ -155,6 +161,8 @@ def main():
     data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
     data["rp_design_mdot"] = float(np.round(m_dot_fu / lb_to_kg, 3))
     data["gox_feed_pressure"] = int(p_ox_pa / psi_to_pa)
+    data["rp_CdA"] = float(np.round(CdA_fu, 6))
+    data["gox_CdA"] = float(np.round(CdA_ox, 6))
     data["rp_injector_feed_pressure"] = int(p_fu_pa / psi_to_pa)
     data["gox_line_velocity"] = float(np.round(v_ox_ft, 2))
     data["rp_line_velocity"] = float(np.round(v_fu_ft, 2))
