@@ -18,9 +18,10 @@ while i <= length(T_wl)
     %% **CHANGE BELOW** Correlations for Yield strength vs temp for material. Only used in comparison, not used for calculations
     %Correlation between copper's yield/ultimate tensile strength in MPa and temperature in K
     %Copper:
-    calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3).* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3; %
+    %calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3).* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3; %
+    calcPainArr = 297.4 - 0.312.*temperatureDist + 3.175*(10^-4).*(temperatureDist.^2) - 2.506*(10^-7).*(temperatureDist.^3); % GRCOP42
     % 7075
-    calcPainArr = 525.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
+    %calcPainArr = 5    25.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
     %6061 T6 
     %calcPainArr = ;
     
@@ -45,9 +46,9 @@ a = 0;
 while a < length(chamberDiameter)
     a = a + 1;
 
-    sigma_rad(a) = comp_stress(a);
-    sigma_circ(a) = thermal_circ(a) + compress_circ(a); %hoopStress(a) + 
-    sigma_long(a) = thermalStress(a);
+    sigma_rad(a) = comp_stress(a); % radially acting stress (outward from centerpoint)
+    sigma_circ(a) = thermal_circ(a)+ compress_circ(a); %hoopStress(a) + thermal_circ(a) +
+    sigma_long(a) = 0; % thermalStress(a)
     vonMises(a) = sqrt(((sigma_rad(a)+sigma_circ(a))^2)+((sigma_circ(a)-sigma_long(a))^2) + ((sigma_rad(a) + sigma_long(a))^2));
     
     if OEffectives(a) >= vonMises

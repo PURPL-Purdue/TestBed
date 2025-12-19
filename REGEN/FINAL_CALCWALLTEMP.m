@@ -76,21 +76,21 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         %yieldStrength = (-(1.57*10^-5)*(T_wgFinal.^3) + (0.0139 * (T_wgFinal.^2)) - 4.21*(T_wgFinal) + 762)*1000000;
         %UTS =  (-(1.31*10^-5)*(T_wgFinal.^3) + (0.0113 * (T_wgFinal.^2)) - 3.45*(T_wgFinal) + 719)*1000000;
         %7075:
-        %yieldStrength1 = (-19756 + (188.4887580831*T_wgFinal) -(.63101218051*(T_wgFinal.^2)) + (.0008997028*(T_wgFinal.^3)) -(0.0000004663*(T_wgFinal.^4)))*1000000;
-        %UTS1 = (-20399.3454015107 + (196.2160186167*T_wgFinal)  -(0.6601708400*(T_wgFinal.^2)) + (.0009446715*(T_wgFinal.^3)) -(.0000004910*(T_wgFinal.^4)))*1000000;
+        yieldStrength1 = (-19756 + (188.4887580831*T_wgFinal) -(.63101218051*(T_wgFinal.^2)) + (.0008997028*(T_wgFinal.^3)) -(0.0000004663*(T_wgFinal.^4)))*1000000;
+        UTS1 = (-20399.3454015107 + (196.2160186167*T_wgFinal)  -(0.6601708400*(T_wgFinal.^2)) + (.0009446715*(T_wgFinal.^3)) -(.0000004910*(T_wgFinal.^4)))*1000000;
         
-        %yieldStrength2 = (-19756 + (188.4887580831*T_wl_Array) -(.63101218051*(T_wl_Array.^2)) + (.0008997028*(T_wl_Array.^3)) -(0.0000004663*(T_wl_Array.^4)))*1000000;
-        %UTS2 = (-20399.3454015107 + (196.2160186167*T_wl_Array)  -(0.6601708400*(T_wl_Array.^2)) + (.0009446715*(T_wl_Array.^3)) -(.0000004910*(T_wl_Array.^4)))*1000000;
+        yieldStrength2 = (-19756 + (188.4887580831*T_wl_Array) -(.63101218051*(T_wl_Array.^2)) + (.0008997028*(T_wl_Array.^3)) -(0.0000004663*(T_wl_Array.^4)))*1000000;
+        UTS2 = (-20399.3454015107 + (196.2160186167*T_wl_Array)  -(0.6601708400*(T_wl_Array.^2)) + (.0009446715*(T_wl_Array.^3)) -(.0000004910*(T_wl_Array.^4)))*1000000;
          
 
-        yieldStrength1 = 297.4 - 0.312*T_wgFinal + 3.175*(10^-4).*(T_wgFinal.^2) - 2.506*(10^-7).*(T_wgFinal.^3); % GRCOP42
-        UTS1 = 664.5 - 0.987*T_wgFinal + 3.58*(10^-4).*(T_wgFinal.^2);
-        
-        yieldStrength2 = 297.4 - 0.312*T_wl_Array + 3.175*(10^-4).*(T_wl_Array.^2) - 2.506*(10^-7).*(T_wl_Array.^3); % GRCOP42
-        UTS2 = 664.5 - 0.987*T_wl_Array + 3.58*(10^-4).*(T_wl_Array.^2);
-
-        yieldStrength = 1000000*(yieldStrength1+yieldStrength2)/2;
-        UTS = 1000000*(UTS1+UTS2)/2;
+        % yieldStrength1 = 297.4 - 0.312*T_wgFinal + 3.175*(10^-4).*(T_wgFinal.^2) - 2.506*(10^-7).*(T_wgFinal.^3); % GRCOP42
+        % UTS1 = 664.5 - 0.987*T_wgFinal + 3.58*(10^-4).*(T_wgFinal.^2);
+        % 
+        % yieldStrength2 = 297.4 - 0.312*T_wl_Array + 3.175*(10^-4).*(T_wl_Array.^2) - 2.506*(10^-7).*(T_wl_Array.^3); % GRCOP42
+        % UTS2 = 664.5 - 0.987*T_wl_Array + 3.58*(10^-4).*(T_wl_Array.^2);
+        % 
+        yieldStrength = (yieldStrength1+yieldStrength2)/2;
+        UTS = (UTS1+UTS2)/2;
         % Create figure
         figure;
         box on;

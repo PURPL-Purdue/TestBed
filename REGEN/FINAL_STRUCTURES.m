@@ -19,9 +19,9 @@ while i <= length(T_wl)
     %Correlation between copper's yield/ultimate tensile strength in MPa and temperature in K
     %Copper:
     %calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3).* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3; %
-    calcPainArr = 297.4 - 0.312.*temperatureDist + 3.175*(10^-4).*(temperatureDist.^2) - 2.506*(10^-7).*(temperatureDist.^3); % GRCOP42
+    %calcPainArr = 297.4 - 0.312.*temperatureDist + 3.175*(10^-4).*(temperatureDist.^2) - 2.506*(10^-7).*(temperatureDist.^3); % GRCOP42
     % 7075
-    %calcPainArr = 5    25.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
+    calcPainArr = 25.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
     %6061 T6 
     %calcPainArr = ;
     
@@ -46,20 +46,11 @@ a = 0;
 while a < length(chamberDiameter)
     a = a + 1;
 
-    sigma_rad(a) = comp_stress(a);
-    sigma_circ(a) = thermal_circ(a)+ compress_circ(a); %hoopStress(a) + thermal_circ(a) +
-    sigma_long(a) = 0; % thermalStress(a)
+    sigma_rad(a) = comp_stress(a); % radially acting stress (outward from centerpoint) Can delete!
+    sigma_circ(a) = thermal_circ(a)+ compress_circ(a); %hoopStress(a) + thermal_circ(a) % circumferential hoop stress, acting tangential to walls. Dependent on OD boundary conditions.
+    sigma_long(a) = thermalStress(a); % acting along the centerline of engine.
     vonMises(a) = sqrt(((sigma_rad(a)+sigma_circ(a))^2)+((sigma_circ(a)-sigma_long(a))^2) + ((sigma_rad(a) + sigma_long(a))^2));
-    
-    if OEffectives(a) >= vonMises
-        
-        display(sigma_rad)
-        display(sigma_circ)
-        display(sigma_long)
-        display(vonMises)
-        break
-    end
-
+  
     output = [thermal_circ;compress_circ;calcPainArr;temperatureDist;];
    
 end
