@@ -64,30 +64,30 @@ rp_tube_inner_dia: 0.4 # (in) Dominik Sloup
 
 # Expected performance parameters
 
-cstar: 1229 # (m/s) Dominik Sloup
-isp: 182 # (s) Dominik Sloup
+cstar: 1197 # (m/s) Dominik Sloup
+isp: 177 # (s) Dominik Sloup
 
 # Maelstrom Chamber geometry
 
 throat_diameter: 1.322 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
 throat_area: 1.373
-total_length: 9.4  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
-exit_diameter: 2.32  # (in) Dominik Sloup
+total_length: 9.6  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
+exit_diameter: 2.309 # (in) Dominik Sloup
 chamber_volume: 75.5  # (in^3) Dominik Sloup
 
 # Maelstrom Impinging Jet Injector parameters
 
-rp_design_mdot: 1.441 # (lb/s) Dominik Sloup
-rp_orifice_dia: 0.043 # (in) Dominik Sloup
-rp_CdA: 0.03665
+rp_design_mdot: 1.52  # (lb/s) Dominik Sloup
+rp_orifice_dia: 0.044 # (in) Dominik Sloup
+rp_CdA: 0.038674
 rp_feed_pressure: 420 # (psi) Dominik Sloup
-rp_line_velocity: 33.42 # (ft/s) Dominik Sloup
-n2_SCFM: 1188.52 # (ft^3/min) Dominik Sloup
+rp_line_velocity: 35.27 # (ft/s) Dominik Sloup
+n2_SCFM: 1254.14 # (ft^3/min) Dominik Sloup
 
-gox_design_mdot: 1.297 # (lb/s) Dominik Sloup
-gox_CdA: 0.065468
+gox_design_mdot: 1.292 # (lb/s) Dominik Sloup
+gox_CdA: 0.065245
 gox_orifice_dia: 0.057 # (in) Dominik Sloup
 gox_feed_pressure: 800  # (psi) Dominik Sloup
-gox_line_velocity: 62.71  # (ft/s) Dominik Sloup
-gox_SCFM: 936.13  # (ft^3/min) Dominik Sloup
+gox_line_velocity: 62.49  # (ft/s) Dominik Sloup
+gox_SCFM: 932.94  # (ft^3/min) Dominik Sloup
 rp_injector_feed_pressure: 320
