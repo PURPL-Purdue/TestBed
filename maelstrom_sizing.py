@@ -139,8 +139,16 @@ def main():
 
     V_dot_ox = m_dot_ox / rho_ox_amb # Oxygen volumetric flow rate at STP (m^3/s)
 
+    rho_n2_tank   = Fluid(FluidsList.Nitrogen).with_state(Input.pressure(p_fu_pa), Input.temperature(20)).density
+    rho_n2_std = Fluid(FluidsList.Nitrogen).with_state(Input.pressure(101325), Input.temperature(20)).density
+    
+    V_dot_n2 = m_dot_fu / rho_fu
+    m_dot_n2 = rho_n2_tank * V_dot_n2     # kg/s N2 required
+    Vdot_n2_std = m_dot_n2 / rho_n2_std
+
     SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
-    SCFM_n2 = (m_dot_fu / rho_fu) * (rho_fu / 1.165) * 35.3147 * 60
+
+    SCFM_n2 = Vdot_n2_std / np.pow(ft_to_m, 3) * 60
 
     CdA_fu = Cd_fu * A_fu * (m_to_in) ** 2
     CdA_ox = Cd_ox * A_ox * (m_to_in) ** 2
