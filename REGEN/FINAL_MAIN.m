@@ -30,7 +30,7 @@ data = struct(yaml_struct);
 
 p_c             = double(data.chamber_pressure);
 OF              = double(data.of_ratio);
-mdot_coolant    = double(data.rp_design_mdot);
+mdot_coolant    = double(data.fuel_design_mdot);
 
 chamberDiameter = double(data.chamber_diameter);
 totalLength     = double(data.total_length);
@@ -41,7 +41,7 @@ divergingAngle  = double(data.diverging_angle);
 convergingFillet= double(data.converging_fillet);
 throatFillet    = double(data.throat_fillet);
 
-numChannels = 62;
+numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
 heightArray =  [0.125,0.04,0.06] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
 wall_thicknessMatrix = [0.04,0.04,0.04] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
