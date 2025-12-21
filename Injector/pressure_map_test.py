@@ -1,12 +1,32 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pressure_map import pressure_map
+from pyfluids import Fluid, FluidsList, Input
+from pathlib import Path
+from ruamel.yaml import YAML
+import yaml
+
+def find_yaml(filename="Maelstrom.yaml", start_dir=None):
+    start_dir = Path(start_dir or Path.cwd())
+    for path in start_dir.rglob(filename):
+        return path
+    raise FileNotFoundError(f"{filename} not found starting from {start_dir}")
+
+yaml_path = find_yaml()
+
+    # Load YAML with formatting preserved
+yaml = YAML()
+yaml.preserve_quotes = True
+
+with open(yaml_path, "r") as f:
+    data = yaml.load(f)
 
 # -------------------------
 # Constants / conversions
 # -------------------------
 ft_to_m = 0.3048
 m_to_in = 39.3701
+psi_to_pa = 6894.76
 
 # -------------------------
 # Helpers
@@ -78,6 +98,15 @@ def plot_pc_heatmap_with_of_contours(fu_p_map, ox_p_map, PC_pfpo, OF_pfpo,
     )
     ax.clabel(cs, fmt=lambda v: f"OF={v:.2f}", inline=True, fontsize=9)
 
+    # PC equipotential contour 
+    ps = ax.contour(
+        PO, PF, PC_pfpo,
+        levels=np.linspace(250,250,1),
+        colors="k",
+        linewidths=1.0
+    )
+    ax.clabel(ps, fmt=lambda v: f"PC={v:.2f}", inline=True, fontsize=9)
+
     ax.set_xlabel("p_ox (psi)")
     ax.set_ylabel("p_fu (psi)")
     ax.set_title("Pc heatmap with OF contours in (p_fu, p_ox) space")
@@ -135,17 +164,16 @@ def plot_maps(pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo):
 # -------------------------
 if __name__ == "__main__":
     # Example inputs (edit to your engine)
-    min_OF = 0.5
-    max_OF = 5
+    min_OF = 0.35
+    max_OF = 1.35
     max_pc = 300 # psi
     resolution = 200
-    cstar_eff = 0.7
+    cstar_eff = data["cstar_eff"]
 
-    throat_area = 1.372 / (m_to_in ** 2)
-
-    fuel_CdA = 0.028891 / (m_to_in ** 2)
-    ox_CdA = 0.099651 / (m_to_in ** 2)
-    rho_fuel = 810.0 # Jet-A-ish kg/m^3
+    throat_area = data["throat_area"] / (m_to_in ** 2)
+    fuel_CdA = 0.038674 / (m_to_in ** 2)
+    ox_CdA = 0.077515 / (m_to_in ** 2)
+    rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density
 
     pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo = pressure_map(
         minOF=min_OF,
@@ -163,7 +191,7 @@ if __name__ == "__main__":
     ox_p_map=ox_p_map,
     PC_pfpo=PC_pfpo,
     OF_pfpo=OF_pfpo,
-    of_levels=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0],
+    of_levels=[0.65, 0.75, 0.85, 0.95, 1.05],
     pc_vmin=0,
     pc_vmax=max_pc)
 

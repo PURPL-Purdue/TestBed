@@ -1,16 +1,15 @@
-# ════════════════════════════════════════════════════════════════
-#   Maelstrom Cavitating Venturi Sizing + Inlet Pressure Mapping
-#   Author: Dominik Sloup
-#   Updated: 06/01/2025
-#   SI Units Throughout
-# ════════════════════════════════════════════════════════════════
+# Maelstrom Venturi Sizing Code
+# Authors: Dominik Sloup
+# First Created: 12/20/2025
+# Last Updated: 12/20/2025
+# Calculations done in SI units
 
 import numpy as np
 import matplotlib.pyplot as plt
 from pyfluids import Fluid, FluidsList, Input
 from pathlib import Path
-import yaml
 from ruamel.yaml import YAML
+import yaml
 
 def find_yaml(filename="Maelstrom.yaml", start_dir=None):
     start_dir = Path(start_dir or Path.cwd())
@@ -31,162 +30,48 @@ with open(yaml_path, "r") as f:
 # UNIT CONSTANTS
 # ------------------------------------------------------------
 psi_to_pa = 6894.76
-pa_to_psi = 1.0 / psi_to_pa
 in_to_m = 0.0254
 lb_to_kg = 0.453592
 
 # ------------------------------------------------------------
 # FLUID + GEOMETRY PARAMETERS
 # ------------------------------------------------------------
-rho_rp1 = 810.0     # RP-1 density [kg/m^3]
-C_d     = 0.931     # Venturi discharge coefficient
-K_rec   = 0.67      # Pressure recovery factor
 
-# Desired mass flow from feed system code (replace later)
-m_dot_target = data["rp_design_mdot"] * lb_to_kg # kg/s
+d_u = data["fuel_tube_inner_dia"] # Oxidizer line diameter (in)
+p_f = (data["fuel_injector_pressure"] + data["regen_pressure_drop"]) * psi_to_pa # Feed pressure (Pa)
+mdot = data["fuel_design_mdot"] * lb_to_kg # Fuel mass flow rate (kg/s)
 
-# Line diameter for venturi sizing (you used -8 tube)
-d_line_in = data["rp_tube_inner_dia"]
-A_line_m2 = np.pi * (d_line_in * in_to_m)**2 / 4
+d_th_guess = 0.122 # Guess for venturi throat area (in) to estimate beta ratio
+C_d = 0.931     # Venturi discharge coefficient (Tested on prototype, to be corrected)
+C_p = 0.8 # Pressure recovery factor (literature source)
+beta = d_th_guess / d_u
 
-# Surrogate saturation pressure (need actual RP-1 vapor pressure)
-p_sat_pa = Fluid(FluidsList.nDodecane).with_state(
-    Input.quality(0.0),
-    Input.temperature(20)
-).pressure
-p_sat_psi = p_sat_pa * pa_to_psi
+rho_fu = Fluid(FluidsList.Ethanol).with_state(Input.pressure(p_f), Input.temperature(20)).density
 
-# ------------------------------------------------------------
-#   1. DIRECT CAVITATING VENTURI SIZING
-# ------------------------------------------------------------
-def compute_venturi_throat_area(m_dot, Cd, rho, p0_pa, p_sat_pa):
-    """
-    Computes throat area assuming cavitating venturi behavior.
-    Uses the modified Bernoulli equation.
-    """
-    A_star = 1 / np.sqrt(
-        (1 / A_line_m2**2)
-        - (2 * rho * (p_sat_pa - p0_pa)) / m_dot**2
-    )
-    return A_star
+P_cr = (C_p * C_d ** 2) / (1 - beta ** 4) # Critical pressure ratio (above this value, venturi uncavitates)
+p_u = p_f / (P_cr - 0.1) # Upstream venturi pressure (Pa)
 
-# Example design point
-p1_psi = 750
-x_recovery = 0.67               # p0 / p1 ratio
-p0_psi = p1_psi / x_recovery
-p0_pa  = p0_psi * psi_to_pa
+# Set throat pressure to be equal to saturation pressure of ethanol (Pa)
+p_th = Fluid(FluidsList.Ethanol).with_state(Input.quality(0.0),Input.temperature(20)).pressure
 
-A_star_m2 = compute_venturi_throat_area(
-    m_dot_target, C_d, rho_rp1, p0_pa, p_sat_pa
-)
+d_u = d_u * in_to_m # Convert the line diameter to meters
 
-d_star_m = 2 * np.sqrt(A_star_m2 / np.pi)
-d_star_in = d_star_m / in_to_m
+K = C_d * (np.pi / 4) * np.sqrt(2 * rho_fu * (p_u - p_th))
+d_th = np.pow(mdot ** 2 / (K ** 2 + mdot ** 2 / d_u ** 4), 0.25) 
 
-print("\n──────── SIZING RESULTS ────────")
-print(f"Desired m_dot             = {m_dot_target:.3f} kg/s")
-print(f"Venturi inlet pressure    = {p0_psi:.1f} psi")
-print(f"Venturi throat diameter   = {d_star_in:.3f} in")
-print(f"Venturi throat area       = {A_star_m2:.6e} m²\n")
+d_th = d_th / in_to_m # Convert throat diameter to inches
 
-# ------------------------------------------------------------
-#   2. PRESSURE MAPPING FUNCTION
-# ------------------------------------------------------------
-def analyze_venturi_from_inlet(
-    p0_pa,
-    m_dot,
-    Cd,
-    A_star_m2, A_inlet,
-    rho,
-    K_rec,
-    p_sat_pa
-):
-    """
-    Given inlet pressure p0 and required mass flow m_dot:
-      • compute throat pressure p_t
-      • compute recovered manifold pressure p1
-      • detect cavitation
-    """
-    if m_dot <= 0:
-        return p0_pa, p0_pa, False
+print(f"Venturi upstream pressure: {p_u / psi_to_pa:.0f} psi")
+print(f"Venturi dpwnstream pressure: {p_f / psi_to_pa:.0f} psi")
+print(f"Critical pressure ratio: {P_cr:.2f}")
+print(f"Actual pressure ratio: {p_f / p_u:.2f}")
+print(f"Ethanol saturation pressure: {p_th / psi_to_pa:.2f} psi")
+print(f"Cavitating venturi throat diameter: {d_th:.3f} in")
 
-    else:
-        # Throat pressure (cavitating assumption)
-        p_t = p_sat_pa
+data["fuel_feed_pressure"] = int(p_u / psi_to_pa)
+data["critical_pressure_ratio"] = float(round(P_cr,2))
+data["minumum_pressure_ratio"] = float(round(p_f / p_u,2))
+data["venturi_throat_diameter"] = float(round(d_th,3))
 
-        # Modified Bernoulli: solve for required inlet p0 from your equation
-        # p0 = p_sat - (m^2/(2ρ))*(1/A*^2 - 1/A^2)
-        # A_inlet = A_line_m2                   # same as your A_m2 (line area)
-        A_star  = A_star_m2                   # venturi throat area
-        
-        delta_p = (m_dot**2/(2*rho)) * (1/A_star**2 - 1/A_inlet**2)
-
-        p_t_geom = p0_pa - delta_p
-
-        p1_geom = p_t_geom + K_rec * delta_p
-
-        is_cav = p_t_geom < p_sat_pa
-
-        return p_t_geom, p1_geom, is_cav
-
-# ------------------------------------------------------------
-#   3. INLET PRESSURE SWEEP
-# ------------------------------------------------------------
-p0_psi_array = np.linspace(10, 900, 200)
-p0_pa_array  = p0_psi_array * psi_to_pa
-
-# placeholder engine mass flow – REPLACE with your actual engine solver
-m_dot_engine_array = 0.0009 * p0_psi_array
-
-p_t_array = np.zeros_like(p0_pa_array)
-p1_array  = np.zeros_like(p0_pa_array)
-cav_array = np.zeros_like(p0_pa_array, dtype=bool)
-
-for i in range(len(p0_pa_array)):
-    p_t, p1, cav = analyze_venturi_from_inlet(
-        p0_pa_array[i],
-        m_dot_engine_array[i],
-        C_d,
-        A_star_m2,
-        A_line_m2,
-        rho_rp1,
-        K_rec,
-        p_sat_pa
-    )
-    p_t_array[i] = p_t
-    p1_array[i]  = p1
-    cav_array[i] = cav
-
-p_t_psi = p_t_array * pa_to_psi
-p1_psi = p1_array * pa_to_psi
-
-# ------------------------------------------------------------
-#   4. PLOT
-# ------------------------------------------------------------
-plt.figure(figsize=(10, 6))
-
-plt.plot(m_dot_engine_array, p0_psi_array, label="Inlet Pressure $p_0$", linestyle="--")
-plt.plot(m_dot_engine_array, p_t_psi,        label="Throat Pressure $p_t$")
-plt.plot(m_dot_engine_array, p1_psi,        label="Recovered Pressure $p_1$")
-
-plt.axhline(p_sat_psi, color='r', linestyle=':', label="Saturation Pressure (proxy)")
-
-plt.xlabel("Mass Flow Rate [kg/s]")
-plt.ylabel("Pressure [psi]")
-plt.title("Venturi Pressure Mapping vs Engine Mass Flow")
-plt.legend()
-plt.grid(True)
-plt.tight_layout()
-plt.show()
-
-# ------------------------------------------------------------
-# Print sample rows
-# ------------------------------------------------------------
-print("──────── PRESSURE MAP SAMPLE ────────")
-for i in [0, 50, 100, 150]:
-    print(
-        f"p0={p0_psi_array[i]:6.1f} psi | "
-        f"pt={p_t_psi[i]:7.2f} psi | "
-        f"p1={p1_psi[i]:7.2f} psi | "
-        f"cav={cav_array[i]}"
-    )
+with open(yaml_path, "w") as f:
+    yaml.dump(data, f)
