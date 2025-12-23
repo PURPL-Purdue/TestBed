@@ -37,16 +37,16 @@ thrust: 500 # (lbf) Dominik Sloup
 of_ratio: 0.85 # (N/A) Dominik Sloup
 chamber_pressure: 250 # (psi) Dominik Sloup
 exhaust_pressure: 14.7 # (psi) Dominik Sloup
-regen_pressure_drop: 200 # (psi) James Nida
+regen_pressure_drop: 150 # (psi) James Nida
 cstar_eff: 0.8 # (N/A) Dominik Sloup
 isp_eff: 1 # (N/A) Dominik Sloup
 Lstar: 55 # (in) Dominik Sloup
 
-chamber_diameter: 3.65   # (in)  Dominik Sloup
+chamber_diameter: 3.65   # (in) Dominik Sloup
 converging_angle: 45    # (deg) Dominik Sloup
 diverging_angle: 13.5   # (deg) Dominik Sloup
 converging_fillet: 0.5  # (in)  Dominik Sloup
-throat_fillet: 0.55     # (in)   Dominik Sloup
+throat_fillet: 0.55     # (in)  Dominik Sloup
 
 gox_stiffness: 1.7  # (N/A) Dominik Sloup
 gox_orifice_number: 32 # (N/A) Dominik Sloup
@@ -100,7 +100,7 @@ n2_SCFM: 43.69 # (ft^3/min) Dominik Sloup
 
 # Fuel venturi parameters
 
-fuel_feed_pressure: 834 # (psi) Dominik Sloup
+fuel_feed_pressure: 750 # (psi) Dominik Sloup
 critical_pressure_ratio: 0.7 # (N/A) Dominik Sloup
 minumum_pressure_ratio: 0.6 # (N/A) Dominik Sloup
-venturi_throat_diameter: 0.123 # (in) Dominik Sloup
+venturi_throat_diameter: 0.127 # (in) Dominik Sloup

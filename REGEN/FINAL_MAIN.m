@@ -43,11 +43,11 @@ throatFillet    = double(data.throat_fillet);
 
 numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
-heightArray =  [0.125,0.04,0.06] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
+heightArray =  [0.125,0.04,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
 wall_thicknessMatrix = [0.04,0.04,0.04] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
 
 T_start= 298; % Flow Initial Temp in degrees K 
-P_start = 500; % Coolant inlet pressure (psi)
+P_start = 450; % Coolant inlet pressure (psi)
 rho_start = 791.26; % Coolant initial density in kg/m^3
 T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 60; %computation accuracy
