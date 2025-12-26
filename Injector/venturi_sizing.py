@@ -42,7 +42,7 @@ p_f = (data["fuel_injector_pressure"] + data["regen_pressure_drop"]) * psi_to_pa
 mdot = data["fuel_design_mdot"] * lb_to_kg # Fuel mass flow rate (kg/s)
 
 d_th_guess = 0.122 # Guess for venturi throat area (in) to estimate beta ratio
-C_d = 0.931     # Venturi discharge coefficient (Tested on prototype, to be corrected)
+C_d = 0.931 # Venturi discharge coefficient (Tested on prototype, to be corrected)
 C_p = 0.8 # Pressure recovery factor (literature source)
 beta = d_th_guess / d_u
 
@@ -61,6 +61,8 @@ d_th = np.pow(mdot ** 2 / (K ** 2 + mdot ** 2 / d_u ** 4), 0.25)
 
 d_th = d_th / in_to_m # Convert throat diameter to inches
 
+C_dA = C_d * (np.pi * d_th ** 2 / 4) # Venturi throat CdA (in^2)
+
 print(f"Venturi upstream pressure: {p_u / psi_to_pa:.0f} psi")
 print(f"Venturi dpwnstream pressure: {p_f / psi_to_pa:.0f} psi")
 print(f"Critical pressure ratio: {P_cr:.2f}")
@@ -72,6 +74,7 @@ data["fuel_feed_pressure"] = int(p_u / psi_to_pa)
 data["critical_pressure_ratio"] = float(round(P_cr,2))
 data["minumum_pressure_ratio"] = float(round(p_f / p_u,2))
 data["venturi_throat_diameter"] = float(round(d_th,3))
+data["venturi_CdA"] = float(round(C_dA, 4))
 
 with open(yaml_path, "w") as f:
     yaml.dump(data, f)
