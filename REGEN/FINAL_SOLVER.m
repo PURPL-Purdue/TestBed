@@ -68,7 +68,8 @@ while (heightStep <= heightStepNumber)
 
     T_wg_InitialGuess = inputFlowValues(5); % Set initial guess to be upper threshold for wall temp
     T_wg = T_wg_InitialGuess;
-    
+    T_wl = 293;
+
     
 
 
@@ -79,7 +80,7 @@ while (heightStep <= heightStepNumber)
         h_g = H_g_From_Temperature(T_wg, newFluidInfo, inputFlowValues);
         T_r = exhaustTemps(heightStep);
         Q_dotIN = h_g(heightStep)*(T_r-T_wg);
-        
+        thermalConductivity = ((-1350 + 10.9*T_wg + -0.0283*T_wg^2 + 3.21E-05*T_wg^3 + -1.33E-08*T_wg^4)+(-1350 + 10.9*T_wl + -0.0283*T_wl^2 + 3.21E-05*T_wl^3 + -1.33E-08*T_wl^4))/2;
         %cool side
         T_wl = -(Q_dotIN*wallThicknesses(heightStep)/thermalConductivity)+T_wg;
         

@@ -1,3 +1,4 @@
+
 function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises, sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, channelHeight, channelWidth, wallThickness, chamberDiameterArray, heightStepNumber, newFluidProperties, inputValues)
     %% Channel Dimensions
    
@@ -100,22 +101,22 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         hold on;
         
         % Muted, contrasting colors: blue, orange, gray
-        h1 = plot(axialDist * 39.3701, vonMises/1e6,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
-        h2 = plot(axialDist * 39.3701, yieldStrength/1e6,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
-        h3 = plot(axialDist * 39.3701, UTS/1e6, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
+        h1 = plot(axialDist, vonMises/1e6,'-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
+        h2 = plot(axialDist, yieldStrength/1e6,'-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
+        h3 = plot(axialDist, UTS/1e6, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
         
         ylabel('Strength & Stress [MPa]', 'FontSize', 12);
         
         
         allY_left = [UTS,vonMises]/1e6;   % divide by 1e6 here too
         ylim([0, max(allY_left)*1.1]);
-
         
         
-        %% RIGHT Y-AXIS: Contour (Radial Distance [m])
+        
+        %% RIGHT Y-AXIS: Contour (Radial Distance [in])
         yyaxis right
         
-        h4 = plot(axialDist * 39.3701, chamberDiameterArray/2 * 39.3701, 'k--', 'LineWidth', 1.8);
+        h4 = plot(axialDist, chamberDiameterArray/2 * 39.3701, 'k--', 'LineWidth', 1.8);
         ylabel('Radial Distance [in]', 'FontSize', 12);
         
         % --- Control RIGHT Y limits: 0 to next grid mark above max Contour ---
@@ -125,10 +126,10 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
        
         
         %% Common X-axis
-        xlabel('Axial Distance [in]', 'FontSize', 12);
+        xlabel('Location [in]', 'FontSize', 12);
         
         % X limits: start and end at data bounds
-        xlim([0,axialDist(1) * 39.3701]);
+        xlim([0,axialDist(1)]);
         
         %% Grid, ticks, formatting
         grid on;
@@ -168,8 +169,7 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         ylabel('Temperature [K]', 'FontSize', 12);
         ylim([0,max([T_wl_Array,T_wgFinal,flowTemp])*1.1])
         % Title
-        title('Fluid and Wall Temperatures along Chamber', ...
-              'FontSize', 14, 'FontWeight', 'bold');
+        
         
         % Legend
         legend({'Flow Temp', 'Gas Hotwall Temp', 'Liquid Hotwall Temp'}, ...
@@ -207,8 +207,6 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         ylabel('Pressure [psi]', 'FontSize', 12);
         ylim([0,max([flowPressure,chamberPressure'])*1.1/6895])
         % Title
-        title('Coolant & Exhaust Pressures & Velocity', ...
-              'FontSize', 14, 'FontWeight', 'bold');
         
         % Legend
        
@@ -248,8 +246,6 @@ function [flowTemp,flowVelocity,flowPressure, T_wgFinal, finEfficiency, Qdot, fi
         ylabel('[W/(M^2*K)]', 'FontSize', 12);
         ylim([0,max([h_g_Array,h_l_Array])*1.1])
         % Title
-        title('Convective Heat Transfer Coefficients (CHTC)', ...
-              'FontSize', 14, 'FontWeight', 'bold');
         
         
         

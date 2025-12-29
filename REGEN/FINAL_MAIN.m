@@ -50,11 +50,11 @@ T_start= 298; % Flow Initial Temp in degrees K
 P_start = 500; % Coolant inlet pressure (psi)
 rho_start = 791.26; % Coolant initial density in kg/m^3
 T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
-heightStepNumber = 60; %computation accuracy
+heightStepNumber = 250; %computation accuracy
 
 contourResolution = 700; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
-generate_new_CEA = true;
-generate_new_Contour = true;
+generate_new_CEA = false;
+generate_new_Contour = false;
 
 %% Chamber Wall Material Properties
 
