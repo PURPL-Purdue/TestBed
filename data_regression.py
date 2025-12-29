@@ -113,7 +113,23 @@ def data_regression(
     # -------------------------
     # Fuel density (constant placeholder)
     # -------------------------
-    df_ss["rho_fu"] = float(rho_fu_const)
+
+    if fuel_choice == "JetA":
+        df_ss["rho_fu"] = 810
+
+    elif fuel_choice == "Ethanol":
+        rho_eth = np.empty(len(df_ss))
+        for i in range(len(df_ss)):
+            f = Fluid(FluidsList.Ethanol).with_state(
+                Input.pressure(float(p_fu_pa[i])),
+                Input.temperature(T_C),
+            )
+            rho_eth[i] = f.density
+
+        df_ss["rho_fu"] = rho_eth
+
+    elif fuel_choice == "Isopropanol":
+        df_ss["rho_fu"] = 786.0
 
     # -------------------------
     # Ox density + gamma (from pyfluids)
