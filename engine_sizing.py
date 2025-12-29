@@ -1,11 +1,10 @@
-# Maelstrom Injector Sizing Code
+# Hollistic Engine Sizing Code
 # Authors: Dominik Sloup
 # First Created: 06/06/2025
-# Last Updated: 06/06/2025
+# Last Updated: 12/20/2025
 # Calculations done in SI units
 
 import numpy as np
-import math
 import matplotlib.pyplot as plt
 from rocketcea.cea_obj import CEA_Obj
 from matplotlib.widgets import TextBox
@@ -38,7 +37,15 @@ F = data["thrust"] # Nominal thrust of the torch (lbf)
 p_c = data["chamber_pressure"] # Nominal chamber pressure (psi)
 p_e = data["exhaust_pressure"] # Exhaust pressure (psi)
 OF = data["of_ratio"] # Nominal OF Ratio
-T = 293.15 # Fuel and oxidizer temperature (K)
+T_gox = data["gox_temperature"] # Oxidizer temperature (K)
+T_fuel = data["fuel_temperature"] # Fuel temperature (K). WARNING CEA DOES NOT USE THIS AS OF RN
+
+# If I size the engine around the maximum OF ratio and then move down I will need to decrease 
+# gox pressure and increase fuel pressure to stay at the same chamber pressure, thus gox stiffness
+# decreases (gox velocity goes up? because Im also decreasing mass flow so its counteracting that.
+# Our gox stiffness is already very high, so this likely isn't an issue. Is there anything else I
+# am forgetting? Oh yeah, is an increase in fuel mass flow good for the cavitating venturi? I think 
+# so. An increase in mass flow means a smaller pressure ratio.
 
 chamber_dia = data['chamber_diameter'] # Chamber diameter at injector (in)
 cA = data['converging_angle']
@@ -52,10 +59,10 @@ ox_orifice_num = data["gox_orifice_number"] # Number of oxidizer orifices (N/A)
 Cd_ox = data["gox_discharge_coeff"] # Gox orifice anticipated C_d (N/A)
 d_line_ox = data["gox_tube_inner_dia"] # Oxidizer line diameter (in)
 
-K_fu = data["rp_stiffness"] # Desired Ox injector stiffness (N/A)
-fu_orifice_num = data["rp_orifice_number"] # Number of fuel orifices (N/A)
-Cd_fu = data["rp_discharge_coeff"] # Fuel orifice anticipated C_d (N/A)
-d_line_fu = data["rp_tube_inner_dia"] # Oxidizer line diameter (in)
+K_fu = data["fuel_stiffness"] # Desired Ox injector stiffness (N/A)
+fu_orifice_num = data["fuel_orifice_number"] # Number of fuel orifices (N/A)
+Cd_fu = data["fuel_discharge_coeff"] # Fuel orifice anticipated C_d (N/A)
+d_line_fu = data["fuel_tube_inner_dia"] # Oxidizer line diameter (in)
 
 cstar_eff = data["cstar_eff"] # C star efficiency factor (N/A)
 Isp_eff = data["isp_eff"] # Nozzle efficiency factor (N/A)
@@ -68,7 +75,6 @@ Lstar = data["Lstar"] # Characteristic length (in)
 gamma_o2 = 1.4 # GOx specific heat ratio
 g = 9.81 # Gravitational constant (m/s^2)
 g0 = 32.174 # Gravitational constant (ft/s^2)
-# rho_fu = 810 # RP-1 density at ambient temp and pressure (may want to update this to match manifold press), (kg/m^3)
 
 # ──────────────────────────────────────────────────────────────
 #  UNIT CONVERSIONS
@@ -93,9 +99,8 @@ def main():
     p_fu_pa = p_c * (1 + K_fu) * psi_to_pa # Fuel injector feed pressure (Pa)
 
     # Oxygen density at manifold pressure and ambient temperature (kg/m^3)
-    rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T-273.15)).density 
-    rho_fu = Fluid(FluidsList.Ethanol).with_state(Input.pressure(p_fu_pa), Input.temperature(T-273.15)).density
-    print(rho_fu)
+    rho_ox = Fluid(FluidsList.Oxygen).with_state(Input.pressure(p_ox_pa), Input.temperature(T_gox-273.15)).density 
+    rho_fu = Fluid(FluidsList.Ethanol).with_state(Input.pressure(p_fu_pa), Input.temperature(T_fuel-273.15)).density
     m_dot_fu, m_dot_ox, cstar_real, Isp = get_mdots(engine,F,p_c,OF,cstar_eff)
     A_fu = get_area_from_mdot('liquid',m_dot_fu, p_fu_pa, p_c_pa, rho_fu, Cd_fu) # Fuel injection area (m^2)
     A_ox = get_area_from_mdot('gas',m_dot_ox, p_ox_pa, p_c_pa, rho_ox, Cd_ox, gamma_o2) # Oxidizer injection area (m^2)
@@ -124,25 +129,20 @@ def main():
       - tR/np.tan(dA)
       - tR/np.tan(cA))
 
-    d_line_fu_m = d_line_fu * 0.0254
-    d_line_ox_m = d_line_ox * 0.0254
-
-    A_line_fu = np.pi * (d_line_fu_m/2) ** 2 
-    A_line_ox = np.pi * (d_line_ox_m/2) ** 2 
-
-    # Line velocity calculations:
-    v_fu = m_dot_fu / (A_line_fu * rho_fu)
-    v_ox = m_dot_ox / (A_line_ox * rho_ox)
-
-    v_ox_ft = v_ox / ft_to_m
-    v_fu_ft = v_fu / ft_to_m
-
     rho_ox_amb = Fluid(FluidsList.Oxygen).with_state(Input.pressure(101325), Input.temperature(20)).density
 
     V_dot_ox = m_dot_ox / rho_ox_amb # Oxygen volumetric flow rate at STP (m^3/s)
 
+    rho_n2_tank   = Fluid(FluidsList.Nitrogen).with_state(Input.pressure(p_fu_pa), Input.temperature(20)).density
+    rho_n2_std = Fluid(FluidsList.Nitrogen).with_state(Input.pressure(101325), Input.temperature(20)).density
+    
+    V_dot_n2 = m_dot_fu / rho_fu
+    m_dot_n2 = rho_n2_tank * V_dot_n2     # kg/s N2 required
+    Vdot_n2_std = m_dot_n2 / rho_n2_std
+
     SCFM_ox =  V_dot_ox / np.pow(ft_to_m, 3) * 60
-    SCFM_n2 = (m_dot_fu / rho_fu) * (rho_fu / 1.165) * 35.3147 * 60
+
+    SCFM_n2 = Vdot_n2_std / np.pow(ft_to_m, 3) * 60
 
     CdA_fu = Cd_fu * A_fu * (m_to_in) ** 2
     CdA_ox = Cd_ox * A_ox * (m_to_in) ** 2
@@ -156,16 +156,14 @@ def main():
     data["chamber_volume"] = float(np.round(V_chamber, 1))
     data["total_length"] = float(np.round(total_length, 1))
  
-    data["rp_orifice_dia"] = float(np.round(d_fu * m_to_in, 3))
+    data["fuel_orifice_dia"] = float(np.round(d_fu * m_to_in, 3))
     data["gox_orifice_dia"] = float(np.round(d_ox * m_to_in, 3))
     data["gox_design_mdot"] = float(np.round(m_dot_ox / lb_to_kg, 3))
-    data["rp_design_mdot"] = float(np.round(m_dot_fu / lb_to_kg, 3))
+    data["fuel_design_mdot"] = float(np.round(m_dot_fu / lb_to_kg, 3))
     data["gox_feed_pressure"] = int(p_ox_pa / psi_to_pa)
-    data["rp_CdA"] = float(np.round(CdA_fu, 6))
+    data["fuel_CdA"] = float(np.round(CdA_fu, 6))
     data["gox_CdA"] = float(np.round(CdA_ox, 6))
-    data["rp_injector_feed_pressure"] = int(p_fu_pa / psi_to_pa)
-    data["gox_line_velocity"] = float(np.round(v_ox_ft, 2))
-    data["rp_line_velocity"] = float(np.round(v_fu_ft, 2))
+    data["fuel_injector_pressure"] = int(p_fu_pa / psi_to_pa)
     data["gox_SCFM"] = float(np.round(SCFM_ox, 2))
     data["n2_SCFM"] = float(np.round(SCFM_n2, 2))
     
