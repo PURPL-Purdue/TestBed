@@ -40,9 +40,9 @@ exhaust_pressure: 14.7 # (psi) Dominik Sloup
 regen_pressure_drop: 150 # (psi) James Nida
 cstar_eff: 0.8 # (N/A) Dominik Sloup
 isp_eff: 1 # (N/A) Dominik Sloup
-Lstar: 55 # (in) Dominik Sloup
+Lstar: 50 # (in) Dominik Sloup
 
-chamber_diameter: 3.65   # (in) Dominik Sloup
+chamber_diameter: 3.325   # (in) Dominik Sloup
 converging_angle: 45    # (deg) Dominik Sloup
 diverging_angle: 13.5   # (deg) Dominik Sloup
 converging_fillet: 0.5  # (in)  Dominik Sloup
@@ -78,9 +78,9 @@ isp: 177 # (s) Dominik Sloup
 
 throat_diameter: 1.322 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
 throat_area: 1.373 # (in^2) Dominik Sloup
-total_length: 8.5  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
+total_length: 9.1  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
 exit_diameter: 2.309 # (in) Dominik Sloup
-chamber_volume: 75.5  # (in^3) Dominik Sloup
+chamber_volume: 68.7  # (in^3) Dominik Sloup
 
 # Maelstrom oxidizer injector parameters
 
