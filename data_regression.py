@@ -1,185 +1,220 @@
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from pyfluids import Fluid, FluidsList, Input
-from Injector.get_mdot_from_area import get_mdot_from_area
-from rocketcea.cea_obj import CEA_Obj
 import os
+from pathlib import Path
 
-# =================================================
-# USER INPUTS
-# =================================================
+import numpy as np
+import pandas as pd
+from pyfluids import Fluid, FluidsList, Input
+from rocketcea.cea_obj import CEA_Obj
 
-file_name = "GG_test_low_20250526_205511.csv"
+from Injector.get_mdot_from_area import get_mdot_from_area
 
-# file_name = "GG_test_low_20250527_024632.csv"
-# file_name = "GG_test_low_20250527_033233.csv"
 
-csv_path = Path(r"C:\Users\Precision\Downloads") / file_name
+def data_regression(
+    file_name: str,
+    fuel_choice: str,
+    fuel_CdA: float,
+    ox_CdA: float,
+    A_star: float,
+    *,
+    csv_dir: str | Path = r"C:\Users\Precision\Downloads",
+    ox_name: str = "GOX",
+    T_C: float = 20.0,
+    accept_frac: float = 0.10,   # median ±10% band
+    ATM_PSI: float = 14.6959,
+    psi_to_pa: float = 6894.757,
+    ft_to_m: float = 0.3048,
+    # column names
+    state_ox: str = "SN-O2-02 State",
+    state_fu: str = "SN-FU-01 State",
+    fuel_upstream_col: str = "PT-FU-01 Pressure",
+    ox_upstream_col: str = "PT-O2-04 Pressure",
+    downstream_col: str = "PT-GG-01 Pressure",   # used for mdot + CEA Pc
+    downstream_col2: str = "PT-GG-02 Pressure",  # used for c*_act
+    # fuel density
+    rho_fu_const: float = 810.0,
+    clear_terminal: bool = True,
+    print_summary: bool = True,
+):
+    """
+    Returns:
+      summary: dict of mean values + counts + overall pressure deviation
+      df_ss: steady-state dataframe (filtered)
+    """
 
-pressure_cols = [
-    "PT-GG-01 Pressure",
-    "PT-GG-02 Pressure",
-    "PT-O2-04 Pressure",
-    "PT-FU-01 Pressure",
-]
+    # -------------------------
+    # Load
+    # -------------------------
+    csv_path = Path(csv_dir) / file_name
+    df = pd.read_csv(csv_path)
 
-state_ox = "SN-O2-02 State"
-state_fu = "SN-FU-01 State"
+    # -------------------------
+    # Filter: both states TRUE
+    # -------------------------
+    def _truthy(series: pd.Series) -> pd.Series:
+        return (
+            series.astype(str)
+            .str.strip()
+            .str.upper()
+            .isin(["TRUE", "1", "T", "YES", "Y"])
+        )
 
-ref_pressure = "PT-O2-04 Pressure"
+    df[state_ox] = _truthy(df[state_ox])
+    df[state_fu] = _truthy(df[state_fu])
 
-fuel_upstream_col = "PT-FU-01 Pressure"
-ox_upstream_col   = "PT-O2-04 Pressure"
-downstream_col    = "PT-GG-01 Pressure"   # used for mdot + CEA Pc (edit if needed)
-downstream_col2   = "PT-GG-02 Pressure"   # used for c*_act (edit if needed)
+    df_active = df.loc[df[state_ox] & df[state_fu]].copy()
 
-psi_to_pa = 6894.757293168
-pa_to_psi = 1.0 / psi_to_pa
-ft_to_m = 0.3048
-ATM_PSI = 14.6959  # set to 0.0 if sensors are absolute (psia)
+    # -------------------------
+    # "Steady" filter: median ±accept_frac for key pressures
+    # -------------------------
+    steady_pressure_cols = [ox_upstream_col, fuel_upstream_col, downstream_col, downstream_col2]
 
-engine = CEA_Obj(oxName="GOX", fuelName="JetA")
+    for c in steady_pressure_cols:
+        df_active[c] = pd.to_numeric(df_active[c], errors="coerce")
 
-fuel_CdA = 7.21e-06
-ox_CdA   = 1.87e-05
-A_star   = 0.000160041
-gamma_ox = 1.4
+    med = df_active[steady_pressure_cols].median(skipna=True)
+    lo = (1.0 - accept_frac) * med
+    hi = (1.0 + accept_frac) * med
 
-# "Steady-ish" detector (no fixed pressure cutoff)
-window = 10
-deriv_thresh = 2.0
-std_thresh   = 3.0
+    steady_mask = np.ones(len(df_active), dtype=bool)
+    for c in steady_pressure_cols:
+        steady_mask &= df_active[c].between(lo[c], hi[c], inclusive="both").to_numpy()
 
-# Acceptance interval around median (two-sided)
-accept_frac = 0.1  # ±10%
+    df_ss = df_active.loc[steady_mask].copy()
 
-T_C = 20.0  # pyfluids temp input in Celsius (per you)
+    # -------------------------
+    # Clear terminal + header
+    # -------------------------
+    if clear_terminal:
+        os.system("cls" if os.name == "nt" else "clear")
 
-# =================================================
-# LOAD CSV
-# =================================================
-df = pd.read_csv(csv_path)
+    if print_summary:
+        print(f"\n==={file_name}===")
+        print(f"Active samples (both states TRUE): {len(df_active)}")
+        print(f"Median±{int(accept_frac*100)}% steady-state samples: {len(df_ss)}")
 
-# =================================================
-# FILTER: BOTH STATES TRUE
-# =================================================
-df[state_ox] = df[state_ox].astype(str).str.strip().str.upper().isin(["TRUE", "1", "T", "YES", "Y"])
-df[state_fu] = df[state_fu].astype(str).str.strip().str.upper().isin(["TRUE", "1", "T", "YES", "Y"])
+    if len(df_ss) == 0:
+        summary = {
+            "file_name": file_name,
+            "fuel_choice": fuel_choice,
+            "n_active": int(len(df_active)),
+            "n_steady": 0,
+            "note": "No steady-state samples passed the median band filter.",
+        }
+        return summary, df_ss
 
-df_active = df.loc[df[state_ox] & df[state_fu]].copy()
+    # -------------------------
+    # Pressures (psig -> psia -> Pa)
+    # -------------------------
+    p_ox_pa    = (df_ss[ox_upstream_col].to_numpy()   + ATM_PSI) * psi_to_pa
+    p_fu_pa    = (df_ss[fuel_upstream_col].to_numpy() + ATM_PSI) * psi_to_pa
+    p_down_pa  = (df_ss[downstream_col].to_numpy()    + ATM_PSI) * psi_to_pa
+    p_down2_pa = (df_ss[downstream_col2].to_numpy()   + ATM_PSI) * psi_to_pa
 
-# =================================================
-# "STEADY" FILTER: median ±10% band (two-sided) across pressures you care about
-# =================================================
-accept_frac = 0.10  # 10% two-sided acceptance about the median
+    # -------------------------
+    # Fuel density (constant placeholder)
+    # -------------------------
+    df_ss["rho_fu"] = float(rho_fu_const)
 
-# choose which pressures define "steady" (use upstream/downstream that drive mdot/c*)
-steady_pressure_cols = [ox_upstream_col, fuel_upstream_col, downstream_col, downstream_col2]
+    # -------------------------
+    # Ox density + gamma (from pyfluids)
+    # -------------------------
+    rho_ox = np.empty(len(df_ss), dtype=float)
+    gamma_ox = np.empty(len(df_ss), dtype=float)
 
-# ensure numeric
-for c in steady_pressure_cols:
-    df_active[c] = pd.to_numeric(df_active[c], errors="coerce")
+    for i in range(len(df_ss)):
+        f = Fluid(FluidsList.Oxygen).with_state(
+            Input.pressure(float(p_ox_pa[i])),
+            Input.temperature(T_C),
+        )
+        rho_ox[i] = f.density
+        gamma_ox[i] = (f.sound_speed ** 2) * f.density / f.pressure
 
-# median-based band (robust to rugged data, no derivatives)
-med = df_active[steady_pressure_cols].median(skipna=True)
-lo = (1.0 - accept_frac) * med
-hi = (1.0 + accept_frac) * med
+    df_ss["rho_ox"] = rho_ox
+    df_ss["gamma_ox"] = gamma_ox
 
-steady_mask = np.ones(len(df_active), dtype=bool)
-for c in steady_pressure_cols:
-    steady_mask &= df_active[c].between(lo[c], hi[c], inclusive="both").to_numpy()
+    # -------------------------
+    # RocketCEA engine + flows + c*
+    # -------------------------
+    engine = CEA_Obj(oxName=ox_name, fuelName=fuel_choice)
 
-df_ss = df_active.loc[steady_mask].copy()
+    m_dot_fu = np.empty(len(df_ss), dtype=float)
+    m_dot_ox = np.empty(len(df_ss), dtype=float)
+    OF_ratio = np.empty(len(df_ss), dtype=float)
+    cstar_the = np.empty(len(df_ss), dtype=float)
 
-os.system('cls' if os.name == 'nt' else 'clear')
+    for i in range(len(df_ss)):
+        m_dot_fu[i] = get_mdot_from_area(
+            "liquid", fuel_CdA, p_fu_pa[i], p_down_pa[i], df_ss["rho_fu"].iat[i]
+        )
+        m_dot_ox[i] = get_mdot_from_area(
+            "gas", ox_CdA, p_ox_pa[i], p_down_pa[i], df_ss["rho_ox"].iat[i], gamma=float(gamma_ox[i])
+        )
+        OF_ratio[i] = m_dot_ox[i] / m_dot_fu[i]
+        cstar_the[i] = engine.get_Cstar(Pc=float(p_down_pa[i]), MR=float(OF_ratio[i]))
 
-print("\n===" + file_name + "===")
-print(f"Active samples (both states TRUE): {len(df_active)}")
-print(f"Median±{int(accept_frac*100)}% steady-state samples: {len(df_ss)}")
+    df_ss["m_dot_fu"] = m_dot_fu
+    df_ss["m_dot_ox"] = m_dot_ox
+    df_ss["OF_ratio"] = OF_ratio
 
-# =================================================
-# PRESSURES -> Pa (psig -> psia) using df_ss
-# =================================================
-p_ox_pa    = (df_ss[ox_upstream_col].to_numpy()    + ATM_PSI) * psi_to_pa
-p_fu_up_pa = (df_ss[fuel_upstream_col].to_numpy()  + ATM_PSI) * psi_to_pa
-p_down_pa  = (df_ss[downstream_col].to_numpy()     + ATM_PSI) * psi_to_pa
-p_down2_pa = (df_ss[downstream_col2].to_numpy()    + ATM_PSI) * psi_to_pa
+    df_ss["cstar_the"] = cstar_the * ft_to_m                 # rocketcea often returns ft/s
+    df_ss["cstar_act"] = p_down2_pa * A_star / (m_dot_fu + m_dot_ox)
+    df_ss["cstar_eff"] = df_ss["cstar_act"] / df_ss["cstar_the"]
 
-# =================================================
-# rho / mdots / OF / cstar_eff (STEADY-ONLY)
-# =================================================
-df_ss["rho_fu"] = 810.0  # placeholder constant
+    # -------------------------
+    # Pressure deviation metric (psi): mean abs dev from median, averaged across channels
+    # -------------------------
+    dev_psi = {}
+    for c in steady_pressure_cols:
+        x = df_ss[c].to_numpy(dtype=float)  # still psig
+        x_med = np.nanmedian(x)
+        dev_psi[c] = float(np.nanmean(np.abs(x - x_med)))
 
-rho_ox   = np.empty(len(df_ss), dtype=float)
-gamma_ox = np.empty(len(df_ss), dtype=float)
+    overall_dev_psi = float(np.mean(list(dev_psi.values()))) if dev_psi else float("nan")
 
-for i in range(len(df_ss)):
-    f = Fluid(FluidsList.Oxygen).with_state(
-        Input.pressure(float(p_ox_pa[i])),  # Pa
-        Input.temperature(T_C),              # °C
-    )
+    # -------------------------
+    # Summary stats
+    # -------------------------
+    summary = {
+        "file_name": file_name,
+        "fuel_choice": fuel_choice,
+        "n_active": int(len(df_active)),
+        "n_steady": int(len(df_ss)),
+        "m_dot_fu_mean": float(df_ss["m_dot_fu"].mean()),
+        "m_dot_ox_mean": float(df_ss["m_dot_ox"].mean()),
+        "OF_mean": float(df_ss["OF_ratio"].mean()),
+        "p_fu_mean_psig": float(df_ss[fuel_upstream_col].mean()),
+        "p_ox_mean_psig": float(df_ss[ox_upstream_col].mean()),
+        "pc_mean_psig": float(df_ss[downstream_col2].mean()),
+        "overall_pressure_dev_psig": float(overall_dev_psi),
+        "rho_fu_mean": float(df_ss["rho_fu"].mean()),
+        "rho_ox_mean": float(df_ss["rho_ox"].mean()),
+        "cstar_expected_mean_mps": float(df_ss["cstar_the"].mean()),
+        "cstar_actual_mean_mps": float(df_ss["cstar_act"].mean()),
+        "cstar_eff_mean": float(df_ss["cstar_eff"].mean()),
+    }
 
-    rho_ox[i] = f.density
-    gamma_ox[i] = (f.sound_speed ** 2) * f.density / f.pressure
+    # -------------------------
+    # Print summary (same vibe as your original)
+    # -------------------------
+    if print_summary:
+        print("\n=== FLOWS ===")
+        print(f"Fuel mdot           : {summary['m_dot_fu_mean']:.3g} kg/s")
+        print(f"Ox mdot             : {summary['m_dot_ox_mean']:.3g} kg/s")
+        print(f"OF Ratio            : {summary['OF_mean']:.3g}\n")
 
-df_ss["rho_ox"] = rho_ox
-df_ss["gamma_ox"] = gamma_ox
+        print("=== PRESSURES ===")
+        print(f"Fuel feed pressure  : {summary['p_fu_mean_psig']:.3g} psi")
+        print(f"Ox feed pressure    : {summary['p_ox_mean_psig']:.3g} psi")
+        print(f"Chamber pressure    : {summary['pc_mean_psig']:.3g} psi")
+        print(f"Pressure deviation  : {summary['overall_pressure_dev_psig']:.1f} psi\n")
 
-m_dot_fu = np.empty(len(df_ss), dtype=float)
-m_dot_ox = np.empty(len(df_ss), dtype=float)
-OF_ratio = np.empty(len(df_ss), dtype=float)
-cstar_the = np.empty(len(df_ss), dtype=float)
+        print("=== DENSITIES ===")
+        print(f"Fuel density        : {summary['rho_fu_mean']:.2f} kg/m^3")
+        print(f"Ox density          : {summary['rho_ox_mean']:.2f} kg/m^3\n")
 
-for i in range(len(df_ss)):
-    m_dot_fu[i] = get_mdot_from_area("liquid", fuel_CdA, p_fu_up_pa[i], p_down_pa[i], df_ss["rho_fu"].iat[i])
-    m_dot_ox[i] = get_mdot_from_area("gas",   ox_CdA,   p_ox_pa[i],    p_down_pa[i], df_ss["rho_ox"].iat[i], gamma=gamma_ox[i])
-    OF_ratio[i] = m_dot_ox[i] / m_dot_fu[i]
-    cstar_the[i] = engine.get_Cstar(Pc=p_down_pa[i], MR=OF_ratio[i])
+        print("=== C* PERFORMANCE ===")
+        print(f"Expected C*         : {summary['cstar_expected_mean_mps']:.0f} m/s")
+        print(f"Actual C*           : {summary['cstar_actual_mean_mps']:.0f} m/s")
+        print(f"Cstar Efficiency    : {summary['cstar_eff_mean']:.3g}")
 
-df_ss["m_dot_fu"] = m_dot_fu
-df_ss["m_dot_ox"] = m_dot_ox
-df_ss["OF_ratio"] = OF_ratio
-
-df_ss["cstar_the"] = cstar_the * ft_to_m              # (m/s) if rocketcea returns (ft/s)
-df_ss["cstar_act"] = p_down2_pa * A_star / (m_dot_fu + m_dot_ox)
-df_ss["cstar_eff"] = df_ss["cstar_act"] / df_ss["cstar_the"]
-
-# =================================================
-# Averages you care about
-# =================================================
-OF_mean = float(df_ss["OF_ratio"].mean())
-cstar_eff_mean = float(df_ss["cstar_eff"].mean())
-
-# =================================================
-# "average deviation of the pressure (psi)" for the steady set
-# here: mean absolute deviation from the steady-set median, per pressure channel
-# =================================================
-dev_psi = {}
-for c in steady_pressure_cols:
-    x = df_ss[c].to_numpy(dtype=float)  # still psig in the CSV
-    x_med = np.nanmedian(x)
-    dev_psi[c] = float(np.nanmean(np.abs(x - x_med)))
-
-overall_dev_psi = float(np.mean(list(dev_psi.values()))) if dev_psi else np.nan
-# =================================================
-# Print summary
-# =================================================
-print("\n=== FLOWS ===")
-print(f"Fuel mdot           : {df_ss['m_dot_fu'].mean():.3g} kg/s")
-print(f"Ox mdot             : {df_ss['m_dot_ox'].mean():.3g} kg/s")
-print(f"OF Ratio            : {OF_mean:.3g}\n")
-
-print("=== PRESSURES ===")
-print(f"Fuel feed pressure  : {df_ss[fuel_upstream_col].mean():.3g} psi")
-print(f"Ox feed pressure    : {df_ss[ox_upstream_col].mean():.3g} psi")
-print(f"Chamber pressure    : {df_ss[downstream_col2].mean():.3g} psi\n")
-
-print("=== DENSITIES ===")
-print(f"Fuel density        : {df_ss['rho_fu'].mean():.2f} kg/m^3")
-print(f"Ox density          : {df_ss['rho_ox'].mean():.2f} kg/m^3\n")
-
-print("=== C* PERFORMANCE ===")
-print(f"Expected C*         : {df_ss['cstar_the'].mean():.0f} m/s")
-print(f"Actual C*           : {df_ss['cstar_act'].mean():.0f} m/s")
-print(f"Cstar Efficiency    : {cstar_eff_mean:.3g}")
+    return summary, df_ss
