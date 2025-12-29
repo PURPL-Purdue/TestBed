@@ -62,7 +62,7 @@ fuel_temperature: 400 # (K) James Nida's Regen Code
 
 num_channels: 62 # Number of coolant channels
 channel_widths: [0.02, 0.02, 0.02] # Width of coolant channel at injector, throat and exit (in)
-channel_heights: [0.125, 0.04, 0.06] # Height of coolant channel at injector, throat and exit (in)
+channel_heights: [0.125, 0.04, 0.125] # Height of coolant channel at injector, throat and exit (in)
 wall_thicknesses: [0.04, 0.04, 0.04] # Hotwall thickness at injector, throat and exit (in)
 
 ######################################
