@@ -1,58 +1,80 @@
 # Maelstrom Venturi Sizing Code
 # Authors: Dominik Sloup
-# First Created: 06/01/2025
-# Last Updated: 06/01/2025
+# First Created: 12/20/2025
+# Last Updated: 12/20/2025
 # Calculations done in SI units
 
 import numpy as np
 import matplotlib.pyplot as plt
-import CEA_Wrap as CEA
-from matplotlib.widgets import TextBox
 from pyfluids import Fluid, FluidsList, Input
+from pathlib import Path
+from ruamel.yaml import YAML
+import yaml
 
-# ──────────────────────────────────────────────────────────────
-#  CONSTANTS
-# ──────────────────────────────────────────────────────────────
+def find_yaml(filename="Maelstrom.yaml", start_dir=None):
+    start_dir = Path(start_dir or Path.cwd())
+    for path in start_dir.rglob(filename):
+        return path
+    raise FileNotFoundError(f"{filename} not found starting from {start_dir}")
 
-C_d = 0.98 # Discharge coefficient guess (based on PSP Liquids' testing) https://purdue-space-program.atlassian.net/wiki/spaces/PL/pages/936903267/Successful+Water+Flow+1
-p_1 = 750 # Pressure downstream of cavitating venturi (psi)
-x = 0.9 # Anticipated pressure recovery across the venturi
-m_dot_kg = 0.60962815 # Desired mass flow (kg/s)
-rho = 810 # RP-1 density
-p_0 = p_1 / x # Pressure upstream of the cavitating venturi (psi)
-p_0_pa = p_0 * 6894.76 # Pressure upstream of cavitating venturi (Pa)
-d = 0.426 # Line inner diameter (in)
-A = np.pi * (d / 2) ** 2 # Cross sectional are of a -8 tube (in^2)
-A_m2 = A / 1550 # Cross sectional are of a -8 tube (m^2)
+yaml_path = find_yaml()
 
-# ──────────────────────────────────────────────────────────────
-#  CALCULATIONS
-# ──────────────────────────────────────────────────────────────
+    # Load YAML with formatting preserved
+yaml = YAML()
+yaml.preserve_quotes = True
 
-# rho = Fluid(FluidsList.Water).with_state(Input.pressure(p_0_pa), Input.temperature(20)).density
-p_sat_pa = Fluid(FluidsList.Water).with_state(Input.quality(0.0), Input.temperature(20)).pressure # Water saturation pressure at 20 degrees celsius
-# This should be changed because RP-1's saturation pressure is different
+with open(yaml_path, "r") as f:
+    data = yaml.load(f)
 
-# We assume cavitation to calculate the venturi throat area
-A_star_m2 = m_dot_kg / (C_d * np.sqrt(2 * rho * (p_0_pa - p_sat_pa))) # Throat area (m^2)
+# ------------------------------------------------------------
+# UNIT CONSTANTS
+# ------------------------------------------------------------
+psi_to_pa = 6894.76
+in_to_m = 0.0254
+lb_to_kg = 0.453592
 
-# Modified bernoulli equation used to calculate throat area
-# A_star_m2 = 1 / np.sqrt( (1 / A_m2**2) - (2 * rho * (p_sat_pa - p_0_pa)) / m_dot_kg**2 )
+# ------------------------------------------------------------
+# FLUID + GEOMETRY PARAMETERS
+# ------------------------------------------------------------
 
-d_star_m = 2 * np.sqrt(A_star_m2 / np.pi) # Venturi throat diameter (m)
-d_star_in = d_star_m * 39.3701 # Venturi  diameter (in)
+d_u = data["fuel_tube_inner_dia"] # Oxidizer line diameter (in)
+p_f = (data["fuel_injector_pressure"] + data["regen_pressure_drop"]) * psi_to_pa # Feed pressure (Pa)
+mdot = data["fuel_design_mdot"] * lb_to_kg # Fuel mass flow rate (kg/s)
 
-# ──────────────────────────────────────────────────────────────
-#  RESULTS
-# ──────────────────────────────────────────────────────────────
+d_th_guess = 0.122 # Guess for venturi throat area (in) to estimate beta ratio
+C_d = 0.931 # Venturi discharge coefficient (Tested on prototype, to be corrected)
+C_p = 0.8 # Pressure recovery factor (literature source)
+beta = d_th_guess / d_u
 
-print(f"\nAnticipated C_d:                 {C_d}")
-print(f"Desired mass flow:               {m_dot_kg:.3f} kg/s")
+rho_fu = Fluid(FluidsList.Ethanol).with_state(Input.pressure(p_f), Input.temperature(20)).density
 
-print(f"\nUpstream venturi pressure:       {p_0:.0f} psi")
-print(f"Expected throat pressure:        {(p_sat_pa / 6894.76):.1f} psi")
-print(f"Downstream venturi pressure:     {p_1:.0f} psi")
+P_cr = (C_p * C_d ** 2) / (1 - beta ** 4) # Critical pressure ratio (above this value, venturi uncavitates)
+p_u = p_f / (P_cr - 0.1) # Upstream venturi pressure (Pa)
 
-print(f"Line inner diameter:             {0.426:.3f} in")  # assuming -8 tube ID
-print(f"Venturi throat area:             {A_star_m2:.6f} m^2")
-print(f"Venturi throat diameter:         {(d_star_m * 39.3701):.3f} in\n")
+# Set throat pressure to be equal to saturation pressure of ethanol (Pa)
+p_th = Fluid(FluidsList.Ethanol).with_state(Input.quality(0.0),Input.temperature(20)).pressure
+
+d_u = d_u * in_to_m # Convert the line diameter to meters
+
+K = C_d * (np.pi / 4) * np.sqrt(2 * rho_fu * (p_u - p_th))
+d_th = np.pow(mdot ** 2 / (K ** 2 + mdot ** 2 / d_u ** 4), 0.25) 
+
+d_th = d_th / in_to_m # Convert throat diameter to inches
+
+C_dA = C_d * (np.pi * d_th ** 2 / 4) # Venturi throat CdA (in^2)
+
+print(f"Venturi upstream pressure: {p_u / psi_to_pa:.0f} psi")
+print(f"Venturi dpwnstream pressure: {p_f / psi_to_pa:.0f} psi")
+print(f"Critical pressure ratio: {P_cr:.2f}")
+print(f"Actual pressure ratio: {p_f / p_u:.2f}")
+print(f"Ethanol saturation pressure: {p_th / psi_to_pa:.2f} psi")
+print(f"Cavitating venturi throat diameter: {d_th:.3f} in")
+
+data["fuel_feed_pressure"] = int(p_u / psi_to_pa)
+data["critical_pressure_ratio"] = float(round(P_cr,2))
+data["minumum_pressure_ratio"] = float(round(p_f / p_u,2))
+data["venturi_throat_diameter"] = float(round(d_th,3))
+data["venturi_CdA"] = float(round(C_dA, 4))
+
+with open(yaml_path, "w") as f:
+    yaml.dump(data, f)

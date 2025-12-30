@@ -1,0 +1,190 @@
+%% Main Compiled Code
+%widthArray = linspace(0.02/39.37, 0.040/39.37, 10); %m %channel width sweep %CHECK WITH LITERATURE
+%heightArray = linspace(0.04/39.37, 0.125/39.37, 10); %m %channel height sweep %CHECK WITH LITERATURE
+
+clc; clear;
+
+repoDir = fileparts(mfilename('fullpath'));
+parentDir = fullfile(repoDir, '..');
+addpath(parentDir);
+
+m_to_in = 39.3701;
+lb_to_kg = 0.453592;
+psi_to_pa = 6894.76;
+
+% p_c = 250; % Main chamber pressure (psi)
+% OF = 1; % OF Ratio (N/A)
+% mdot_coolant = 0.573208442786; % Coolant mass flow (kg/s)
+% throatDiameter  = 1;   % (in)
+% exitDiameter    = 2;   % (in)
+% convergingAngle = 45;  % (deg)
+% divergingAngle  = 13.5;% (deg)
+% totalLength     = 7.2; % (in)
+% convergingFillet= 0.5; % (in)
+% throatFillet    = 0.4; % (in)
+
+file_name = "Maelstrom";
+
+yaml_struct = py.yaml.safe_load(fileread(file_name + ".yaml"));
+data = struct(yaml_struct);
+
+p_c             = double(data.chamber_pressure);
+OF              = double(data.of_ratio);
+mdot_coolant    = double(data.fuel_design_mdot);
+
+chamberDiameter = double(data.chamber_diameter);
+totalLength     = double(data.total_length);
+throatDiameter  = double(data.throat_diameter);
+exitDiameter    = double(data.exit_diameter);
+convergingAngle = double(data.converging_angle);
+divergingAngle  = double(data.diverging_angle);
+convergingFillet= double(data.converging_fillet);
+throatFillet    = double(data.throat_fillet);
+
+numChannels = 60;
+widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
+heightArray =  [0.125,0.04,0.125] / m_to_in;       % Height of coolant channel at injector, throat and exit (in)
+wall_thicknessMatrix = [0.04,0.04,0.04] / m_to_in; % Hotwall thickness at injector, throat and exit (in)
+
+T_start= 298; % Flow Initial Temp in degrees K 
+P_start = 450; % Coolant inlet pressure (psi)
+rho_start = 791.26; % Coolant initial density in kg/m^3
+T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
+heightStepNumber = 250; %computation accuracy
+
+contourResolution = 700; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
+generate_new_CEA = false;
+generate_new_Contour = false;
+
+%% Chamber Wall Material Properties
+
+k_w = 130; % thermal conductivity of the wall (W/m*K) %copper 323, 7075 130
+surfaceRoughness = 0.0000032; % per additive industries average height of roughness (chosen from engineering toolbox/elementum) in m
+CTE = 0.0000212; % Material's coefficient of thermal expansion in (%change/K) 0.0000212 for 7075
+youngsModulus = 71700000000; %Pa 71700000000 for 7075
+poissonsRatio = 0.33; %SAME FOR 7075
+
+mdot_coolant = mdot_coolant * lb_to_kg; % Total coolant mass flow (kg/s)
+mdot_channel = mdot_coolant/numChannels; % Coolant mass flow in a single channel (kg/s)
+
+hotwallGeometry = [chamberDiameter, throatDiameter, exitDiameter, ...
+                       convergingAngle, divergingAngle, totalLength, ...
+                       convergingFillet, throatFillet];
+
+if generate_new_Contour
+    generateContour(hotwallGeometry, file_name, contourResolution)
+end
+
+engineContour = readmatrix("Contour_" + file_name + ".xlsx");
+idx = find(engineContour(:,3) == 1, 1); % Look for the point in the chamber contour where the area ratio is 1
+throatDiameter = engineContour(idx,2) * 2 * m_to_in;  % Obtain the throat diameter value (in)
+chamberLength = floor((engineContour(end,1)) * m_to_in * 100) / 100; % Chamber length (in)
+filletRad = convergingFillet; % chamber converging radius (in)
+
+%% Initialize all arrays and matrices,
+flowTempArray = zeros(1,heightStepNumber); %Matrices to store all pressure,velocity and temp data from calculateWallTemp
+flowVelocityArray = zeros(1,heightStepNumber);
+flowPressureArray = zeros(1,heightStepNumber);
+
+%% Height Step initialization % Not sure if this works, may scrap for even height steps (worked with PSP data)
+
+heightStepArray = linspace(0,chamberLength / m_to_in ,heightStepNumber);
+
+%% Run NASA CEA and retrieve values
+
+if generate_new_CEA == true
+    CEAOut(p_c,OF,file_name)
+end
+
+fluidProperties = readmatrix("CEA_" + file_name + ".xlsx"); %pull all nasaCEA values into fluidProperties
+% if newFluidProperties errors and cuts off a row, change the middle value
+% in the heightStepArray initialization call to be whatever the ACTUAL end
+% length is set to.
+fluidProperties(1,:) = [];
+y = 1; 
+r = 1;
+axialDist = (fluidProperties(:,1));
+newFluidProperties = zeros(length(heightStepArray),10);
+newFluidProperties(:,1) = heightStepArray;
+%chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
+T_l_reqMatrix = [];
+updatedTemps = [];
+updatedPressure = [];
+updatedVelocity = [];
+
+%% New fluid Properties
+while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
+    
+    a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
+    
+    %sumDiameter = 0;
+    sumAEAT = 0;
+    sumPrandtl = 0;
+    sumMach = 0;
+    sumGamma = 0;
+    sumT = 0;
+    sumVisc = 0;
+    sumCp = 0;
+    sumP = 0;
+    sumCstar = 0;                
+
+    while a <= length(axialDist)
+        
+        if a-r==0
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
+            sumAEAT = sumAEAT+fluidProperties(a,2);
+            sumPrandtl = sumPrandtl+fluidProperties(a,3);
+            sumMach = sumMach+fluidProperties(a,4);
+            sumGamma = sumGamma+fluidProperties(a,5);
+            sumT = sumT+fluidProperties(a,6);
+            sumVisc = sumVisc+fluidProperties(a,7);
+            sumCp = sumCp+fluidProperties(a,8);
+            sumP = sumP+fluidProperties(a,9);
+            sumCstar = sumCstar+fluidProperties(a,10);
+            a=a+1;
+
+        elseif axialDist(a) < heightStepArray(y)
+            %sumDiameter = sumDiameter + chamberPlot(a,2);
+            sumAEAT = sumAEAT+fluidProperties(a,2);
+            sumPrandtl = sumPrandtl+fluidProperties(a,3);
+            sumMach = sumMach+fluidProperties(a,4);
+            sumGamma = sumGamma+fluidProperties(a,5);
+            sumT = sumT+fluidProperties(a,6);
+            sumVisc = sumVisc+fluidProperties(a,7);
+            sumCp = sumCp+fluidProperties(a,8);
+            sumP = sumP+fluidProperties(a,9);
+            sumCstar = sumCstar+fluidProperties(a,10);
+            a=a+1;
+
+        else
+            divFactor = a-r;
+            newFluidProperties(y,2) = sumAEAT/divFactor;
+            newFluidProperties(y,3) = sumPrandtl/divFactor;
+            newFluidProperties(y,4) = sumMach/divFactor;
+            newFluidProperties(y,5) = sumGamma/divFactor;
+            newFluidProperties(y,6) = sumT/divFactor;
+            newFluidProperties(y,7) = sumVisc/divFactor;
+            newFluidProperties(y,8) = sumCp/divFactor;
+            newFluidProperties(y,9) = sumP/divFactor;
+            newFluidProperties(y,10) = sumCstar/divFactor;
+            r = a;
+            break; 
+        
+        end
+    end
+    y=y+1;
+end
+
+throatArea = pi*(throatDiameter/(2*39.37))^2;
+chamberDiameter1 = 2*sqrt((throatArea*newFluidProperties(:,2))/pi);
+newFluidProperties = flip(newFluidProperties,1);
+
+converge_index = find(newFluidProperties(:,2) == newFluidProperties(end,2), 1, 'first' );
+[a, throat_index] = min(newFluidProperties(:,2));
+
+chamberDiameter = flip(chamberDiameter1);
+
+inputValues = [T_start, P_start * psi_to_pa, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength,throat_index];
+
+%% Calculate Wall Temp
+[flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);

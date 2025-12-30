@@ -1,4 +1,4 @@
-function [T_wgFinal, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array] = SOLVER(throat_index, converge_index, chamberDiameterArray, heightStepNumber, newFluidInfo, channelWidth, channelHeight, wallThickness)
+function [T_wgFinal, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array] = SOLVER(chamberDiameterArray, heightStepNumber, newFluidInfo, channelWidths, channelHeights, wallThicknesses, inputFlowValues)
   % clc;
   % clear;
 %% Inputs (meters, Kelvin, seconds, Pascals, Watts) 
@@ -10,28 +10,20 @@ function [T_wgFinal, flowTemp, flowPressure, flowVelocity, finEfficiency, Qdot, 
 % throat_index is point of peak contraction, channelWidth, channelHeight,
 % wallThickness are 3 value arrays with [start value, throat value, end
 % value]
-channelWidths = [linspace(channelWidth(1),channelWidth(2),throat_index),linspace(channelWidth(2),channelWidth(3),converge_index-throat_index),(channelWidth(3)*ones(1,(heightStepNumber - converge_index)))];
-channelHeights = [linspace(channelHeight(1),channelHeight(2),throat_index),linspace(channelHeight(2),channelHeight(3),converge_index-throat_index),(channelHeight(3)*ones(1,(heightStepNumber - converge_index)))];
-wallThicknesses = [linspace(wallThickness(1),wallThickness(2),throat_index),linspace(wallThickness(2),wallThickness(3),converge_index-throat_index),(wallThickness(3)*ones(1,(heightStepNumber - converge_index)))];
 
 
 %combustion properties
-exhaustTemps = newFluidInfo (:,6);
-chamberPressure = newFluidInfo(:,9)*100000; % Chamber Pressure (Pa)
-
-%material properties
-thermalConductivity = 161; % 7075 W/m*K
-
-hotwallTemps = [];
+exhaustTemps = newFluidInfo(:,6);
 
 % calculateWallTemp Inputs
-T_start= 298; % K
-P_start = 2551000; % Pa
-rho_start = 1000; %kg/m^3, changed coolant density to RP-1 at standard temp
+T_start= inputFlowValues(1); % K
+P_start = inputFlowValues(2); % Pa
+rho_start = inputFlowValues(3); %kg/m^3, changed coolant density to RP-1 at standard temp
+mass_flow = inputFlowValues(4); % Precalcuated mass flow based on # of channels in Malestrom
+thermalConductivity = inputFlowValues(6); % thermal conductivity W/m*K
+channel_number = inputFlowValues(7);
+surfaceRoughness = inputFlowValues(8); % measure for how rough channels are after slit saw (chosen from engineering toolbox)
 
-m_flow_total = 2.26796; %kg/s --> Calculated this by multiplying the total water mass flow by the ratio of density of RP-1 to water at standard temp
-channel_number = 62;
-mass_flow = m_flow_total/channel_number; % Precalcuated mass flow based on # of channels in Malestrom
 v_start = mass_flow/(channelWidths(1) * channelHeights(1) * rho_start); %m/s
 
 
@@ -40,8 +32,7 @@ v_start = mass_flow/(channelWidths(1) * channelHeights(1) * rho_start); %m/s
 flowTemp = [T_start];
 flowVelocity = [v_start];
 flowPressure = [P_start];
-updatedPressure = []; % if on a different height step, initialize as the previous height step's value
-updatedTemps = [];
+
 T_wgFinal = zeros(1,heightStepNumber);
 xz = 1;
 %% SOLVER
@@ -50,8 +41,8 @@ xz = 1;
  
 heightStep = 1; % current height step
 
-while (heightStep < heightStepNumber)
- 
+while (heightStep <= heightStepNumber)
+    xz = 0;
     height = channelHeights(heightStep);
     width = channelWidths(heightStep);
 
@@ -75,7 +66,7 @@ while (heightStep < heightStepNumber)
 
     end
 
-    T_wg_InitialGuess = 700; % Set initial guess to be upper threshold for wall temp
+    T_wg_InitialGuess = inputFlowValues(5); % Set initial guess to be upper threshold for wall temp
     T_wg = T_wg_InitialGuess;
     
     
@@ -85,7 +76,7 @@ while (heightStep < heightStepNumber)
 
     while(notCorrect)
         %hot side
-        h_g = H_g_From_Temperature(T_wg, newFluidInfo);
+        h_g = H_g_From_Temperature(T_wg, newFluidInfo, inputFlowValues);
         T_r = exhaustTemps(heightStep);
         Q_dotIN = h_g(heightStep)*(T_r-T_wg);
         
@@ -127,7 +118,7 @@ while (heightStep < heightStepNumber)
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;
             
-            surfaceRoughness = 0.000002; % measure for how rough channels are after slit saw (chosen from engineering toolbox)
+            
             frictionFactor = (1/(-1.8*log10(((surfaceRoughness/hyd_diam)/3.7)^(1.11)+(6.9/Re))))^2; %new friction factor which is so cool (from vincent and haaland)
             
             % Calculate convective heat transfer coefficient [W/(m^2·K)]
@@ -158,19 +149,19 @@ while (heightStep < heightStepNumber)
             A_wallL = A_wallLiquid+(A_fin*fin_efficiency);
         xz = xz+1;
         %Calculate required heat flux, qdotL_total
-        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(wallThicknesses(heightStep)*A_wallG);
-        display(xz)
-        if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
+        Q_dotOUT = h_l*A_wallL*(T_wl-temp)/(A_wallG);
+
+            if(abs(Q_dotIN-Q_dotOUT) < 0.01*(Q_dotIN))
             T_wgFinal(heightStep) = T_wg;
             notCorrect = false;
-        elseif(Q_dotIN<Q_dotOUT)
-            T_wg = T_wg * 0.99;
-        else
-            T_wg = T_wg * 1.01;
-        end
+            elseif(Q_dotIN<Q_dotOUT)
+                T_wg = T_wg * 0.95;
+            else
+                T_wg = T_wg * 1.05;
+            end
         
     end
-    display(1)
+    display(xz)
         
     % Calculate Coolant Temp increase, delta_T (K)
     delta_T = Q_dotOUT*A_wallL/(mass_flow*cp);

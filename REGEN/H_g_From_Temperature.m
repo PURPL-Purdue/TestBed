@@ -1,4 +1,4 @@
-function h_out = H_g_From_Temperature(temperature, fluid_information)
+function h_out = H_g_From_Temperature(temperature, fluid_information, inputFlowValues)
     
 
     info = fluid_information';
@@ -8,9 +8,9 @@ function h_out = H_g_From_Temperature(temperature, fluid_information)
     %Input manipulation
     wall_temp = temperature * 1.8; %Conversion to Rankine
     
-    R = 0.61625; %inches
+    R = inputFlowValues(12); %inches
     G = 32.17405; %ft/s^2
-    throatDiameter = 0.92596; %inches
+    throatDiameter = inputFlowValues(11); %inches
 
 
     area_Ratio = info(2,:);
