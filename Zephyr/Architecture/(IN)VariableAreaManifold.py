@@ -9,7 +9,7 @@ CONFIG = {
     "num_outlets_total": 40,       # total number of outlet holes (full ring)
     "P_res_psi": 1000.0,           # fixed pump pressure, PSI
     "P_chamber_psi": 600.0,        # downstream chamber pressure, PSI
-    "A_outlet_cm2": .150,           # outlet area (cm²)
+    "A_outlet_cm2": .150,          # outlet area (cm²)
     "rho": 810.0,                  # fluid density (kg/m³)
     "mass_flow_kg_s": 4.204,       # total inlet mass flow (kg/s)
     "verbose": True
@@ -32,28 +32,23 @@ def cm2_to_m2(a): return a * CM2_TO_M2
 
 def ring_manifold_half(cfg):
     n_total = cfg["num_outlets_total"]
-    n_half = n_total // 2                # number of outlets in one half
+    n_half = n_total // 2
     m_total = cfg["mass_flow_kg_s"]
-    m_half = m_total / 2                 # mass flow in one half
+    m_half = m_total / 2
     rho = cfg["rho"]
-    A_outlet = cm2_to_m2(cfg["A_outlet_cm2"])
-    P_res = psi_to_pa(cfg["P_res_psi"])
-    P_chamber = psi_to_pa(cfg["P_chamber_psi"])
+    A_outlet_m2 = cm2_to_m2(cfg["A_outlet_cm2"])
 
-    # Target velocity for each outlet
-    v_target = m_half / (rho * n_half * A_outlet)
+    # outlet velocity (constant bleed)
+    v_target = m_half / (rho * n_half * A_outlet_m2)
 
     A_plenum = []
     outlet_velocities = []
     outlet_massflows = []
 
     for i in range(n_half):
-        # Remaining mass flow in this half
         m_remain = m_half - i * (m_half / n_half)
-        # Tapered plenum area
         A_i_m2 = m_remain / (rho * v_target)
-        A_i_cm2 = m2_to_cm2(A_i_m2)
-        A_plenum.append(A_i_cm2)
+        A_plenum.append(m2_to_cm2(A_i_m2))
 
         outlet_velocities.append(v_target)
         outlet_massflows.append(m_half / n_half)
@@ -62,43 +57,35 @@ def ring_manifold_half(cfg):
             print(f"Outlet {i+1:02d}: "
                   f"{v_target:.3f} m/s | "
                   f"{m_half/n_half:.3f} kg/s | "
-                  f"Plenum {A_i_cm2:.3f} cm²")
+                  f"Plenum {m2_to_cm2(A_i_m2):.3f} cm²")
 
-    # ============================================================
-    # ✨ NEW FUNCTIONALITY: SCALE AREAS TO 5 mm SEMICIRCLE HEIGHT
-    # ============================================================
-    target_radius_mm = 5.0
-    target_radius_m = target_radius_mm / 1000.0
+    # ================================================
+    # 🚀 NEW: APPLY HEADER AREA = 1.5 × OUTLET AREA
+    # ================================================
 
-    # Smallest and largest plenum areas (in m²)
-    A_min_m2 = cm2_to_m2(A_plenum[-1])
-    A_max_m2 = cm2_to_m2(A_plenum[0])
+    # desired minimum area at the end of manifold:
+    # A_header = 1.5 * A_outlet
+    A_outlet_cm2 = cfg["A_outlet_cm2"]
+    A_required_min_cm2 = 1.5 * A_outlet_cm2
 
-    # Compute current smallest semicircle radius
-    r_min_m = math.sqrt((2 * A_min_m2) / math.pi)
+    # find current smallest plenum area
+    A_min_current_cm2 = A_plenum[-1]
 
-    # Scale factor for all areas (so smallest becomes 5 mm)
-    scale_factor = (target_radius_m / r_min_m) ** 2
+    # scaling factor for ALL plenum areas
+    scale_factor = A_required_min_cm2 / A_min_current_cm2
+
+    # scaled plenum areas
     A_plenum_scaled = [a * scale_factor for a in A_plenum]
 
-    # Compute radii (mm) for key points
-    def semicircle_radius_mm(area_cm2):
-        return math.sqrt((2 * cm2_to_m2(area_cm2)) / math.pi) * 1000.0
-
-    r_small = semicircle_radius_mm(A_plenum_scaled[-1])
-    r_large = semicircle_radius_mm(A_plenum_scaled[0])
-    r_mid = semicircle_radius_mm(A_plenum_scaled[len(A_plenum_scaled)//2])
-
-    print("\n--- Scaled Plenum Geometry ---")
-    print(f"Scale factor applied: {scale_factor:.6f}")
-    print(f"Largest radius : {r_large:.3f} mm")
-    print(f"Midpoint radius: {r_mid:.3f} mm")
-    print(f"Smallest radius: {r_small:.3f} mm (set to target height)")
-    print("--------------------------------\n")
+    print("\n--- Scaled Plenum Geometry (1.5× header rule) ---")
+    print(f"Required min header area : {A_required_min_cm2:.4f} cm²")
+    print(f"Current min plenum area  : {A_min_current_cm2:.4f} cm²")
+    print(f"Scale factor applied     : {scale_factor:.6f}")
+    print(f"Largest area (scaled)    : {A_plenum_scaled[0]:.4f} cm²")
+    print(f"Smallest area (scaled)   : {A_plenum_scaled[-1]:.4f} cm²")
+    print("--------------------------------------------------\n")
 
     return outlet_velocities, outlet_massflows, A_plenum_scaled
-    # ============================================================
-
 
 # =============================
 # 📊 PLOTTING FUNCTION
@@ -106,14 +93,13 @@ def ring_manifold_half(cfg):
 
 def plot_half_ring(A_plenum):
     n_half = len(A_plenum)
-    # Degrees for negative side (-180 to 0), mirrored
+
     degrees_left = [-180 + (180 * i / n_half) for i in range(n_half)]
-    areas_left = A_plenum[::-1]  # reverse for correct taper
-    # Degrees for positive side (0 to 180)
+    areas_left = A_plenum[::-1]
+
     degrees_right = [0 + (180 * i / n_half) for i in range(n_half)]
     areas_right = A_plenum
 
-    # Combine for full ring
     degrees = degrees_left + degrees_right
     areas = areas_left + areas_right
 
@@ -125,7 +111,6 @@ def plot_half_ring(A_plenum):
     plt.grid(True)
     plt.show()
 
-
 # =============================
 # ▶️ MAIN EXECUTION
 # =============================
@@ -133,7 +118,4 @@ def plot_half_ring(A_plenum):
 if __name__ == "__main__":
     v_out, m_out, A_plenum = ring_manifold_half(CONFIG)
     print("\nSimulation complete ✅\n")
-    print("Note: this is one half of the ring manifold. The other half is symmetrical.")
-
-    # Plot plenum area around the ring
     plot_half_ring(A_plenum)
