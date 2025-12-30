@@ -68,7 +68,8 @@ while (heightStep <= heightStepNumber)
 
     T_wg_InitialGuess = inputFlowValues(5); % Set initial guess to be upper threshold for wall temp
     T_wg = T_wg_InitialGuess;
-    
+    T_wl = 293;
+
     
 
 
@@ -79,7 +80,7 @@ while (heightStep <= heightStepNumber)
         h_g = H_g_From_Temperature(T_wg, newFluidInfo, inputFlowValues);
         T_r = exhaustTemps(heightStep);
         Q_dotIN = h_g(heightStep)*(T_r-T_wg);
-        
+        thermalConductivity = ((-1350 + 10.9*T_wg + -0.0283*T_wg^2 + 3.21E-05*T_wg^3 + -1.33E-08*T_wg^4)+(-1350 + 10.9*T_wl + -0.0283*T_wl^2 + 3.21E-05*T_wl^3 + -1.33E-08*T_wl^4))/2;
         %cool side
         T_wl = -(Q_dotIN*wallThicknesses(heightStep)/thermalConductivity)+T_wg;
         
@@ -87,10 +88,10 @@ while (heightStep <= heightStepNumber)
             %% H_L finder
 
             hyd_diam = (2*width*height)/(height+width);
-            density = double(py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Dodecane'));
+            density = double(py.CoolProp.CoolProp.PropsSI('D','P',pressure,'T',temp,'Ethanol'));
         
             % Dynamic viscosity [Pa·s]
-            dyn_visc = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Dodecane'));%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
+            dyn_visc = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',temp,'Ethanol'));%dynamic viscosity is normal viscosity, for kinematic viscosity, divide by density
         
         
             % Calculate Reynolds number
@@ -99,12 +100,12 @@ while (heightStep <= heightStepNumber)
         
             % Calculate Prandtl Number
             % Thermal conductivity [W/(m·K)]
-            kf = double(py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Dodecane'));
+            kf = double(py.CoolProp.CoolProp.PropsSI('CONDUCTIVITY','P',pressure,'T',temp,'Ethanol'));
             
             %^Use empirical data/curves found from papers in regen channel
         
             % Specific heat capacity [J/(kg·K)]
-            cp = double(py.CoolProp.CoolProp.PropsSI('CPMASS','P',pressure,'T',temp,'Dodecane'));
+            cp = double(py.CoolProp.CoolProp.PropsSI('CPMASS','P',pressure,'T',temp,'Ethanol'));
             
             % Prandtl number [-]
             Pr = cp * dyn_visc / kf;
@@ -113,7 +114,7 @@ while (heightStep <= heightStepNumber)
         
             %% Sieder Tate Nusselt's Number
             % Get viscosity at wall temperature for Sieder-Tate correction
-            mu_wall = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wl,'Dodecane'));
+            mu_wall = double(py.CoolProp.CoolProp.PropsSI('VISCOSITY','P',pressure,'T',T_wl,'Ethanol'));
             
             % Calculate Nusselt number using Sieder-Tate correlation
             Nu = 0.027 * Re^(4/5) * Pr^(1/3) * (dyn_visc/mu_wall)^0.14;

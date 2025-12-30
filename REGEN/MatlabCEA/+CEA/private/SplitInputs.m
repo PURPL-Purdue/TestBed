@@ -66,9 +66,12 @@ function inputs = SplitInputs(reactants, inputs, splitFlds)
             % condition per input structure
             splitArray = inputs.(inputs.splitfld);
             inputs(1:LSplit) = inputs;
+            
+            fieldName = inputs(1).splitfld;   % get the field name from one element
 
             for i = 1:length(inputs)
-                inputs(i).(inputs.splitfld) = splitArray(i);
+                inputs(i) = inputs(1);
+                inputs(i).(fieldName) = splitArray(i);
             end
         end
     end
