@@ -6,7 +6,8 @@ function [vonMises,sigma_long, sigma_circ, sigma_rad, output] = FINAL_STRUCTURES
 CTE = inputValues(9);
 youngsModulus = inputValues(10);
 poissonsRatio = inputValues(13);
-thermalConductivity = inputValues(6);
+thermalConductivity = ((-1350 + 10.9*T_wg + -0.0283*T_wg.^2 + 3.21E-05*T_wg.^3 + -1.33E-08*T_wg.^4)+(-1350 + 10.9*T_wl + -0.0283*T_wl.^2 + 3.21E-05*T_wl.^3 + -1.33E-08*T_wl.^4))/2;
+
 
 OEffectives = zeros(length(T_wl),1);
 thermalStress = zeros(length(T_wl),1);
@@ -38,7 +39,7 @@ effectiveRatio = (channelWidths.* inputValues(7))./(pi*(chamberDiameter+wallThic
 hoopStress = chamberPressure.*chamberDiameter./(2.*wallThicknesses);
 comp_stress = (chamberPressure*2) + deltaP;
 compress_circ = effectiveRatio .*deltaP.*chamberDiameter./wallThicknesses;
-thermal_circ = (Qdot.* youngsModulus.* CTE.*wallThicknesses)/(2*(1-poissonsRatio)*thermalConductivity);
+thermal_circ = (Qdot.* youngsModulus.* CTE.*wallThicknesses)/(2*(1-poissonsRatio).*thermalConductivity);
 
 %Searches and finds coolant wall temperature and Wmin that *just* meets the
 %strength requirements.
