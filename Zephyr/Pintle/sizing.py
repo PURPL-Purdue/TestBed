@@ -121,12 +121,27 @@ print(f"Fuel Areas: {fuel_areas}")
 
 tmrs = np.empty_like(throttles)
 lmrs = np.empty_like(throttles)
+spray_angles = np.empty_like(throttles)
 for i in range(len(throttles)):
     lox_mom = (ox_fraction * mass_flows[i]) ** 2 / rhoo / lox_areas[i]
     fuel_mom = (fuel_fraction * mass_flows[i]) ** 2 / rhof / fuel_areas[i]
     tmrs[i] = lox_mom / fuel_mom
+    lmrs[i] = tmrs[i] / blockage_factor
+    spray_angles[i] = (105.5 - 24.5 * tmrs[i]) * sqrt(lmrs[i])
 
-fig, ax = plt.subplots(2, 3)
+
+ispvacs = np.empty_like(throttles)
+ispambs = np.empty_like(throttles)
+separation_point = 0.0
+for i in range(len(throttles)):
+    ispvacs[i] = cea.get_Isp(chamber_pressures[i], Mo / Mf, expansion_ratio)
+    ispambs[i], mode = cea.estimate_Ambient_Isp(chamber_pressures[i], Mo / Mf, expansion_ratio, Pa)
+    if mode == "Separated" and throttles[i] > separation_point:
+        separation_point = throttles[i]
+        print(f"Separation at: {separation_point}")
+
+
+fig, ax = plt.subplots(2, 4)
 ax[0,0].plot(throttles, chamber_pressures)
 ax[0,0].set_xlim(0.0, 1.0)
 ax[0,0].set_ylim(0.0, Pc)
@@ -152,24 +167,43 @@ ax[1,1].plot(throttles, lox_areas)
 ax[1,1].plot(throttles, fuel_areas)
 ax[1,1].set_xlim(0.0, 1.0)
 ax[1,1].set_ylim(0.0, max(Aann, Aslot))
-ax[1,1].set_xlabel("Throttle Levels (ratio)")
+ax[1,1].set_xlabel("Throttle Level (ratio)")
 ax[1,1].set_ylabel("Orifice Areas (sq.in)")
 ax[1,1].set_title("Orifice Areas vs. Throttle Level")
 ax[1,1].legend(["LOx", "RP1"])
 
 ax[0,2].plot(throttles, tmrs)
+ax[0,2].plot(throttles, lmrs)
 ax[0,2].set_xlim(0.0, 1.0)
-ax[0,2].set_ylim(0.0, 1.05 * np.max(tmrs))
-ax[0,2].set_xlabel("Throttle Levels (ratio)")
-ax[0,2].set_ylabel("TMR (ratio)")
-ax[0,2].set_title("TMR vs. Throttle Level")
+ax[0,2].set_ylim(0.0, 1.05 * max(np.max(tmrs), np.max(lmrs)))
+ax[0,2].set_xlabel("Throttle Level (ratio)")
+ax[0,2].set_ylabel("TMR and LMR (ratio)")
+ax[0,2].set_title("TMR and LMR vs. Throttle Level")
+ax[0,2].legend(["TMR", "LMR"])
 
 ax[1,2].plot(throttles, lox_stiffnesses)
 ax[1,2].plot(throttles, fuel_stiffnesses)
 ax[1,2].set_xlim(0.0, 1.0)
 ax[1,2].set_ylim(0.0, max(np.max(lox_stiffnesses), np.max(fuel_stiffnesses)))
-ax[1,2].set_xlabel("Throttle Levels (ratio)")
+ax[1,2].set_xlabel("Throttle Level (ratio)")
 ax[1,2].set_ylabel("Stiffness (ratio)")
 ax[1,2].set_title("Stiffness vs. Throttle Level")
 ax[1,2].legend(["LOx", "RP1"])
+
+ax[0,3].plot(throttles, spray_angles)
+ax[0,3].set_xlim(0.0, 1.0)
+ax[0,3].set_ylim(np.min(spray_angles), np.max(spray_angles))
+ax[0,3].set_xlabel("Throttle Level (ratio)")
+ax[0,3].set_ylabel("Spray Angle (degrees)")
+ax[0,3].set_title("Spray Angle vs. Throttle Level")
+
+ax[1,3].plot(throttles, ispvacs)
+ax[1,3].plot(throttles, ispambs)
+ax[1,3].vlines(separation_point, 0.0, 1.05 * np.max(ispvacs), linestyles='dashed', label='Flow Separation')
+ax[1,3].set_xlim(0.0, 1.0)
+ax[1,3].set_ylim(0.0, 1.05 * np.max(ispvacs))
+ax[1,3].set_xlabel("Thrust Level (ratio)")
+ax[1,3].set_ylabel("ISP (s)")
+ax[1,3].set_title("Vacuum and Sea Level ISP vs. Throttle Level")
+ax[1,3].legend(["Vacuum", "Sea Level"])
 plt.show()
