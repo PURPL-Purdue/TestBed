@@ -52,13 +52,13 @@ rho_start = 791.26; % Coolant initial density in kg/m^3
 T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 250; %computation accuracy
 
-contourResolution = 700; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
+contourResolution = 1500; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
 generate_new_CEA = false;
 generate_new_Contour = false;
 
 %% Chamber Wall Material Properties
 
-k_w = 130; % thermal conductivity of the wall (W/m*K) %copper 323, 7075 130
+k_w = 130; %  NOW DEFINED IN SOLVER FUNCTION !!!!!!thermal conductivity of the wall (W/m*K) %copper 323, 7075 130
 surfaceRoughness = 0.0000032; % per additive industries average height of roughness (chosen from engineering toolbox/elementum) in m
 CTE = 0.0000212; % Material's coefficient of thermal expansion in (%change/K) 0.0000212 for 7075
 youngsModulus = 71700000000; %Pa 71700000000 for 7075

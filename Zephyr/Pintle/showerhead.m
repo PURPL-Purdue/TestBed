@@ -1,12 +1,13 @@
 in_to_m = 0.0254;
 lb_to_kg = 0.4536;
 N_to_lbf = 0.2248;
+psi_to_Pa = 6894.757;
 
 % Input Parameters
 flow_disturbance = 0.05; % Maximal Flow Disturbance Ratio
 tolerance = 4.0 * (in_to_m / 1000.0); % +- in Thou
 stiffness = 0.2; % Ratio of Pressure Drop to Chamber Pressure
-sleeve_thickness = 100 * (in_to_m / 1000.0); % Thickness of Sleeve Wall
+sleeve_thickness = 50 * (in_to_m / 1000.0); % Thickness of Sleeve Wall
 pintle_wall = 50 * (in_to_m / 1000.0);
 min_material = 1.0 - .85; % Fraction of Material Needed to be Left in Pintle
 thread_backing = 50.0 * (in_to_m / 1000.0); % How Much Material Needs to be Behind a Thread
@@ -14,8 +15,10 @@ thread_backing = 50.0 * (in_to_m / 1000.0); % How Much Material Needs to be Behi
 chamber_radius = (4.5 / 2) * in_to_m;
 chamber_length = (4.5 / 2) * in_to_m;
 
-of_ratio = 1.50087; % Architecture Number
-max_mass_flow = 8.82281 * lb_to_kg;
+mdot_f = 3.0736; % kg/s
+mdot_lox = 6.7616; % kg/s
+P_c = 400 * psi_to_Pa;
+P_mlox = (1 + stiffness) * P_c;
 
 throttle = 0.2; % Minimum Throttle
 
@@ -24,19 +27,12 @@ servo_angle = 180.0 * (pi / 180.0); % Maximum Servo Angle
 safety = 2.0;
 
 % Constants
-psi_to_Pa = 6894.757;
-
-mdot_f = max_mass_flow;
 u_f = 1136;
 rho_f = 768.09;
 
-mdot_lox = of_ratio * mdot_f;
 u_lox = 1014;
 rho_lox = 1205;
 
-P_c = 600 * psi_to_Pa;
-P_mf = 900 * psi_to_Pa;
-P_mlox = 720 * psi_to_Pa;
 
 
 C_d = 1.0;
@@ -85,16 +81,20 @@ fprintf("LOx Manifold Height Min. (thou): %.0f\n", lox_manifold_height * 1000.0 
 fprintf("--------------------------------------\n");
 
 slot_height = A_pg * 1 / (2 * pi * (R_od - pintle_wall) * (1 - min_material));
+sleeve_thickness_50 = sqrt(R_tot^2 - A_ann * 0.5 / pi) - R_sv;
+sleeve_thickness_min = sqrt(R_tot^2 - A_ann * throttle / pi) - R_sv;
 sleeve_angle = asin(1.0 / (slot_height * (1-throttle)) * (sqrt(R_tot^2 - A_ann*throttle/pi)-R_sv));
 
 fprintf("Slot Height @ Max (thou): %.0f\n", slot_height * 1000.0 / in_to_m);
 fprintf("Slot Height @ %.0f%% (thou): %.0f\n", throttle * 100.0, slot_height * throttle * 1000.0 / in_to_m);
 fprintf("Sleeve Transverse Distance: (thou): %.0f\n", slot_height * (1 - throttle) * 1000.0 / in_to_m);
+fprintf("Sleeve Thickness Increase @ 50%% Throttle (thou): %.0f\n", sleeve_thickness_50 * (1000.0 / in_to_m));
+fprintf("Sleeve Thickness Increase @ %.0f%% Throttle (thou): %.0f\n", throttle * 100, sleeve_thickness_min * (1000.0 / in_to_m));
 fprintf("Amount of Material Left on Circumference (thou): %.0f\n", 2 * pi * R_od * min_material * 1000.0 / in_to_m);
-fprintf("Sleeve Angle from Vertical (degrees): %.0f\n", sleeve_angle * 180.0 / pi);
+fprintf("Sleeve Angle from Vertical (Approximation for Force) (degrees): %.0f\n", sleeve_angle * 180.0 / pi);
 fprintf("--------------------------------------\n");
 
-F_U = P_c * pi * (R_sv^2 - R_od^2) + P_mlox * pi * tan(sleeve_angle) * (R_tot^2 - R_sv^2);
+F_U = P_c * pi * (R_sv^2 - R_od^2) + P_mlox * pi * ((R_sv+sleeve_thickness_min)^2 - R_sv^2);
 
 torque_fn = @(g)torque(g, servo_angle, static_friction, F_U, R_od + thread_backing, throttle, slot_height, R_sv + sin(sleeve_angle) * slot_height * (1-throttle));
 [gear_ratio, servo_torque] = fminbnd(torque_fn, 0.05, 20.0);
