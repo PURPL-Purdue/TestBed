@@ -6,7 +6,8 @@ function [vonMises,sigma_long, sigma_circ, sigma_rad, output] = FINAL_STRUCTURES
 CTE = inputValues(9);
 youngsModulus = inputValues(10);
 poissonsRatio = inputValues(13);
-thermalConductivity = inputValues(6);
+thermalConductivity = ((-1350 + 10.9*T_wg + -0.0283*T_wg.^2 + 3.21E-05*T_wg.^3 + -1.33E-08*T_wg.^4)+(-1350 + 10.9*T_wl + -0.0283*T_wl.^2 + 3.21E-05*T_wl.^3 + -1.33E-08*T_wl.^4))/2;
+
 
 OEffectives = zeros(length(T_wl),1);
 thermalStress = zeros(length(T_wl),1);
@@ -19,9 +20,9 @@ while i <= length(T_wl)
     %Correlation between copper's yield/ultimate tensile strength in MPa and temperature in K
     %Copper:
     %calcPainArr = 191.31 + 0.65634 .* temperatureDist - 1.85 .* 10.^(-3).* (temperatureDist).^2 +1.0185 .* 10.^(-6) .* (temperatureDist).^3; %
-    calcPainArr = 297.4 - 0.312.*temperatureDist + 3.175*(10^-4).*(temperatureDist.^2) - 2.506*(10^-7).*(temperatureDist.^3); % GRCOP42
+    %calcPainArr = 297.4 - 0.312.*temperatureDist + 3.175*(10^-4).*(temperatureDist.^2) - 2.506*(10^-7).*(temperatureDist.^3); % GRCOP42
     % 7075
-    %calcPainArr = 5    25.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
+    calcPainArr = 25.35614 ./ (1 + exp(-(-0.0181864 .* (temperatureDist) + 8.7044)));
     %6061 T6 
     %calcPainArr = ;
     
@@ -38,7 +39,7 @@ effectiveRatio = (channelWidths.* inputValues(7))./(pi*(chamberDiameter+wallThic
 hoopStress = chamberPressure.*chamberDiameter./(2.*wallThicknesses);
 comp_stress = (chamberPressure*2) + deltaP;
 compress_circ = effectiveRatio .*deltaP.*chamberDiameter./wallThicknesses;
-thermal_circ = (Qdot.* youngsModulus.* CTE.*wallThicknesses)/(2*(1-poissonsRatio)*thermalConductivity);
+thermal_circ = (Qdot.* youngsModulus.* CTE.*wallThicknesses)/(2*(1-poissonsRatio).*thermalConductivity);
 
 %Searches and finds coolant wall temperature and Wmin that *just* meets the
 %strength requirements.
@@ -46,20 +47,13 @@ a = 0;
 while a < length(chamberDiameter)
     a = a + 1;
 
-    sigma_rad(a) = comp_stress(a);
-    sigma_circ(a) = thermal_circ(a)+ compress_circ(a); %hoopStress(a) + thermal_circ(a) +
-    sigma_long(a) = 0; % thermalStress(a)
-    vonMises(a) = sqrt(((sigma_rad(a)+sigma_circ(a))^2)+((sigma_circ(a)-sigma_long(a))^2) + ((sigma_rad(a) + sigma_long(a))^2));
+    sigma_rad(a) = comp_stress(a); % radially acting stress (outward from centerpoint) Can delete!
+    sigma_circ(a) = thermal_circ(a)+ compress_circ(a); %hoopStress(a) + thermal_circ(a) % circumferential hoop stress, acting tangential to walls. Dependent on OD boundary conditions.
     
-    if OEffectives(a) >= vonMises
-        
-        display(sigma_rad)
-        display(sigma_circ)
-        display(sigma_long)
-        display(vonMises)
-        break
-    end
-
+        sigma_long(a) = thermalStress(a); % acting along the centerline of engine.
+    
+    vonMises(a) = sqrt(((sigma_rad(a)+sigma_circ(a))^2)+((sigma_circ(a)-sigma_long(a))^2) + ((sigma_rad(a) + sigma_long(a))^2));
+  
     output = [thermal_circ;compress_circ;calcPainArr;temperatureDist;];
    
 end

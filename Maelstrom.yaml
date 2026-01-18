@@ -33,30 +33,37 @@
 ###### MAELSTROM ENGINE INPUTS #######
 ######################################
 
-thrust: 450 # (lbf) Dominik Sloup
-of_ratio: 1 # (N/A) Dominik Sloup
+thrust: 500 # (lbf) Dominik Sloup
+of_ratio: 0.85 # (N/A) Dominik Sloup
 chamber_pressure: 250 # (psi) Dominik Sloup
 exhaust_pressure: 14.7 # (psi) Dominik Sloup
-regen_pressure_drop: 100 # (psi) James Nida
-cstar_eff: 0.8 # (N/A) Dominik Sloup
+regen_pressure_drop: 150 # (psi) James Nida
+cstar_eff: 0.846 # (N/A) Dominik Sloup
 isp_eff: 1 # (N/A) Dominik Sloup
-Lstar: 55 # (in) Dominik Sloup
+Lstar: 43 # (in) Dominik Sloup
 
-chamber_diameter: 3.4   # (in)  Dominik Sloup
+chamber_diameter: 3.325   # (in) Dominik Sloup
 converging_angle: 45    # (deg) Dominik Sloup
 diverging_angle: 13.5   # (deg) Dominik Sloup
 converging_fillet: 0.5  # (in)  Dominik Sloup
-throat_fillet: 0.4     # (in)   Dominik Sloup
+throat_fillet: 0.55     # (in)  Dominik Sloup
 
-gox_stiffness: 2.2  # (N/A) Dominik Sloup
-gox_orifice_number: 32 # (N/A) Dominik Sloup
+gox_stiffness: 1.7  # (N/A) Dominik Sloup
+gox_orifice_number: 48 # (N/A) Dominik Sloup
 gox_discharge_coeff: 0.8 # (N/A) Dominik Sloup
 gox_tube_inner_dia: 0.9 # (in) Dominik Sloup
+gox_temperature: 293.15 # (K) Dominik Sloup
 
-rp_stiffness: 0.28 # (N/A) Dominik Sloup
-rp_orifice_number: 32 # (N/A) Dominik Sloup
-rp_discharge_coeff: 0.8 # (N/A) Dominik Sloup
-rp_tube_inner_dia: 0.4 # (in) Dominik Sloup
+fuel_stiffness: 0.19 # (N/A) Dominik Sloup
+fuel_orifice_number: 48 # (N/A) Dominik Sloup
+fuel_discharge_coeff: 0.8 # (N/A) Dominik Sloup
+fuel_tube_inner_dia: 0.4 # (in) Dominik Sloup
+fuel_temperature: 400 # (K) James Nida's Regen Code
+
+num_channels: 62 # Number of coolant channels
+channel_widths: [0.02, 0.02, 0.02] # Width of coolant channel at injector, throat and exit (in)
+channel_heights: [0.125, 0.04, 0.125] # Height of coolant channel at injector, throat and exit (in)
+wall_thicknesses: [0.04, 0.04, 0.04] # Hotwall thickness at injector, throat and exit (in)
 
 ######################################
 ###### MAELSTROM ENGINE OUTPUTS ######
@@ -64,26 +71,37 @@ rp_tube_inner_dia: 0.4 # (in) Dominik Sloup
 
 # Expected performance parameters
 
-cstar: 1103 # (m/s) Dominik Sloup
-isp: 164 # (s) Dominik Sloup
+cstar: 1265 # (m/s) Dominik Sloup
+isp: 188 # (s) Dominik Sloup
 
-# Maelstrom Chamber geometry
+# Maelstrom chamber geometry
 
-throat_diameter: 1.254 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
-total_length: 8.6  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
-exit_diameter: 2.165 # (in) Dominik Sloup
-chamber_volume: 67.9  # (in^3) Dominik Sloup
+throat_diameter: 1.322 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
+throat_area: 1.373 # (in^2) Dominik Sloup
+total_length: 8.0  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
+exit_diameter: 2.309 # (in) Dominik Sloup
+chamber_volume: 59.1  # (in^3) Dominik Sloup
 
-# Maelstrom Impinging Jet Injector parameters
+# Maelstrom oxidizer injector parameters
 
-rp_design_mdot: 1.371 # (lb/s) Dominik Sloup
-rp_orifice_dia: 0.041 # (in) Dominik Sloup
-rp_feed_pressure: 420 # (psi) Dominik Sloup
-rp_line_velocity: 31.07 # (ft/s) Dominik Sloup
-n2_SCFM: 1131.18 # (ft^3/min) Dominik Sloup
+gox_design_mdot: 1.222 # (lb/s) Dominik Sloup
+gox_CdA: 0.0733   # (in^2) Dominik Sloup
+gox_orifice_dia: 0.049 # (in) Dominik Sloup
+gox_feed_pressure: 675  # (psi) Declan Koch, required be under 675 (@ 1.292 lb/s) to keep gox line velocity under 75 ft/s
+gox_SCFM: 882.21  # (ft^3/min) Dominik Sloup
 
-gox_design_mdot: 1.371 # (lb/s) Dominik Sloup
-gox_orifice_dia: 0.059 # (in) Dominik Sloup
-gox_feed_pressure: 800  # (psi) Dominik Sloup
-gox_line_velocity: 66.31  # (ft/s) Dominik Sloup
-gox_SCFM: 989.96  # (ft^3/min) Dominik Sloup
+# Maelstrom fuel injector parameters
+
+fuel_design_mdot: 1.438 # (lb/s) Dominik Sloup
+fuel_orifice_dia: 0.04  # (in) Dominik Sloup
+fuel_CdA: 0.04771  # (in^2) Dominik Sloup
+fuel_injector_pressure: 297 # (psi) Dominik Sloup
+n2_SCFM: 40.98 # (ft^3/min) Dominik Sloup
+
+# Fuel venturi parameters
+
+fuel_feed_pressure: 750 # (psi) Dominik Sloup
+critical_pressure_ratio: 0.7 # (N/A) Dominik Sloup
+minumum_pressure_ratio: 0.6 # (N/A) Dominik Sloup
+venturi_throat_diameter: 0.123 # (in) Dominik Sloup
+venturi_CdA: 0.0111 # (in^2) Dominik Sloup

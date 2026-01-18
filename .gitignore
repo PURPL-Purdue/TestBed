@@ -5,4 +5,6 @@ __pycache__/
 *.inp
 *.out
 *.plt
+*.xlsx
 REGEN/MatlabCEA/+CEA/bin/ZZa26964
+Zephyr/Pintle/ceavenv/
