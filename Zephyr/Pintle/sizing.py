@@ -37,7 +37,7 @@ rhof = 768.09 * (in_to_m ** 3) / lb_to_kg
 rhoo = 1205 / lb_to_kg * (in_to_m ** 3)
 
 expansion_ratio = 4.897
-chamber_diameter = (0.1665 / 2) / in_to_m
+chamber_diameter = (0.1665) / in_to_m
 exit_area = ((0.1843 / 2) / in_to_m)**2 * pi
 
 Dp = 0.2 * chamber_diameter
