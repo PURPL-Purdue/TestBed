@@ -4,13 +4,24 @@ if __name__ == "__main__":
     Pcstart = 100
     PcMax = 300
     OFstart = .5
+    OFEnd = 4
+    FireTime = 2
+
+    while Pcstart <= PcMax:
+        while ThrustStart <= ThrustMax:
+            while OFstart <= OFEnd:
+                CEA(ThrustStart, OFstart, Pcstart)
+
+                OFflowChecker(OFstart, mdot, FireTime)
+
+
+
 
     
-    CEA()
 
 
 
-def OFflowChecker(OF, mdot):
+def OFflowChecker(OF, mdot, FireTime):
     {
 
     
@@ -24,6 +35,6 @@ def plotter(OF):
 
 def CEA(thrust, OF, Pc):
     {
-
+        
 
     }
