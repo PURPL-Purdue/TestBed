@@ -151,7 +151,7 @@ def OFflowChecker(OF, mdot, FireTime):
 
         return passfail, mdot_ox, mdot_fuel
 
-def plotter(result, FireTime, passfail, mdot_ox, mdot_fuel):
+def plotter(result, FireTime, passfail, thrust):
     """
     Creates a single matrix row for trade study / plotting
     """
@@ -160,12 +160,14 @@ def plotter(result, FireTime, passfail, mdot_ox, mdot_fuel):
         result['pc_psi'],          # 1 chamber pressure
         result['of'],              # 2 OF ratio
         result['mdot'],            # 3 total mass flow
-        mdot_ox,                   # 4 oxidizer mass flow
-        mdot_fuel,                 # 5 fuel mass flow
-        result['Tc'],              # 6 chamber temperature
-        FireTime,                  # 7 fire time
-        result['Dt']               # 8 throat diameter
+        thrust,                    # 4 thrust
+        result['Tc'],              # 5 chamber temperature
+        result['Dt']*100,          # 6 throat diameter (cm)
+        result['Dt']*200           # 7 chamber diameter (2xthroat)
     ])
+
+
+    return row
 
     return row
 
@@ -187,8 +189,8 @@ if __name__ == "__main__":
 
     print("HSK Operating Envelope Trade Study")
     print("----------------------------------")
-    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Oxidizer Mass Flow (kg/s) | Fuel Mass Flow (kg/s) | Chamber Temp (K) | Fire Time (s) | Throat Diameter (m)")
-
+    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Thrust (N) | Chamber Temp (K) | Throat Diameter (cm) | Chamber Diameter (cm)")
+    
     cea = CEA_Obj(oxName=OXIDIZER, fuelName=FUEL)
     rows = []
 
@@ -200,13 +202,15 @@ if __name__ == "__main__":
                 result = CEA(ThrustStart, OFstart, Pcstart)
                 
                 passfail, mdot_ox, mdot_fuel = OFflowChecker(OFstart, result['mdot'], FireTime)
-
-                row = plotter(result, FireTime, passfail, mdot_ox, mdot_fuel)
+                
+                row = plotter(result, FireTime, passfail, ThrustStart)
                 rows.append(row)
-                print(f"{int(row[0])}        | {row[1]:.2f}    | {row[2]:.2f}   | {row[3]:.2f}               | {row[4]:.2f}                 | {row[5]:.2f}            | {row[6]:.2f}       | {row[7]:.2f}        | {row[8]:.4f}")
+                print(f"{int(row[0])}        | {row[1]:.2f}    | {row[2]:.2f}   | {row[3]:.2f}        | {row[4]:.2f}  | {row[5]:.2f}      | {row[6]:.2f}     | {row[7]:.4f}")
 
                 OFstart += 0.5
             ThrustStart += 20
         Pcstart += 5
 
     data_matrix = np.vstack(rows)
+    np.savetxt("trade_study_matrix.csv", data_matrix, delimiter=",")
+
