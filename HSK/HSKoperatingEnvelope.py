@@ -60,8 +60,6 @@ def compute_Cf_ideal(gamma, Pe_Pc, Pa_Pc, Ae_over_At):
     return momentum + pressure_term    
 
 def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
-    
-    cea = CEA_Obj(oxName=ox, fuelName=fuel)
 
     # temperatures (degR), convert primary chamber temperature to K
     temps_rankine = cea.get_Temperatures(Pc=pc_psi, MR=OF_ratio, eps=1)
@@ -72,7 +70,9 @@ def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
     MolWt, gamma = mw_gamma
 
     # R_specific
-    R_specific = R_UNIVERSAL / MolWt
+    MolWt_kg_per_kmol = MolWt * LBM_TO_KG
+    R_specific = R_UNIVERSAL / MolWt_kg_per_kmol
+
 
     # cstar
     cstar = cstar_from_T_gamma_R(Tc, gamma, R_specific)
@@ -86,6 +86,7 @@ def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
         'gamma': gamma,
         'MolWt': MolWt,
         'R_specific': R_specific,
+        'cp': cp
     }
 
 def CEA(F_newtons, of, pc_psi):
@@ -112,18 +113,19 @@ def CEA(F_newtons, of, pc_psi):
     At = F_newtons / (Pc_Pa * Cf)
     Dt = math.sqrt(4.0 * At / math.pi)
 
-    cstar_eff = cstar * EFFICIENCY_FACTOR
-    mdot = Pc_Pa * At / cstar_eff
+    mdot = Pc_Pa * At / cstar
 
     Ae = At * eps
     De = math.sqrt(4.0 * Ae / math.pi)
-    Isp = (Cf * cstar) / G0
-    Ve = Isp * G0 * EFFICIENCY_FACTOR
+    Ve = Cf * cstar * EFFICIENCY_FACTOR
+    Isp = Ve / G0
+    
 
 
     #R_throat = 0.382 * Dt  # Throat radius-of-curvature approximation (not geometric throat radius)
     L_nozzle = (De - Dt) / (2 * math.tan(math.radians(NOZZLE_HALF_ANGLE_DEG)))
 
+    #c
     
     result = {
         'pc_psi': pc_psi, 'of': of, 'gamma': gamma, 'Tc': Tc,
@@ -140,6 +142,7 @@ def CEA(F_newtons, of, pc_psi):
 def OFflowChecker(OF, mdot, FireTime):
     mdot_ox = mdot * OF / (1 + OF)
     mdot_fuel = mdot / (1 + OF)
+
 
     m_ox = mdot_ox * FireTime
     m_fuel = mdot_fuel * FireTime
@@ -179,16 +182,16 @@ if __name__ == "__main__":
     ThrustMax = 5000
     ThrustTemp = ThrustStart
     Pcstart = 100
-    Pctemp = Pcstart
     PcMax = 300
     OFstart = .5
     OFTemp = OFstart
     OFEnd = 4
     FireTime = 2
-
     print("HSK Operating Envelope Trade Study")
     print("----------------------------------")
     print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Oxidizer Mass Flow (kg/s) | Fuel Mass Flow (kg/s) | Chamber Temp (K) | Fire Time (s) | Throat Diameter (m)")
+    cea = CEA_Obj(oxName=OXIDIZER, fuelName=FUEL)
+
     while Pcstart <= PcMax:
         ThrustStart = ThrustTemp
         while ThrustStart <= ThrustMax:
@@ -198,6 +201,6 @@ if __name__ == "__main__":
                 passfail, mdot_ox, mdot_fuel = OFflowChecker(OFstart, result['mdot'], FireTime)
                 row = plotter(result, FireTime, passfail, mdot_ox, mdot_fuel)
                 print(f"{int(row[0])}        | {row[1]:.2f}    | {row[2]:.2f}   | {row[3]:.2f}               | {row[4]:.2f}                 | {row[5]:.2f}            | {row[6]:.2f}       | {row[7]:.2f}        | {row[8]:.4f}")
-                OFstart += 0.1
-            ThrustStart += 5
+                OFstart += 0.5
+            ThrustStart += 20
         Pcstart += 5
