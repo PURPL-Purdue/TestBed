@@ -167,8 +167,6 @@ def plotter(result, FireTime, passfail, mdot_ox, mdot_fuel):
         result['Dt']               # 8 throat diameter
     ])
 
-
-
     return row
 
 
@@ -192,6 +190,7 @@ if __name__ == "__main__":
     print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Oxidizer Mass Flow (kg/s) | Fuel Mass Flow (kg/s) | Chamber Temp (K) | Fire Time (s) | Throat Diameter (m)")
 
     cea = CEA_Obj(oxName=OXIDIZER, fuelName=FUEL)
+    rows = []
 
     while Pcstart <= PcMax:
         ThrustStart = ThrustTemp
@@ -203,9 +202,11 @@ if __name__ == "__main__":
                 passfail, mdot_ox, mdot_fuel = OFflowChecker(OFstart, result['mdot'], FireTime)
 
                 row = plotter(result, FireTime, passfail, mdot_ox, mdot_fuel)
-
+                rows.append(row)
                 print(f"{int(row[0])}        | {row[1]:.2f}    | {row[2]:.2f}   | {row[3]:.2f}               | {row[4]:.2f}                 | {row[5]:.2f}            | {row[6]:.2f}       | {row[7]:.2f}        | {row[8]:.4f}")
 
                 OFstart += 0.5
             ThrustStart += 20
         Pcstart += 5
+
+    data_matrix = np.vstack(rows)
