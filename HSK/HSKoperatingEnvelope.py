@@ -140,24 +140,21 @@ def CEA(F_newtons, of, pc_psi):
     return result
 
 def OFflowChecker(OF, mdot, FireTime):
-    mdot_ox = mdot * OF / (1 + OF)
-    mdot_fuel = mdot / (1 + OF)
+        mdot_ox = mdot * OF / (1 + OF)
+        mdot_fuel = mdot / (1 + OF)
 
+        m_ox = mdot_ox * FireTime
+        m_fuel = mdot_fuel * FireTime
 
-    m_ox = mdot_ox * FireTime
-    m_fuel = mdot_fuel * FireTime
+        #feasability check based on amount of propellant available
+        passfail = int(m_ox < 48.5 and m_fuel < 16.45)
 
-    #feasability check based on amount of propellant available
-    passfail = int(m_ox < 48.5 and m_fuel < 16.45)
+        return passfail, mdot_ox, mdot_fuel
 
-    return passfail, mdot_ox, mdot_fuel
-
-
-def plotter(result, FireTime, passfail, thrust):
+def plotter(result, FireTime, passfail, mdot_ox, mdot_fuel):
     """
     Creates a single matrix row for trade study / plotting
     """
-
     row = np.array([
         passfail,                  # 0 feasibility
         result['pc_psi'],          # 1 chamber pressure
@@ -189,7 +186,9 @@ if __name__ == "__main__":
     print("HSK Operating Envelope Trade Study")
     print("----------------------------------")
     print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Thrust (N) | Chamber Temp (K) | Throat Diameter (cm) | Chamber Diameter (cm)")
+
     cea = CEA_Obj(oxName=OXIDIZER, fuelName=FUEL)
+    rows = []
 
     while Pcstart <= PcMax:
         ThrustStart = ThrustTemp
@@ -203,3 +202,5 @@ if __name__ == "__main__":
                 OFstart += 0.5
             ThrustStart += 20
         Pcstart += 5
+
+    data_matrix = np.vstack(rows)
