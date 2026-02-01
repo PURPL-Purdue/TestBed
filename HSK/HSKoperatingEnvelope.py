@@ -5,7 +5,6 @@ from rocketcea.cea_obj import CEA_Obj
 
 AMBIENT_P_PSI = 14.7
 EFFICIENCY_FACTOR = .85
-HOTFIRE_SECONDS = 30
 
 NOZZLE_HALF_ANGLE_DEG = 15.0
 LSTAR = 1.0922
@@ -169,23 +168,17 @@ def plotter(result, FireTime, passfail, thrust):
 
     return row
 
-    return row
-
-
-
-
-
 
 if __name__ == "__main__":
     ThrustStart = 200
     ThrustMax = 5000
     ThrustTemp = ThrustStart
     Pcstart = 100
-    PcMax = 300
+    PcMax = 325
     OFstart = .5
     OFTemp = OFstart
     OFEnd = 4
-    FireTime = 2
+    FireTime = 3
 
     print("HSK Operating Envelope Trade Study")
     print("----------------------------------")
@@ -199,7 +192,8 @@ if __name__ == "__main__":
         while ThrustStart <= ThrustMax:
             OFstart = OFTemp
             while OFstart <= OFEnd:
-                result = CEA(ThrustStart, OFstart, Pcstart)
+                ConvertedThrust = ThrustStart * LBF_TO_N
+                result = CEA(ConvertedThrust, OFstart, Pcstart)
                 
                 passfail, mdot_ox, mdot_fuel = OFflowChecker(OFstart, result['mdot'], FireTime)
                 
@@ -212,5 +206,9 @@ if __name__ == "__main__":
         Pcstart += 5
 
     data_matrix = np.vstack(rows)
-    np.savetxt("trade_study_matrix.csv", data_matrix, delimiter=",")
+    
+    show_opt = input("Save? (y/n): ").strip().lower()
+    
+    if show_opt == "y":
+        np.savetxt("trade_study_matrix.csv", data_matrix, delimiter=",")
 
