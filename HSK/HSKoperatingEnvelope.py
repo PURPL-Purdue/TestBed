@@ -140,17 +140,36 @@ def CEA(F_newtons, of, pc_psi):
     return result
 
 def OFflowChecker(OF, mdot, FireTime):
-    {
-        
+        mdot_ox = mdot * OF / (1 + OF)
+        mdot_fuel = mdot / (1 + OF)
 
-    
-    }
+        m_ox = mdot_ox * FireTime
+        m_fuel = mdot_fuel * FireTime
 
-def plotter(OF):
-    {
+        #feasability check based on amount of propellant available
+        passfail = int(m_ox < 48.5 and m_fuel < 16.45)
+
+        return passfail, mdot_ox, mdot_fuel
+
+def plotter(result, FireTime, passfail, mdot_ox, mdot_fuel):
+    """
+    Creates a single matrix row for trade study / plotting
+    """
+    row = np.array([
+        passfail,                  # 0 feasibility
+        result['pc_psi'],          # 1 chamber pressure
+        result['of'],              # 2 OF ratio
+        result['mdot'],            # 3 total mass flow
+        mdot_ox,                   # 4 oxidizer mass flow
+        mdot_fuel,                 # 5 fuel mass flow
+        result['Tc'],              # 6 chamber temperature
+        FireTime,                  # 7 fire time
+        result['Dt']               # 8 throat diameter
+    ])
 
 
-    }
+
+    return row
 
 
 
@@ -168,6 +187,10 @@ if __name__ == "__main__":
     OFEnd = 4
     FireTime = 2
 
+    print("HSK Operating Envelope Trade Study")
+    print("----------------------------------")
+    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Oxidizer Mass Flow (kg/s) | Fuel Mass Flow (kg/s) | Chamber Temp (K) | Fire Time (s) | Throat Diameter (m)")
+
     cea = CEA_Obj(oxName=OXIDIZER, fuelName=FUEL)
 
     while Pcstart <= PcMax:
@@ -177,12 +200,11 @@ if __name__ == "__main__":
             while OFstart <= OFEnd:
                 result = CEA(ThrustStart, OFstart, Pcstart)
                 
-                mdot = result['mdot']
-                print("ping")
+                passfail, mdot_ox, mdot_fuel = OFflowChecker(OFstart, result['mdot'], FireTime)
 
-                PassFail = OFflowChecker(OFstart, mdot, FireTime)
+                row = plotter(result, FireTime, passfail, mdot_ox, mdot_fuel)
 
-                plotter(result, PassFail, ThrustStart, OFstart, Pcstart)
+                print(f"{int(row[0])}        | {row[1]:.2f}    | {row[2]:.2f}   | {row[3]:.2f}               | {row[4]:.2f}                 | {row[5]:.2f}            | {row[6]:.2f}       | {row[7]:.2f}        | {row[8]:.4f}")
 
                 OFstart += 0.5
             ThrustStart += 20
