@@ -125,6 +125,7 @@ def CEA(F_newtons, of, pc_psi):
     #R_throat = 0.382 * Dt  # Throat radius-of-curvature approximation (not geometric throat radius)
     L_nozzle = (De - Dt) / (2 * math.tan(math.radians(NOZZLE_HALF_ANGLE_DEG)))
 
+    #c
     
     result = {
         'pc_psi': pc_psi, 'of': of, 'gamma': gamma, 'Tc': Tc,
