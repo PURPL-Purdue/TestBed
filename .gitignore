@@ -8,3 +8,4 @@ __pycache__/
 *.xlsx
 REGEN/MatlabCEA/+CEA/bin/ZZa26964
 Zephyr/Pintle/ceavenv/
+*.exp
