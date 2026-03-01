@@ -76,7 +76,7 @@ isp: 188 # (s) Dominik Sloup
 
 # Maelstrom chamber geometry
 
-throat_diameter: 1.322 # Needs to be > 1.2 (in), dictated by the minimum bore diameter of our longest boring bar
+throat_diameter: 1.321 # AS MACHINED, DO NOT CHANGE
 throat_area: 1.373 # (in^2) Dominik Sloup
 total_length: 8.0  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
 exit_diameter: 2.309 # (in) Dominik Sloup
