@@ -73,7 +73,7 @@ p_star = p_2 * ((1 + (gamma - 1)/2 * downstream_mach**2) * (2 / (gamma + 1)))**(
 # ------------------------------------------------------------
 
 # two starting guesses for upstream pressure
-p_prev = 0. * p_2
+p_prev = 0.9 * p_2
 p_curr = 1.1 * p_2
 
 # calculating the zeroing function
