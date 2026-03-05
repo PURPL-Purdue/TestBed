@@ -86,7 +86,7 @@ chamber_volume: 59.1  # (in^3) Dominik Sloup
 
 gox_design_mdot: 1.222 # (lb/s) Dominik Sloup
 gox_CdA: 0.0733   # (in^2) Dominik Sloup
-gox_orifice_dia: 0.049 # (in) Dominik Sloup
+gox_orifice_dia: 0.0472441 # AS MACHINED, DO NOT CHANGE
 gox_feed_pressure: 675  # (psi) Declan Koch, required be under 675 (@ 1.292 lb/s) to keep gox line velocity under 75 ft/s
 gox_SCFM: 882.21  # (ft^3/min) Dominik Sloup
 
