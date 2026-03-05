@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from rocketcea.cea_obj import CEA_Obj
+from rocketcea.cea_obj_w_units import CEA_Obj
 import bisect
 
 # =====================================================
@@ -11,9 +11,9 @@ import bisect
 OXIDIZER = "LOX"
 FUEL = "ETHANOL"
 
-TARGET_THRUST_LBF = 500.0
-CHAMBER_PRESSURES = [250.0]
-OF_TARGET = 0.85
+TARGET_THRUST_LBF = 1000.0
+CHAMBER_PRESSURES = [200.0]
+OF_TARGET = 2
 OF_RANGE = np.linspace(0.5, 3.0, 50)
 
 AMBIENT_P_PSI = 14.7
@@ -40,22 +40,10 @@ M3_TO_GAL = GAL_PER_LITER * L_PER_M3
 DENSITY_RP1 = 810.0
 DENSITY_LOX = 1140.0
 
-# unit conversion constants used for CEA outputs
-BTU_TO_J = 1055.05585
-LBM_TO_KG = 0.45359237
-LBM_PER_CUFT_TO_KG_PER_M3 = 16.01846337396
-FT_TO_M = 0.3048
-MILLIPOISE_TO_PA_S = 1e-4
-SIGMA_SB = 5.670374419e-8  # Stefan-Boltzmann (not used but left for extension)
-
 
 # =====================================================
 # === HELPER FUNCTIONS ================================
 # =====================================================
-
-def cstar_from_T_gamma_R(Tc, gamma, R_specific):
-    term = (2.0 / (gamma + 1.0)) ** ((gamma + 1.0) / (2.0 * (gamma - 1.0)))
-    return math.sqrt(R_specific * Tc) / (gamma ** 0.5 * term)
 
 def pe_over_pc_from_M(M, gamma):
     return (1.0 + 0.5 * (gamma - 1.0) * M**2) ** (-gamma / (gamma - 1.0))
@@ -80,36 +68,34 @@ def compute_Cf_ideal(gamma, Pe_Pc, Pa_Pc, Ae_over_At):
     pressure_term = (Pe_Pc - Pa_Pc) * Ae_over_At
     return momentum + pressure_term
 
+
+# =====================================================
+# === CEA INITIALIZATION ===============================
+# =====================================================
+
+cea = CEA_Obj(
+    oxName=OXIDIZER,
+    fuelName=FUEL,
+    pressure_units='psia',
+    cstar_units='m/s'
+)
+
+
 # =====================================================
 # === CORE CEA WRAPPER ================================
 # =====================================================
 
-def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
-    """
-    Wrap CEA_Obj calls and return essential thermochemical and transport properties.
-    Minimal additional CEA queries (cp, density, transport, sonic velocity).
-    Conversions to SI are applied here.
-    """
-    cea = CEA_Obj(oxName=ox, fuelName=fuel)
+def get_numbers_extended(OF_ratio, pc_psi):
 
-    # temperatures (degR), convert primary chamber temperature to K
     temps_rankine = cea.get_Temperatures(Pc=pc_psi, MR=OF_ratio, eps=1)
-    Tc = temps_rankine[0] * 5.0 / 9.0  # Rankine -> Kelvin
+    Tc = temps_rankine[0] * 5.0 / 9.0
 
-    # molecular weight and gamma (MolWt returned in lbm/lbmole)
-    mw_gamma = cea.get_Chamber_MolWt_gamma(Pc=pc_psi, MR=OF_ratio)
-    MolWt, gamma = mw_gamma
+    MolWt, gamma = cea.get_Chamber_MolWt_gamma(Pc=pc_psi, MR=OF_ratio)
 
-    # R_specific
-    R_specific = R_UNIVERSAL / MolWt
+    MolWt_kg_per_kmol = MolWt * 0.45359237
+    R_specific = R_UNIVERSAL / MolWt_kg_per_kmol
 
-    # cstar
-    cstar = cstar_from_T_gamma_R(Tc, gamma, R_specific)
-
-    # --- sparing additional CEA queries (units converted to SI) ---
-    # cp: get_Chamber_Cp returns BTU/lbm-degR -> J/kg-K
-    cp_btu_per_lbm_degR = cea.get_Chamber_Cp(Pc=pc_psi, MR=OF_ratio, eps=1)
-    cp = cp_btu_per_lbm_degR * BTU_TO_J / LBM_TO_KG * (9.0 / 5.0)
+    cstar = cea.get_Cstar(Pc=pc_psi, MR=OF_ratio)
 
     return {
         'cstar': cstar,
@@ -119,23 +105,25 @@ def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
         'R_specific': R_specific,
     }
 
+
 # =====================================================
 # === GEOMETRY & PERFORMANCE ==========================
 # =====================================================
 
 def compute_sizing(F_newtons, pc_psi, of):
-    data = get_numbers_extended(of, pc_psi, OXIDIZER, FUEL)
-    gamma, cstar, Tc, R_specific = data['gamma'], data['cstar'], data['Tc'], data['R_specific']
-    cp = data.get('cp', None)
-    mu = data.get('mu', None)
-    rho_chamber = data.get('rho_chamber', None)
-    sonic_vel = data.get('sonic_vel', None)
 
-    Pc_Pa = pc_psi * PSI_TO_PA
-    Pa_Pa = AMBIENT_P_PSI * PSI_TO_PA
-    Pa_over_Pc = Pa_Pa / Pc_Pa
+    F_lbf = F_newtons / LBF_TO_N
 
-    # === Nozzle parameters ===
+    data = get_numbers_extended(of, pc_psi)
+    gamma = data['gamma']
+    Tc = data['Tc']
+    R_specific = data['R_specific']
+    cstar = data['cstar']
+
+    Pc = pc_psi
+    Pa = AMBIENT_P_PSI
+    Pa_over_Pc = Pa / Pc
+
     if Pa_over_Pc < 1.0:
         Me = Mach_from_pe_pc(Pa_over_Pc, gamma)
         eps = area_ratio_from_M(Me, gamma)
@@ -144,33 +132,35 @@ def compute_sizing(F_newtons, pc_psi, of):
         Me, eps, Pe_Pc = 1.0, 1.0, 1.0
 
     Cf = compute_Cf_ideal(gamma, Pe_Pc, Pa_over_Pc, eps)
-    At = F_newtons / (Pc_Pa * Cf)
+
+    At_in2 = F_lbf / (Pc * Cf)
+    At = At_in2 * 0.00064516
     Dt = math.sqrt(4.0 * At / math.pi)
 
-    cstar_eff = cstar * EFFICIENCY_FACTOR
-    mdot = Pc_Pa * At / cstar_eff
+    mdot = (pc_psi * PSI_TO_PA * At) / cstar
 
     Ae = At * eps
     De = math.sqrt(4.0 * Ae / math.pi)
-    Isp = (Cf * cstar) / G0
-    Ve = Isp * G0 * EFFICIENCY_FACTOR
 
-    # === Chamber geometry ===
+    Ve = Cf * cstar * EFFICIENCY_FACTOR
+    Isp = Ve / G0
+
     D_chamber = 2.0 * Dt
     V_chamber = LSTAR * At
     L_chamber = V_chamber / (math.pi/4 * D_chamber**2)
 
     L_converge = (D_chamber - Dt) / (2 * math.tan(math.radians(45)))
-    V_converge = (1/3) * math.pi * L_converge * ((D_chamber/2)**2 + (D_chamber/2)*(Dt/2) + (Dt/2)**2)
+    V_converge = (1/3) * math.pi * L_converge * (
+        (D_chamber/2)**2 + (D_chamber/2)*(Dt/2) + (Dt/2)**2
+    )
 
     V_total = V_chamber + V_converge
     Lstar_with_converge = V_total / At
 
-    R_throat = 0.382 * Dt  # Throat radius-of-curvature approximation (not geometric throat radius)
+    R_throat = 0.382 * Dt
     L_throat = R_throat + 0.5 * Dt
     L_nozzle = (De - Dt) / (2 * math.tan(math.radians(NOZZLE_HALF_ANGLE_DEG)))
 
-    # Surface areas
     A_cyl_wall = math.pi * D_chamber * L_chamber
     r1 = D_chamber / 2.0
     r2 = Dt / 2.0
@@ -178,104 +168,22 @@ def compute_sizing(F_newtons, pc_psi, of):
     A_converge_wall = math.pi * (r1 + r2) * slant_converge
     A_total_wall = A_cyl_wall + A_converge_wall
 
-    # assemble base result dict (includes transport props returned from CEA)
     result = {
         'pc_psi': pc_psi, 'of': of, 'gamma': gamma, 'Tc': Tc,
         'cstar': cstar, 'Isp': Isp, 'Ve': Ve, 'Cf': Cf, 'eps': eps,
         'mdot': mdot, 'At': At, 'Dt': Dt, 'Ae': Ae, 'De': De,
-        'D_chamber': D_chamber, 'L_chamber': L_chamber*100.0,
+        'D_chamber': D_chamber, 'L_chamber': L_chamber,
         'L_chamber_cyl': L_chamber, 'L_converge': L_converge,
-        'L_chamber_full': L_chamber + L_converge, 'V_chamber': V_chamber,
-        'Lstar': LSTAR, 'V_total': V_total, 'Lstar_with_converge': Lstar_with_converge,
-        'L_throat': L_throat*100.0, 'L_nozzle': L_nozzle*100.0,
-        'A_cyl_wall': A_cyl_wall * 10000,
-        'A_converge_wall': A_converge_wall * 10000,
-        'A_total_wall': A_total_wall * 10000,
-        'cp': cp, 'mu': mu, 'rho_chamber': rho_chamber,
-        'sonic_vel': sonic_vel, 'R_specific': R_specific
+        'L_chamber_full': L_chamber + L_converge,
+        'V_chamber': V_chamber,
+        'Lstar': LSTAR, 'V_total': V_total,
+        'Lstar_with_converge': Lstar_with_converge,
+        'L_throat': L_throat, 'L_nozzle': L_nozzle,
+        'A_cyl_wall': A_cyl_wall,
+        'A_converge_wall': A_converge_wall,
+        'A_total_wall': A_total_wall,
+        'R_specific': R_specific
     }
-
-    # # --- TRANSIENT: compute throat inner-surface transient using 1D conduction + Bartz h ---
-    # # Mass flux G = mdot / At (kg / (m^2 s))
-    # G = max(result['mdot'] / result['At'], 1e-8)
-    # # Use throat curvature radius for Bartz
-    # rt_throat = max(R_throat, 1e-6)
-
-    # Tw_series_throat, times_throat, q0_throat, h0_throat = transient_1d_wall(
-    #     Tg=result['Tc'],
-    #     cp_g=result['cp'],
-    #     mu=result['mu'],
-    #     G=G,
-    #     rt=rt_throat,
-    #     wall_props=WALL_MATERIAL,
-    #     t_total=HOTFIRE_SECONDS,
-    #     nodes=WALL_NODES,
-    #     h_ext=H_EXT_AMBIENT
-    # )
-
-    # # Peak throat inner surface temperature and associated time
-    # if len(Tw_series_throat) > 0:
-    #     Tw_peak_throat = max(Tw_series_throat)
-    #     t_at_peak_throat = times_throat[Tw_series_throat.index(Tw_peak_throat)]
-    # else:
-    #     Tw_peak_throat = float('nan')
-    #     t_at_peak_throat = 0.0
-
-    # --- SIMPLE ESTIMATE FOR CYLINDRICAL CHAMBER WALL ---
-    # Chamber sees lower convective heating than throat. Approximate inner convection coefficient as fraction of throat.
-    # We reuse the Bartz baseline but scale mass-flux effect by larger hydraulic radius. Simpler: use h_chamber = 0.2 * h_throat
-    # h_chamber_est = 0.2 * h0_throat
-    # q0_chamber = h_chamber_est * (result['Tc'] - 300.0)  # initial approx heat flux into chamber wall
-
-    # # run a transient wall model for chamber inner surface using a fixed h_inner = h_chamber_est
-    # # we adapt transient_1d_wall by temporarily using a near-constant h_inner via simplified call: emulate by setting G small and rt very large
-    # Tw_series_chamber, times_chamber, q0_ch, h0_ch = transient_1d_wall(
-    #     Tg=result['Tc'],
-    #     cp_g=result['cp'],
-    #     mu=result['mu'],
-    #     G=max(G*0.05, 1e-6),   # much smaller effective mass flux for chamber region
-    #     rt=max(result['D_chamber']/2.0, 1e-6),
-    #     wall_props=WALL_MATERIAL,
-    #     t_total=HOTFIRE_SECONDS,
-    #     nodes=WALL_NODES,
-    #     h_ext=H_EXT_AMBIENT
-    # )
-    # if len(Tw_series_chamber) > 0:
-    #     Tw_peak_chamber = max(Tw_series_chamber)
-    #     t_at_peak_chamber = times_chamber[Tw_series_chamber.index(Tw_peak_chamber)]
-    # else:
-    #     Tw_peak_chamber = float('nan')
-    #     t_at_peak_chamber = 0.0
-
-    # # add transient results to result dict
-    # result['Tw_series_throat'] = Tw_series_throat
-    # result['Tw_times_throat'] = times_throat
-    # result['Tw_peak_throat'] = Tw_peak_throat
-    # result['Tw_peak_time_throat'] = t_at_peak_throat
-    # result['q0_throat'] = q0_throat
-    # result['h0_throat'] = h0_throat
-
-    # result['Tw_series_chamber'] = Tw_series_chamber
-    # result['Tw_times_chamber'] = times_chamber
-    # result['Tw_peak_chamber'] = Tw_peak_chamber
-    # result['Tw_peak_time_chamber'] = t_at_peak_chamber
-    # result['q0_chamber_est'] = q0_chamber
-    # result['h0_chamber_est'] = h_chamber_est
-
-    # # Hoop stresses (thin-wall approximation) computed once and included
-    # Pc_Pa = pc_psi * PSI_TO_PA
-    # r_chamber = result['D_chamber'] / 2.0
-    # t = WALL_THICKNESS_M
-    # sigma_hoop_chamber = Pc_Pa * r_chamber / t
-    # result['sigma_hoop_chamber_Pa'] = sigma_hoop_chamber
-
-    # r_throat_geom = result['Dt'] / 2.0
-    # sigma_hoop_throat = Pc_Pa * r_throat_geom / t
-    # result['sigma_hoop_throat_Pa'] = sigma_hoop_throat
-
-    # # yield values for checks (based on peak throat temp)
-    # result['yield_at_Tw_peak_throat_MPa'] = yield_strength_GRCop42(result['Tw_peak_throat']) if not math.isnan(result['Tw_peak_throat']) else None
-    # result['yield_at_Tc_MPa'] = yield_strength_GRCop42(result['Tc'])
 
     return result
 
@@ -298,50 +206,6 @@ def pretty_print(r):
     print(f" L* (just cylinder) = {r['Lstar']:.3f} m | L* (with converge) = {r['Lstar_with_converge']:.3f} m")
     print(f" Throat length = {r['L_throat']:.2f} cm | Nozzle length = {r['L_nozzle']:.2f} cm")
     print(f" SA Cyl = {r['A_cyl_wall']:.2f} cm^2 | SA Cyl+converge = {r['A_total_wall']:.2f} cm^2")
-
-#    # Throat transient results
-#    Tw_peak_throat = r.get('Tw_peak_throat', None)
-#    t_peak_throat = r.get('Tw_peak_time_throat', None)
-#    q0_th = r.get('q0_throat', None)
-#    h0_th = r.get('h0_throat', None)
-#   if Tw_peak_throat is not None:
-#        print(f"\nPeak inner wall temperature (throat) = {Tw_peak_throat:.1f} K at t = {t_peak_throat:.2f} s")
-#        if q0_th is not None:
-#            print(f"Initial throat heat flux (approx) = {q0_th:.1f} W/m^2")
-#        if h0_th is not None:
-#            print(f"Initial throat convective coeff (approx) = {h0_th:.1f} W/m^2K")
-
-    # Chamber inner surface estimate
-    # Tw_peak_ch = r.get('Tw_peak_chamber', None)
-    # t_peak_ch = r.get('Tw_peak_time_chamber', None)
-    # q0_ch = r.get('q0_chamber_est', None)
-    # h0_ch = r.get('h0_chamber_est', None)
-    # if Tw_peak_ch is not None:
-    #     print(f"\nPeak inner wall temperature (cyl chamber) = {Tw_peak_ch:.1f} K at t = {t_peak_ch:.2f} s")
-    #     if q0_ch is not None:
-    #         print(f"Initial chamber heat flux (est) = {q0_ch:.1f} W/m^2")
-    #     if h0_ch is not None:
-    #         print(f"Initial chamber convective coeff (est) = {h0_ch:.1f} W/m^2K")
-
-    # # Hoop stress & yield checks
-    # sigma_ch_Pa = r.get('sigma_hoop_chamber_Pa', None)
-    # sigma_th_Pa = r.get('sigma_hoop_throat_Pa', None)
-    # yield_th_peak = r.get('yield_at_Tw_peak_throat_MPa', None)
-    # if sigma_ch_Pa is not None:
-    #     sigma_ch_MPa = sigma_ch_Pa / 1e6
-    #     print(f"\nApprox chamber hoop stress (thin-wall) = {sigma_ch_MPa:.2f} MPa (at Pc = {r['pc_psi']} psi)")
-    # if sigma_th_Pa is not None:
-    #     sigma_th_MPa = sigma_th_Pa / 1e6
-    #     print(f"Approx throat hoop stress (thin-wall)   = {sigma_th_MPa:.2f} MPa")
-
-    # if yield_th_peak is not None:
-    #     print(f"0.2% yield strength at peak throat wall T = {yield_th_peak:.1f} MPa")
-    #     if sigma_th_MPa >= yield_th_peak:
-    #         print(" **WARNING**: Throat hoop stress >= yield strength at predicted peak wall temperature (plastic risk).")
-    #     elif sigma_th_MPa >= 0.8 * yield_th_peak:
-    #         print(" **CAUTION**: Throat hoop stress >= 80% of yield strength at predicted peak wall temperature.")
-    #     else:
-    #         print("Throat hoop stress is below yield at predicted peak wall temperature.")
 
     of, mdot, t_fire = r['of'], r['mdot'], HOTFIRE_SECONDS
     mdot_fuel = mdot / (1.0 + of)
