@@ -28,11 +28,12 @@ def calculate_convection_coeff(ox, fuel, of_ratio, p_chamber_pa, D_inner, v_gas,
     # We get these at the chamber (cp)
     I_sp = cea.get_Isp(Pc=pc_psi, MR=of_ratio, eps=eps, frozen=1, frozenAtThroat=1) # Placeholder for structure
     # Alternatively, get more detailed properties:
-    T_k = 5/9 *cea.get_Temperatures(Pc=pc_psi, MR=of_ratio, eps=eps, frozen=1)[1]
-    
+    T_k = 5/9 *cea.get_Temperatures(Pc=pc_psi, MR=of_ratio, eps=eps, frozen=1)[0]
+    # print(f"Calculated gas temperature at chamber: {T_k:.2f} K")
     # 2. Get Transport Properties
     # (Cp in kJ/kg-K, Viscosity in millipoise, Pr)
     cp_kj, viscosity_mp, pr, k_g = cea.get_Chamber_Transport(Pc=pc_psi, MR=of_ratio, eps=eps)
+    # print(f"CEA Transport Properties at Chamber: Cp={cp_kj:.2f} kJ/kg-K, Viscosity={viscosity_mp:.2f} mp, Pr={pr:.2f}, Thermal Conductivity={k_g:.4f} W/m-K")
     
     # Convert units to SI
     cp_g = cp_kj * 1000.0          # J/kg-K
@@ -42,7 +43,7 @@ def calculate_convection_coeff(ox, fuel, of_ratio, p_chamber_pa, D_inner, v_gas,
     # 3. Density (Ideal Gas Law)
     # R_specific = R_universal / M
     R_univ = 8314.46 # J/(kmol-K)
-    M_val = cea.get_IvacCstrTc_ChmMwGam(Pc=pc_psi, MR=of_ratio, eps=1.0)[3] # kg/kmol
+    M_val = cea.get_IvacCstrTc_ChmMwGam(Pc=pc_psi, MR=of_ratio, eps=eps)[3] # kg/kmol
     rho_g = p_chamber_pa / ((R_univ / M_val) * T_k)
     
     # 4. Reynolds Number & Gnielinski Correlation

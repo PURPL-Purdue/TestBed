@@ -127,37 +127,61 @@ def CEA(F_lbf, of, pc_psi):
     Ve = Cf * cstar * EFFICIENCY_FACTOR  # m/s
     Isp = Ve / G0                        # seconds
     
-    V_c = mdot / (At_m2 * (pc_psi * 6894.757 / (8.314 * Tc))) # math.sqrt(gamma * R_specific * Tc)  # m/s
-    ##Thermal Analysis
+    #Chamber THermal Analysis
+    Ac = math.pi * ((0.127 / 2)**2  - (0.107 / 2)**2) # m^2
+    V_c = mdot / (Ac  * (PcPa / (287 * Tc))) # math.sqrt(gamma * R_specific * Tc)# m/s
+    # print(f"Calculated chamber velocity: {V_c:.2f} m/s")
+    
     # Convert Pc from psi to Pa for thermal analysis
-    H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, Dt, V_c, eps)[0:2]
+    H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, 0.107, V_c, eps)[0:2]
     # print(f"Convection Coefficient: {H_conv:.2f} W/m^2-K, Gas Temperature: {T_gas:.2f} K")
+    
+    #Throat Thermal Analysis
+    V_th = math.sqrt(gamma * R_specific * Tc * (2.0 / (gamma + 1.0))) # m/s at the throat
+    # print(f"Calculated throat velocity: {V_th:.2f} m/s")
+    H_conv_throat, T_gas_throat = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, Dt, V_th, eps)[0:2]
+    
     T_initial = 25 + 273.15  # Celsius to Kelvin
     # ==================== SOLVE ====================
     n_nodes = 50
-    r_nodes = np.linspace(Dt, Dt + THICKNESS, n_nodes)
+    r_nodes = np.linspace(0.107, 0.127, n_nodes)
     dr = r_nodes[1] - r_nodes[0]
     T0 = np.full(n_nodes, T_initial)
     t_final = 20 # seconds
-
-    sol = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv, T_gas, K_METAL), 
+    sol_c = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv, T_gas, K_METAL), 
                     method='BDF', t_eval=np.linspace(0, t_final, 1000))
 
+    r_nodes = np.linspace(Dt, Dt + THICKNESS, n_nodes)
+    dr = r_nodes[1] - r_nodes[0]
+    sol_t = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv_throat, T_gas_throat, K_METAL), 
+                    method='BDF', t_eval=np.linspace(0, t_final, 1000))
     # ==================== RESULTS ====================
-    T_res = sol.y
-    times = sol.t
-
-    inner_wall_temp = T_res[1, :]
+    T_res_c = sol_c.y
+    times_c = sol_c.t
+    T_res_t = sol_t.y
+    times_t = sol_t.t
+    
+    inner_wall_temp_c = T_res_c[1, :]
+    inner_wall_temp_t = T_res_t[1, :]
 
     # Find melting time
-    melt_indices = np.where(inner_wall_temp >= T_MELT)[0]
+    melt_indices = np.where(inner_wall_temp_c >= T_MELT)[0]
     if len(melt_indices) > 0:
-        t_melt = times[melt_indices[0]]
+        t_melt_c = times_c[melt_indices[0]]
         # print(f"CRITICAL: Inner wall melts at {t_melt:.3f} seconds.")
     else:
-        t_melt = -1
+        t_melt_c = -1
         # print("Wall did not melt within the time frame.")
 
+    #Find melting time for throat
+    melt_indices_throat = np.where(inner_wall_temp_t >= T_MELT)[0]
+    if len(melt_indices_throat) > 0:
+        t_melt_t = times_t[melt_indices_throat[0]]
+        # print(f"CRITICAL: Throat wall melts at {t_melt:.3f} seconds.")
+    else:
+        t_melt_t = -1
+        # print("Throat wall did not melt within the time frame.")
+    
     result = {
         'pc_psi': pc_psi,
         'of': of,
@@ -175,7 +199,8 @@ def CEA(F_lbf, of, pc_psi):
         'De': De,
         'R_specific': R_specific,
         'material': material,
-        't_melt': t_melt
+        't_melt_chamber': t_melt_c,
+        't_melt_throat': t_melt_t
     }
 
     return result
@@ -209,7 +234,8 @@ def plotter(result, FireTime, passfail, thrust_lbf):
         result['Dt'] * 100,        # cm
         (10.7 / (result['Dt'] * 100)), #contraction Ratio
         result['eps'],
-        result['t_melt'],           # seconds until melting (or -1 if no melt)
+        result['t_melt_chamber'],   # seconds until melting (or -1 if no melt)
+        result['t_melt_throat'],    # seconds until melting (or -1 if no melt)
         result['Ve'],              # m/s
         #result['Dt'] * 200         # chamber diameter (cm)
     ])
@@ -238,7 +264,7 @@ if __name__ == "__main__":
 
     print("HSK Operating Envelope Trade Study")
     print("----------------------------------")
-    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Thrust (lbf) | Chamber Temp (K) | Throat Diameter (cm) | EPS | Time to Melt (s) | Velocity")
+    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Thrust (lbf) | Chamber Temp (K) | Throat Diameter (cm) | EPS | T_chamber (s) | T_throat (s)")
 
     cea = CEA_Obj(
         oxName=OXIDIZER,
