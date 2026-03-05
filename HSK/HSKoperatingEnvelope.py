@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 from rocketcea.cea_obj_w_units import CEA_Obj
+from scipy.integrate import solve_ivp
+from thermal_solver import calculate_convection_coeff, heat_equation
 
 AMBIENT_P_PSI = 14.7
 EFFICIENCY_FACTOR = .85
@@ -17,6 +19,20 @@ DENSITY_RP1 = 810.0
 DENSITY_LOX = 1140.0
 
 R_UNIVERSAL = 8314.4621
+
+
+# =================== PARAMETERS (THERMAL) ====================
+P_CHAMBER = 1.724e+6        # 250 psi in Pa
+LENGTH = 0.2 * 0.0254       # m
+THICKNESS = 0.05 * 0.0254     # m
+
+# ---------- Material properties ----------
+material = "SS 316"
+K_METAL = 16.3      # W/(m·K)  
+C_METAL = 500       # J/(kg·K)   
+RHO_METAL = 8000
+ALPHA = K_METAL / (RHO_METAL * C_METAL)
+T_MELT = 1370.0 + 273.15  # Celsius to Kelvin
 
 
 def cstar_from_T_gamma_R(Tc, gamma, R_specific):
@@ -98,7 +114,7 @@ def CEA(F_lbf, of, pc_psi):
     # Keep geometry in meters by converting once properly
     At_m2 = At * 0.00064516  # correct in^2 → m^2
 
-    Dt = math.sqrt(4.0 * At_m2 / math.pi)
+    Dt = math.sqrt(4.0 * At_m2 / math.pi) # m
 
     # mdot from definition: mdot = Pc*At/c*
     # Convert Pc (psi) → Pa and At → m^2 for SI consistency
@@ -109,6 +125,37 @@ def CEA(F_lbf, of, pc_psi):
 
     Ve = Cf * cstar * EFFICIENCY_FACTOR  # m/s
     Isp = Ve / G0                        # seconds
+    
+    V_c = mdot / (At_m2 * (pc_psi * 6894.757 / (8.314 * Tc))) # math.sqrt(gamma * R_specific * Tc)  # m/s
+    ##Thermal Analysis
+    # Convert Pc from psi to Pa for thermal analysis
+    H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, P_CHAMBER, Dt, V_c, eps)[0:2]
+    # print(f"Convection Coefficient: {H_conv:.2f} W/m^2-K, Gas Temperature: {T_gas:.2f} K")
+    T_initial = 25 + 273.15  # Celsius to Kelvin
+    # ==================== SOLVE ====================
+    n_nodes = 50
+    r_nodes = np.linspace(Dt, Dt + THICKNESS, n_nodes)
+    dr = r_nodes[1] - r_nodes[0]
+    T0 = np.full(n_nodes, T_initial)
+    t_final = 20 # seconds
+
+    sol = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv, T_gas, K_METAL), 
+                    method='BDF', t_eval=np.linspace(0, t_final, 1000))
+
+    # ==================== RESULTS ====================
+    T_res = sol.y
+    times = sol.t
+
+    inner_wall_temp = T_res[1, :]
+
+    # Find melting time
+    melt_indices = np.where(inner_wall_temp >= T_MELT)[0]
+    if len(melt_indices) > 0:
+        t_melt = times[melt_indices[0]]
+        # print(f"CRITICAL: Inner wall melts at {t_melt:.3f} seconds.")
+    else:
+        t_melt = -1
+        # print("Wall did not melt within the time frame.")
 
     result = {
         'pc_psi': pc_psi,
@@ -125,7 +172,9 @@ def CEA(F_lbf, of, pc_psi):
         'Dt': Dt,
         'Ae': Ae,
         'De': De,
-        'R_specific': R_specific
+        'R_specific': R_specific,
+        'material': material,
+        't_melt': t_melt
     }
 
     return result
@@ -158,7 +207,9 @@ def plotter(result, FireTime, passfail, thrust_lbf):
         result['Tc'],              # K
         result['Dt'] * 100,        # cm
         (10.7 / (result['Dt'] * 100)), #contraction Ratio
-        result['eps']
+        result['eps'],
+        result['t_melt'],           # seconds until melting (or -1 if no melt)
+        result['Ve'],              # m/s
         #result['Dt'] * 200         # chamber diameter (cm)
     ])
 
@@ -186,7 +237,7 @@ if __name__ == "__main__":
 
     print("HSK Operating Envelope Trade Study")
     print("----------------------------------")
-    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Thrust (lbf) | Chamber Temp (K) | Throat Diameter (cm) | EPS")
+    print("PassFail | Pc (psi) | OF Ratio | Total Mass Flow (kg/s) | Thrust (lbf) | Chamber Temp (K) | Throat Diameter (cm) | EPS | Time to Melt (s) | Velocity")
 
     cea = CEA_Obj(
         oxName=OXIDIZER,
@@ -212,7 +263,7 @@ if __name__ == "__main__":
                     row = plotter(result, FireTime, passfail, ThrustStart)
                     rows.append(row)
 
-                    print(f"{int(row[0])} | {row[1]:.2f} | {row[2]:.2f} | {row[3]:.2f} | {row[4]:.2f} | {row[5]:.2f} | {row[6]:.2f} | {row[7]:.2f} | {row[8]:.2f}")
+                    print(f"{int(row[0])} | {row[1]} | {row[2]:.2f} | {row[3]:.2f} | {row[4]:.2f} | {row[5]:.2f} | {row[6]:.2f} | {row[7]:.2f} | {row[8]:.2f} | {row[9]:.2f} | {row[10]:.2f}")
 
                 OFstart += 0.5
             ThrustStart += 20
