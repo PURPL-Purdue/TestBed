@@ -22,9 +22,9 @@ R_UNIVERSAL = 8314.4621
 
 
 # =================== PARAMETERS (THERMAL) ====================
-P_CHAMBER = 1.724e+6        # 250 psi in Pa
+#P_CHAMBER = 1.724e+6        # 250 psi in Pa
 LENGTH = 0.2 * 0.0254       # m
-THICKNESS = 0.05 * 0.0254     # m
+THICKNESS = 0.01     # m
 
 # ---------- Material properties ----------
 material = "SS 316"
@@ -91,6 +91,7 @@ def CEA(F_lbf, of, pc_psi):
 
     gamma, Tc, R_specific = data['gamma'], data['Tc'], data['R_specific']
 
+    PcPa = pc_psi * 6894.76
     Pc = pc_psi
     Pa = AMBIENT_P_PSI
     Pa_over_Pc = Pa / Pc
@@ -129,7 +130,7 @@ def CEA(F_lbf, of, pc_psi):
     V_c = mdot / (At_m2 * (pc_psi * 6894.757 / (8.314 * Tc))) # math.sqrt(gamma * R_specific * Tc)  # m/s
     ##Thermal Analysis
     # Convert Pc from psi to Pa for thermal analysis
-    H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, P_CHAMBER, Dt, V_c, eps)[0:2]
+    H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, Dt, V_c, eps)[0:2]
     # print(f"Convection Coefficient: {H_conv:.2f} W/m^2-K, Gas Temperature: {T_gas:.2f} K")
     T_initial = 25 + 273.15  # Celsius to Kelvin
     # ==================== SOLVE ====================
@@ -225,10 +226,10 @@ def plotter(result, FireTime, passfail, thrust_lbf):
 if __name__ == "__main__":
 
     ThrustStart = 100
-    ThrustMax = 2000
+    ThrustMax = 1800
     ThrustTemp = ThrustStart
     Pcstart = 100
-    PcMax = 325
+    PcMax = 250
     OFstart = 0.5
     OFTemp = OFstart
     OFEnd = 4
