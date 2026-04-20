@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pressure_map import pressure_map
+from pressure_map_gasgas import pressure_map
 from pyfluids import Fluid, FluidsList, Input
 from pathlib import Path
 from ruamel.yaml import YAML
 # import yaml
 
-def find_yaml(filename="Maelstrom.yaml", start_dir=None):
+def find_yaml(filename="GG_torch.yaml", start_dir=None):
     start_dir = Path(start_dir or Path.cwd())
     for path in start_dir.rglob(filename):
         return path
@@ -39,7 +39,7 @@ def finite_minmax(a):
     return float(np.min(a[m])), float(np.max(a[m]))
 
 def plot_pc_heatmap_with_of_contours(fu_p_map, ox_p_map, PC_pfpo, OF_pfpo,
-                                     of_levels=None, pc_vmin=None, pc_vmax=None):
+                                     of_levels=None, pc_levels=None, pc_vmin=None, pc_vmax=None):
     """
     Plots a separate figure in (p_fu, p_ox) space:
       - heatmap: Pc (psi) from PC_pfpo
@@ -54,14 +54,13 @@ def plot_pc_heatmap_with_of_contours(fu_p_map, ox_p_map, PC_pfpo, OF_pfpo,
     pf_min, pf_max = np.nanmin(fu_p_map), np.nanmax(fu_p_map)
     po_min, po_max = np.nanmin(ox_p_map), np.nanmax(ox_p_map)
 
-    # If your maps can contain inf, protect against it
     if not np.isfinite([pf_min, pf_max, po_min, po_max]).all():
         pf = fu_p_map[np.isfinite(fu_p_map)]
         po = ox_p_map[np.isfinite(ox_p_map)]
         pf_min, pf_max = float(np.min(pf)), float(np.max(pf))
         po_min, po_max = float(np.min(po)), float(np.max(po))
 
-    # These are the axes for the inverse maps (constructed via linspace in your solver)
+    # These are the axes for the inverse maps
     p_fu_axis = np.linspace(pf_min, pf_max, PC_pfpo.shape[0])
     p_ox_axis = np.linspace(po_min, po_max, PC_pfpo.shape[1])
     PO, PF = np.meshgrid(p_ox_axis, p_fu_axis)  # x=p_ox, y=p_fu
@@ -99,14 +98,17 @@ def plot_pc_heatmap_with_of_contours(fu_p_map, ox_p_map, PC_pfpo, OF_pfpo,
     ax.clabel(cs, fmt=lambda v: f"OF={v:.2f}", inline=True, fontsize=9)
 
     # PC equipotential contour 
-    ps = ax.contour(
-        PO, PF, PC_pfpo,
-        levels=np.linspace(250,250,1),
-        colors="k",
-        linewidths=1.0
-    )
-    ax.clabel(ps, fmt=lambda v: f"PC={v:.2f}", inline=True, fontsize=9)
-
+    # PC equipotential contours
+    if pc_levels is not None and len(pc_levels) > 0:
+        ps = ax.contour(
+            PO, PF, PC_pfpo,
+            levels=pc_levels,
+            colors='k',
+            linewidths=1.0,
+            linestyles="dashed"
+        )
+        ax.clabel(ps, fmt=lambda v: f"PC={v:.0f}", inline=True, fontsize=9)
+    
     ax.set_xlabel("p_ox (psi)")
     ax.set_ylabel("p_fu (psi)")
     ax.set_title("Pc heatmap with OF contours in (p_fu, p_ox) space")
@@ -163,19 +165,15 @@ def plot_maps(pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo):
 # Run demo
 # -------------------------
 if __name__ == "__main__":
-    # Example inputs (edit to your engine)
-    min_OF = 0.35
-    max_OF = 1.35
+    min_OF = 1
+    max_OF = 5
     max_pc = 300 # psi
-    resolution = 200
+    resolution = 120
     cstar_eff = data["cstar_eff"]
 
     throat_area = data["throat_area"] / (m_to_in ** 2)
-    fuel_CdA = 0.038674 / (m_to_in ** 2)
-    ox_CdA = 0.077515 / (m_to_in ** 2)
-    rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density #Run for Ethanol
-    #rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density #Run for IPA
-    #rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density #Run for Kerosine
+    fuel_CdA = data["fuel_CdA"] / (m_to_in ** 2)
+    ox_CdA = data["gox_CdA"] / (m_to_in ** 2)
 
     pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo = pressure_map(
         minOF=min_OF,
@@ -185,16 +183,16 @@ if __name__ == "__main__":
         cstar_eff=cstar_eff,
         throat_area=throat_area,
         fuel_CdA=fuel_CdA,
-        ox_CdA=ox_CdA,
-        rho_fuel=rho_fuel)
+        ox_CdA=ox_CdA)
 
-    plot_pc_heatmap_with_of_contours(
+plot_pc_heatmap_with_of_contours(
     fu_p_map=fu_p_map,
     ox_p_map=ox_p_map,
     PC_pfpo=PC_pfpo,
     OF_pfpo=OF_pfpo,
-    of_levels=[0.85,0.9,0.95,1],
+    of_levels=[1.5, 2.5, 3.5, 4.5],
+    pc_levels=[50, 100, 150, 200],
     pc_vmin=0,
     pc_vmax=max_pc)
 
-    plot_maps(pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo)
+plot_maps(pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo)

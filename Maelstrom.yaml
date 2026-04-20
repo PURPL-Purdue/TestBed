@@ -76,7 +76,7 @@ isp: 188 # (s) Dominik Sloup
 
 # Maelstrom chamber geometry
 
-throat_diameter: 1.321 # AS MACHINED, DO NOT CHANGE
+throat_diameter: 1.3195 # AS MACHINED, DO NOT CHANGE
 throat_area: 1.3706 # AS MACHINED, DO NOT CHANGE
 total_length: 7.399  # AS MACHINED, DO NOT CHANGE
 exit_diameter: 2.309 # (in) Dominik Sloup
