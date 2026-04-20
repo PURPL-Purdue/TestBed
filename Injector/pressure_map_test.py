@@ -4,7 +4,7 @@ from pressure_map import pressure_map
 from pyfluids import Fluid, FluidsList, Input
 from pathlib import Path
 from ruamel.yaml import YAML
-import yaml
+# import yaml
 
 def find_yaml(filename="Maelstrom.yaml", start_dir=None):
     start_dir = Path(start_dir or Path.cwd())
@@ -173,7 +173,9 @@ if __name__ == "__main__":
     throat_area = data["throat_area"] / (m_to_in ** 2)
     fuel_CdA = 0.038674 / (m_to_in ** 2)
     ox_CdA = 0.077515 / (m_to_in ** 2)
-    rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density
+    rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density #Run for Ethanol
+    #rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density #Run for IPA
+    #rho_fuel = Fluid(FluidsList.Ethanol).with_state(Input.pressure(300 * psi_to_pa), Input.temperature(20)).density #Run for Kerosine
 
     pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo = pressure_map(
         minOF=min_OF,
@@ -191,7 +193,7 @@ if __name__ == "__main__":
     ox_p_map=ox_p_map,
     PC_pfpo=PC_pfpo,
     OF_pfpo=OF_pfpo,
-    of_levels=[0.65, 0.75, 0.85, 0.95, 1.05],
+    of_levels=[0.85,0.9,0.95,1],
     pc_vmin=0,
     pc_vmax=max_pc)
 
