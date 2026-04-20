@@ -49,12 +49,12 @@ wall_thicknessMatrix = [0.04,0.04,0.04] / m_to_in; % Hotwall thickness at inject
 T_start= 298; % Flow Initial Temp in degrees K 
 P_start = 450; % Coolant inlet pressure (psi)
 rho_start = 791.26; % Coolant initial density in kg/m^3
-T_target = 773; % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
+T_target = 530; %773 % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
 heightStepNumber = 250; %computation accuracy
 
 contourResolution = 1500; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
 generate_new_CEA = false;
-generate_new_Contour = false;
+generate_new_Contour = true;
 
 %% Chamber Wall Material Properties
 
@@ -115,6 +115,7 @@ updatedVelocity = [];
 %% New fluid Properties
 while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
     
+    disp("it");
     a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
     
     %sumDiameter = 0;
