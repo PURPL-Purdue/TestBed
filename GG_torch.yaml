@@ -17,5 +17,8 @@ exit_diameter: 2.309 # (in) Dominik Sloup
 
 # Maelstrom oxidizer injector parameters
 
+fuel_choice: "GH2" # Article fuel choice, name must be consistent with rocketcea library
+ox_choice: "GOX" # Article oxidizer choice, name must be consistent with rocketcea library
+
 gox_CdA: 0.00080424771 # (in^2) Dominik Sloup, Cd of 1.00
 fuel_CdA: 0.00061575216  # (in^2) Dominik Sloup, Cd of 1.00

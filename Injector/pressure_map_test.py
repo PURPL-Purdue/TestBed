@@ -174,6 +174,9 @@ if __name__ == "__main__":
     fuel_CdA = data["fuel_CdA"] / (m_to_in ** 2)
     ox_CdA = data["gox_CdA"] / (m_to_in ** 2)
 
+    fuel_choice = data["fuel_choice"]
+    ox_choice = data["ox_choice"]
+
     pc_scale, OF_scale, fu_p_map, ox_p_map, PC_pfpo, OF_pfpo = pressure_map(
         minOF=min_OF,
         maxOF=max_OF,
@@ -182,7 +185,9 @@ if __name__ == "__main__":
         cstar_eff=cstar_eff,
         throat_area=throat_area,
         fuel_CdA=fuel_CdA,
-        ox_CdA=ox_CdA)
+        ox_CdA=ox_CdA,
+        fuel_choice=fuel_choice,
+        ox_choice=ox_choice)
 
 plot_pc_heatmap_with_of_contours(
     fu_p_map=fu_p_map,
