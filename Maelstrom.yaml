@@ -78,7 +78,7 @@ isp: 188 # (s) Dominik Sloup
 
 throat_diameter: 1.3195 # AS MACHINED, DO NOT CHANGE
 throat_area: 1.3706 # AS MACHINED, DO NOT CHANGE
-total_length: 8.0  # Needs to be < 10 (in), dictated by the length of our longest drill (website doesn't account for fixture and injector overlap)
+total_length: 7.399  # AS MACHINED, DO NOT CHANGE
 exit_diameter: 2.309 # (in) Dominik Sloup
 chamber_volume: 59.1  # (in^3) Dominik Sloup
 
