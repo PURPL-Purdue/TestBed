@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from data_regression import data_regression
+from Injector.data_regression import data_regression
 
 # ---------------------------
 # CONFIG

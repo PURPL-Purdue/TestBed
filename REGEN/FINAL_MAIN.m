@@ -32,6 +32,7 @@ p_c             = double(data.chamber_pressure);
 OF              = double(data.of_ratio);
 
 chamberDiameter = double(data.chamber_diameter);
+
 totalLength     = double(data.total_length);
 throatDiameter  = double(data.throat_diameter);
 exitDiameter    = double(data.exit_diameter);
@@ -52,11 +53,11 @@ T_start= 298; % Flow Initial Temp in degrees K
 P_start = 450; % Coolant inlet pressure (psi)
 rho_start = 791.26; % Coolant initial density in kg/m^3
 T_target = 530; %773 % target gas-side hotwall temp in degrees K (530 for 7075, 773 for copper)
-heightStepNumber = 250; %computation accuracy
-
-contourResolution = 600; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
+heightStepNumber = 50; %computation accuracy
+contourResolution = 620; % THIS IS FINETUNED, CHANGING IT WILL LEAD TO DISCONTINUITIES IN ALL THE GRAPHS BECAUSE
+% THE CEA CODE IS FUCKED AND BATCHING CAUSES IT TO ADD SOME SUPERSONIC SOLUTIONS UPSTREAM OF THE THROAT
 generate_new_CEA = true;
-generate_new_Contour = true;
+generate_new_Contour = false;
 
 %% Chamber Wall Material Properties
 
@@ -103,90 +104,35 @@ fluidProperties = readmatrix("CEA_" + file_name + ".xlsx"); %pull all nasaCEA va
 % in the heightStepArray initialization call to be whatever the ACTUAL end
 % length is set to.
 fluidProperties(1,:) = [];
-y = 1; 
-r = 1;
 axialDist = (fluidProperties(:,1));
-newFluidProperties = zeros(length(heightStepArray),10);
+
+%% New fluid Properties - Improved loop version
+newFluidProperties = zeros(length(heightStepArray), 10);
 newFluidProperties(:,1) = heightStepArray;
-%chamberPlot = readmatrix("Engine Contour Cleaned and Sorted (Metric).csv");
-T_l_reqMatrix = [];
-updatedTemps = [];
-updatedPressure = [];
-updatedVelocity = [];
+r = 1;
 
-%% New fluid Properties
-while y <= length(heightStepArray) % translating CEA outputs to height step number length output by averaging values over height step number
-    
-    a = r; % MAY NEED TO CHANGE BASED ON WHAT GETS READ FROM EXCEL FILE (add 2 or something to accoutn for text)
-    
-    %sumDiameter = 0;
-    sumAEAT = 0;
-    sumPrandtl = 0;
-    sumMach = 0;
-    sumGamma = 0;
-    sumT = 0;
-    sumVisc = 0;
-    sumCp = 0;
-    sumP = 0;
-    sumCstar = 0;                
-
-    while a <= length(axialDist)
-        
-        if a-r==0
-            %sumDiameter = sumDiameter + chamberPlot(a,2);
-            sumAEAT = sumAEAT+fluidProperties(a,2);
-            sumPrandtl = sumPrandtl+fluidProperties(a,3);
-            sumMach = sumMach+fluidProperties(a,4);
-            sumGamma = sumGamma+fluidProperties(a,5);
-            sumT = sumT+fluidProperties(a,6);
-            sumVisc = sumVisc+fluidProperties(a,7);
-            sumCp = sumCp+fluidProperties(a,8);
-            sumP = sumP+fluidProperties(a,9);
-            sumCstar = sumCstar+fluidProperties(a,10);
-            a=a+1;
-
-        elseif axialDist(a) < heightStepArray(y)
-            %sumDiameter = sumDiameter + chamberPlot(a,2);
-            sumAEAT = sumAEAT+fluidProperties(a,2);
-            sumPrandtl = sumPrandtl+fluidProperties(a,3);
-            sumMach = sumMach+fluidProperties(a,4);
-            sumGamma = sumGamma+fluidProperties(a,5);
-            sumT = sumT+fluidProperties(a,6);
-            sumVisc = sumVisc+fluidProperties(a,7);
-            sumCp = sumCp+fluidProperties(a,8);
-            sumP = sumP+fluidProperties(a,9);
-            sumCstar = sumCstar+fluidProperties(a,10);
-            a=a+1;
-
-        else
-            divFactor = a-r;
-            newFluidProperties(y,2) = sumAEAT/divFactor;
-            newFluidProperties(y,3) = sumPrandtl/divFactor;
-            newFluidProperties(y,4) = sumMach/divFactor;
-            newFluidProperties(y,5) = sumGamma/divFactor;
-            newFluidProperties(y,6) = sumT/divFactor;
-            newFluidProperties(y,7) = sumVisc/divFactor;
-            newFluidProperties(y,8) = sumCp/divFactor;
-            newFluidProperties(y,9) = sumP/divFactor;
-            newFluidProperties(y,10) = sumCstar/divFactor;
-            r = a;
-            break; 
-        
-        end
+for y = 1:length(heightStepArray)
+    % Find indices of CEA data within this height step
+    if y < length(heightStepArray)
+        idx = axialDist >= heightStepArray(y) & axialDist < heightStepArray(y+1);
+    else
+        idx = axialDist >= heightStepArray(y);
     end
-    y=y+1;
+    
+    if any(idx)
+        % Average all fluid properties at once using matrix operations
+        newFluidProperties(y, 2:10) = mean(fluidProperties(idx, 2:10), 1);
+    end
 end
 
 throatArea = pi*(throatDiameter/(2*39.37))^2;
-chamberDiameter1 = 2*sqrt((throatArea*newFluidProperties(:,2))/pi);
+diameterArray = flip(2*sqrt((throatArea*newFluidProperties(:,2))/pi));
 newFluidProperties = flip(newFluidProperties,1);
 
 converge_index = find(newFluidProperties(:,2) == newFluidProperties(end,2), 1, 'first' );
 [a, throat_index] = min(newFluidProperties(:,2));
 
-chamberDiameter = flip(chamberDiameter1);
-
 inputValues = [T_start, P_start * psi_to_pa, rho_start, mdot_channel, T_target, k_w, numChannels, surfaceRoughness, CTE, youngsModulus, throatDiameter, filletRad, poissonsRatio, chamberLength,throat_index];
 
 %% Calculate Wall Temp
-[flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, chamberDiameter, heightStepNumber, newFluidProperties, inputValues);
+[flowTempArray,flowVelocityArray, flowPressureArray,T_wgFinal, finEfficiency, Qdot, finQdot, T_wl_Array, h_l_Array, h_g_Array, vonMises,sigma_long, sigma_circ, sigma_rad] = FINAL_CALCWALLTEMP(converge_index, throat_index, heightArray, widthArray, wall_thicknessMatrix, diameterArray, heightStepNumber, newFluidProperties, inputValues);
