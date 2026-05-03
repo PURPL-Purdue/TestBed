@@ -36,7 +36,7 @@ end
 
 effectiveRatio = (channelWidths.* inputValues(7))./(pi*(chamberDiameter+wallThicknesses));
 
-hoopStress = chamberPressure.*chamberDiameter./(2.*wallThicknesses);
+% hoopStress = chamberPressure.*chamberDiameter./(2.*wallThicknesses);
 comp_stress = (chamberPressure*2) + deltaP;
 compress_circ = effectiveRatio .*deltaP.*chamberDiameter./wallThicknesses;
 thermal_circ = (Qdot.* youngsModulus.* CTE.*wallThicknesses)./(2*(1-poissonsRatio).*thermalConductivity);
