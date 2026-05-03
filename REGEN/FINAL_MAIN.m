@@ -75,10 +75,6 @@ chamberLength = floor((engineContour(end,1)) * m_to_in * 100) / 100;
 filletRad = convergingFillet;
 
 %% Arrays
-flowTempArray = zeros(1,heightStepNumber);
-flowVelocityArray = zeros(1,heightStepNumber);
-flowPressureArray = zeros(1,heightStepNumber);
-
 heightStepArray = linspace(0,chamberLength / m_to_in ,heightStepNumber);
 
 %% CEA RUN (SAVED IN PARENT DIR)

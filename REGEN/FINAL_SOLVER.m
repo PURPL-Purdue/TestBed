@@ -20,7 +20,6 @@ T_start= inputFlowValues(1); % K
 P_start = inputFlowValues(2); % Pa
 rho_start = inputFlowValues(3); %kg/m^3, changed coolant density to RP-1 at standard temp
 mass_flow = inputFlowValues(4); % Precalcuated mass flow based on # of channels in Malestrom
-thermalConductivity = inputFlowValues(6); % thermal conductivity W/m*K
 channel_number = inputFlowValues(7);
 surfaceRoughness = inputFlowValues(8); % measure for how rough channels are after slit saw (chosen from engineering toolbox)
 
@@ -34,7 +33,6 @@ flowVelocity = [v_start];
 flowPressure = [P_start];
 
 T_wgFinal = zeros(1,heightStepNumber);
-xz = 1;
 %% SOLVER
 
 
