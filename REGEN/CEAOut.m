@@ -1,8 +1,8 @@
 %% Main
-function [] = CEAOut(p_c, OF, filename)
+function [] = CEAOut(p_c, OF, filename, outputDir)
 
     repoDir = fileparts(mfilename('fullpath')); % This is required so MATLAB knows where the CEA Output file lives
-    addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin')); 
+    addpath(fullfile(repoDir, 'MatlabCEA', '+CEA', 'bin'));
     
     recycle on;
 
@@ -209,13 +209,14 @@ function [] = CEAOut(p_c, OF, filename)
     temp = [0,"Ae/At","PRANDTL","MACH","GAMMAs","T,","VISC,MILLIPOISE","Cp,","P,","CSTAR,","RHO,","SON","Isp,"];
     options = ["",sprintf("Mode: %s",mode),sprintf("Fac: %s",FAC),sprintf("Compression Ratio: %f",compressionRatio),sprintf("OF: %f",OF),sprintf("P_c: %f",p_c),sprintf("Point Density: 1000"),"","","","","",""];
 
-    outName = fullfile(repoDir, "CEA_" + filename + ".xlsx");
+    outName = fullfile(outputDir, "CEA_" + filename + ".xlsx");
 
     % Delete old file if it exists
     if isfile(outName)
         delete(outName);
     end
 
+    % Write the matrix to the specified directory
     writematrix([options; temp; gigaMatrix], outName, 'FileType', 'spreadsheet');
     
     fprintf("CEA Values Obtained Successfully.\n");
