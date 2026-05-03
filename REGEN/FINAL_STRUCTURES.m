@@ -6,7 +6,7 @@ function [vonMises,sigma_long, sigma_circ, sigma_rad, output] = FINAL_STRUCTURES
 CTE = inputValues(9);
 youngsModulus = inputValues(10);
 poissonsRatio = inputValues(13);
-thermalConductivity = ((-1350 + 10.9*T_wg + -0.0283*T_wg.^2 + 3.21E-05*T_wg.^3 + -1.33E-08*T_wg.^4)+(-1350 + 10.9*T_wl + -0.0283*T_wl.^2 + 3.21E-05*T_wl.^3 + -1.33E-08*T_wl.^4))/2;
+thermalConductivity = ((-1350 + 10.9*T_wg + -0.0283*T_wg.^2 + 3.21E-05*T_wg.^3 +-1.33E-08*T_wg.^4)+(-1350 + 10.9*T_wl + -0.0283*T_wl.^2 + 3.21E-05*T_wl.^3 + -1.33E-08*T_wl.^4))/2;
 
 
 OEffectives = zeros(length(T_wl),1);

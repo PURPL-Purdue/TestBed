@@ -25,22 +25,23 @@ psi_to_pa = 6894.76;
 
 file_name = "Maelstrom";
 
-%yaml_struct = py.yaml.safe_load(fileread(file_name + ".yaml"));
-%data = struct(yaml_struct);
+yaml_struct = py.yaml.safe_load(fileread(file_name + ".yaml"));
+data = struct(yaml_struct);
 
+p_c             = double(data.chamber_pressure);
+OF              = double(data.of_ratio);
 
-p_c             = 250;%double(data.chamber_pressure);
-OF              = 0.85;%double(data.of_ratio);
-mdot_coolant    = 1.438;%double(data.fuel_design_mdot);
+chamberDiameter = double(data.chamber_diameter);
+totalLength     = double(data.total_length);
+throatDiameter  = double(data.throat_diameter);
+exitDiameter    = double(data.exit_diameter);
+convergingAngle = double(data.converging_angle);
+divergingAngle  = double(data.diverging_angle);
+convergingFillet= double(data.converging_fillet);
+throatFillet    = double(data.throat_fillet);
 
-chamberDiameter = 3.325;%double(data.chamber_diameter);
-totalLength     = 7.399;%double(data.total_length);
-throatDiameter  = 1.3195;%double(data.throat_diameter);
-exitDiameter    = 2.309;%double(data.exit_diameter);
-convergingAngle = 45;%double(data.converging_angle);
-divergingAngle  = 13.5;%double(data.diverging_angle);
-convergingFillet= 0.5;%double(data.converging_fillet);
-throatFillet    = 0.55;%double(data.throat_fillet);
+mdot_total = (p_c * double(data.throat_area)) / (double(data.cstar) * 3.28084) * 32.174; % NEEDS TO BE CHANGED, RN CSTAR DOES NOT CHANGE W OF
+mdot_coolant = mdot_total / (1 + OF); % Total fuel mass flow rate
 
 numChannels = 60;
 widthArray = [0.02,0.02,0.02] / m_to_in ;          % Width of coolant channel at injector, throat and exit (in)
@@ -54,7 +55,7 @@ T_target = 530; %773 % target gas-side hotwall temp in degrees K (530 for 7075, 
 heightStepNumber = 250; %computation accuracy
 
 contourResolution = 600; % Keep around 250 for now? I've seen two maxima occur in temp when at 100
-generate_new_CEA = false;
+generate_new_CEA = true;
 generate_new_Contour = true;
 
 %% Chamber Wall Material Properties

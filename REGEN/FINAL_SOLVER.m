@@ -162,7 +162,8 @@ while (heightStep <= heightStepNumber)
             end
         
     end
-    display(xz)
+    clc;
+    fprintf('%d/%d Heightsteps finished\r', heightStep, heightStepNumber);
         
     % Calculate Coolant Temp increase, delta_T (K)
     delta_T = Q_dotOUT*A_wallL/(mass_flow*cp);
