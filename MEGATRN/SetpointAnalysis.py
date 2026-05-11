@@ -86,7 +86,7 @@ def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
     cea = cea_obj_si.CEA_Obj(oxName=ox, fuelName=fuel)
 
     # Temperatures (K)
-    Tc = cea.get_Temperatures(Pc=pc_psi, MR=OF_ratio, eps=ExpansionRatio)[0]
+    Tc = cea.get_Temperatures(Pc=pc_psi, MR=OF_ratio, eps=1)[0]
 
     # MolWt (kg/kmol) and gamma
     MolWt, gamma = cea.get_Chamber_MolWt_gamma(Pc=pc_psi, MR=OF_ratio)
@@ -94,15 +94,15 @@ def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
 
     # Transport Properties (at Throat index 1)
     # Returns (Cp, Visc, Cond, Pr)
-    trans_props = cea.get_Transport_Ppts(Pc=pc_psi, MR=OF_ratio, eps=ExpansionRatio)
+    trans_props = cea.get_Transport_Ppts(Pc=pc_psi, MR=OF_ratio, eps=1)
     cp = trans_props[0][1]      # J/kg-K
     mu = trans_props[1][1]      # Pa-s (kg/m-s)
     k_gas = trans_props[2][1]   # W/m-K
     prandtl = trans_props[3][1] # Dimensionless
 
     # Density and Velocity (at Throat index 1)
-    rho_throat = cea.get_Densities(Pc=pc_psi, MR=OF_ratio, eps=ExpansionRatio)[1] # kg/m3
-    sonic_vel_throat = cea.get_SonicVelocities(Pc=pc_psi, MR=OF_ratio, eps=ExpansionRatio)[1] # m/s
+    rho_throat = cea.get_Densities(Pc=pc_psi, MR=OF_ratio, eps=1)[1] # kg/m3
+    sonic_vel_throat = cea.get_SonicVelocities(Pc=pc_psi, MR=OF_ratio, eps=1)[1] # m/s
     u_throat = sonic_vel_throat * 1.0 # Mach 1 at throat
 
     # cstar
