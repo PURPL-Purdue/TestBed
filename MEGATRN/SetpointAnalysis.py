@@ -1,8 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-# Using cea_obj_si to get SI units directly (m, kg, s, K, J, etc.)
-from rocketcea.cea_obj import CEA_Obj, cea_obj_si 
+from rocketcea.cea_obj_w_units import CEA_Obj 
 import bisect
 from matplotlib.widgets import Slider
 
@@ -28,20 +27,18 @@ LSTAR = 1.0922
 
 
 # =====================================================
-# === CONSTANTS =======================================
+# === CONSTANTS & CONVERSIONS =========================
 # =====================================================
 
 G0 = 9.80665
 PSI_TO_PA = 6894.76
 LBF_TO_N = 4.44822
+PSI_TO_MPA = 0.00689476  
 R_UNIVERSAL = 8314.4621
-KG_TO_LB = 2.20462
-GAL_PER_LITER = 0.264172
-L_PER_M3 = 1000.0
-M3_TO_GAL = GAL_PER_LITER * L_PER_M3
 
-DENSITY_RP1 = 810.0
-DENSITY_LOX = 1140.0
+# Manual conversion helpers for transport properties
+MILLIPOISE_TO_PAS = 0.0001        
+MCAL_CM_K_S_TO_W_MK = 0.4184      
 
 # =====================================================
 # === HELPER FUNCTIONS ================================
@@ -80,46 +77,40 @@ def compute_Cf_ideal(gamma, Pe_Pc, Pa_Pc, Ae_over_At):
 
 def get_numbers_extended(OF_ratio, pc_psi, ox, fuel):
     """
-    Wrap cea_obj_si calls to get SI values directly.
+    Using the 'cea_obj_w_units' wrapper.
     """
-    # Using SI version of the object
-    cea = cea_obj_si.CEA_Obj(oxName=ox, fuelName=fuel)
+    cea = CEA_Obj(oxName=ox, fuelName=fuel, 
+                  pressure_units='MPa', 
+                  temperature_units='K',
+                  density_units='kg/m^3',
+                  specific_heat_units='J/kg-K')
+
+    pc_mpa = pc_psi * PSI_TO_MPA
 
     # Temperatures (K)
-    Tc = cea.get_Temperatures(Pc=pc_psi, MR=OF_ratio, eps=1)[0]
+    Tc = cea.get_Temperatures(Pc=pc_mpa, MR=OF_ratio, eps=1)[0]
 
-    # MolWt (kg/kmol) and gamma
-    MolWt, gamma = cea.get_Chamber_MolWt_gamma(Pc=pc_psi, MR=OF_ratio)
+    # MolWt and gamma
+    MolWt, gamma = cea.get_Chamber_MolWt_gamma(Pc=pc_mpa, MR=OF_ratio)
     R_specific = R_UNIVERSAL / MolWt
 
-    # Transport Properties (at Throat index 1)
-    # Returns (Cp, Visc, Cond, Pr)
-    trans_props = cea.get_Transport_Ppts(Pc=pc_psi, MR=OF_ratio, eps=1)
-    cp = trans_props[0][1]      # J/kg-K
-    mu = trans_props[1][1]      # Pa-s (kg/m-s)
-    k_gas = trans_props[2][1]   # W/m-K
-    prandtl = trans_props[3][1] # Dimensionless
+    # Transport Properties (Chamber)
+    trans_props = cea.get_Chamber_Transport(Pc=pc_mpa, MR=OF_ratio)
+    cp = trans_props[0]                         # J/kg-K
+    mu = trans_props[1] * MILLIPOISE_TO_PAS     # Pa-s
+    k_gas = trans_props[2] * MCAL_CM_K_S_TO_W_MK # W/m-K
+    prandtl = trans_props[3]                    
 
-    # Density and Velocity (at Throat index 1)
-    rho_throat = cea.get_Densities(Pc=pc_psi, MR=OF_ratio, eps=1)[1] # kg/m3
-    sonic_vel_throat = cea.get_SonicVelocities(Pc=pc_psi, MR=OF_ratio, eps=1)[1] # m/s
-    u_throat = sonic_vel_throat * 1.0 # Mach 1 at throat
+    # Density and Sonic Velocity at Throat
+    rho_throat = cea.get_Densities(Pc=pc_mpa, MR=OF_ratio, eps=1)[1] 
+    u_throat = cea.get_SonicVelocities(Pc=pc_mpa, MR=OF_ratio, eps=1)[1] # Mach 1 Velocity
 
-    # cstar
     cstar = cstar_from_T_gamma_R(Tc, gamma, R_specific)
 
     return {
-        'cstar': cstar,
-        'Tc': Tc,
-        'gamma': gamma,
-        'MolWt': MolWt,
-        'R_specific': R_specific,
-        'cp': cp,
-        'mu': mu,
-        'k_gas': k_gas,
-        'prandtl': prandtl,
-        'rho_throat': rho_throat,
-        'u_throat': u_throat
+        'cstar': cstar, 'Tc': Tc, 'gamma': gamma, 'MolWt': MolWt,
+        'R_specific': R_specific, 'cp': cp, 'mu': mu, 'k_gas': k_gas,
+        'prandtl': prandtl, 'rho_throat': rho_throat, 'u_throat': u_throat
     }
 
 # =====================================================
@@ -130,19 +121,13 @@ def compute_sizing(F_newtons, pc_psi, of):
     data = get_numbers_extended(of, pc_psi, OXIDIZER, FUEL)
     gamma, cstar, Tc, R_specific = data['gamma'], data['cstar'], data['Tc'], data['R_specific']
     
-    # Heat transfer components
-    cp = data['cp']
-    mu = data['mu']
-    k_gas = data['k_gas']
-    prandtl = data['prandtl']
-    rho_throat = data['rho_throat']
-    u_throat = data['u_throat']
+    cp, mu, k_gas = data['cp'], data['mu'], data['k_gas']
+    prandtl, rho_throat, u_throat = data['prandtl'], data['rho_throat'], data['u_throat']
 
     Pc_Pa = pc_psi * PSI_TO_PA
     Pa_Pa = AMBIENT_P_PSI * PSI_TO_PA
     Pa_over_Pc = Pa_Pa / Pc_Pa
 
-    # === Nozzle parameters ===
     if Pa_over_Pc < 1.0:
         Me = Mach_from_pe_pc(Pa_over_Pc, gamma)
         eps = area_ratio_from_M(Me, gamma)
@@ -162,22 +147,18 @@ def compute_sizing(F_newtons, pc_psi, of):
     Isp = (Cf * cstar) / G0
     Ve = Isp * G0 * EFFICIENCY_FACTOR
 
-    # === Chamber geometry ===
     D_chamber = 2.0 * Dt
     V_chamber = LSTAR * At
     L_chamber = V_chamber / (math.pi/4 * D_chamber**2)
 
     L_converge = (D_chamber - Dt) / (2 * math.tan(math.radians(45)))
-    V_total = V_chamber + ((1/3) * math.pi * L_converge * ((D_chamber/2)**2 + (D_chamber/2)*(Dt/2) + (Dt/2)**2))
-    Lstar_with_converge = V_total / At
+    L_chamber_full = (L_chamber + L_converge) * 100.0
 
     result = {
         'pc_psi': pc_psi, 'of': of, 'gamma': gamma, 'Tc': Tc,
         'cstar': cstar, 'Isp': Isp, 'Ve': Ve, 'Cf': Cf, 'eps': eps,
         'mdot': mdot, 'At': At, 'Dt': Dt, 'Ae': Ae, 'De': De,
-        'D_chamber': D_chamber, 'L_chamber': L_chamber*100.0,
-        'L_chamber_full': (L_chamber + L_converge)*100.0, 'V_chamber': V_chamber,
-        'L_throat': (0.382 * Dt + 0.5 * Dt)*100.0, 'L_nozzle': ((De - Dt) / (2 * math.tan(math.radians(NOZZLE_HALF_ANGLE_DEG))))*100.0,
+        'D_chamber': D_chamber, 'L_chamber_full': L_chamber_full,
         'cp': cp, 'mu': mu, 'k_gas': k_gas, 'prandtl': prandtl, 
         'rho_throat': rho_throat, 'u_throat': u_throat, 'R_specific': R_specific
     }
@@ -194,9 +175,13 @@ def pretty_print(r):
     print(f" mdot = {r['mdot']:.3f} kg/s")
     print(f" Dia Throat = {r['Dt']*100:.2f} cm | Dia Exit = {r['De']*100:.2f} cm")
     print(f" Chamber D = {r['D_chamber']*100:.2f} cm | Full chamber L = {r['L_chamber_full']:.2f} cm")
-    print(f" --- Heat Transfer Gas Props (Throat) ---")
+    print(f" --- Heat Transfer Gas Props (Chamber) ---")
+    print(f" Specific Heat (Cp): {r['cp']:.1f} J/kg-K")
     print(f" Prandtl: {r['prandtl']:.4f} | Conductivity: {r['k_gas']:.4f} W/m-K")
     print(f" Viscosity: {r['mu']:.4e} Pa-s | Density: {r['rho_throat']:.3f} kg/m³")
+    print(f" Throat Velocity (Mach 1): {r['u_throat']:.1f} m/s")
+    print(f" Cstar : {r['cstar']:.1f} m/s")
+    print(f" Gamma : {r['gamma']:.4f}")
     print("="*60 + "\n")
 
 # =====================================================
@@ -204,19 +189,18 @@ def pretty_print(r):
 # =====================================================
 
 if __name__ == "__main__":
-    print("=== Rocket Engine Analysis (SI Heat Transfer Additions) ===\n")
+    print("=== Rocket Engine Analysis (Official SI Units Wrapper) ===\n")
     target_thrust_N = TARGET_THRUST_LBF * LBF_TO_N
+    
     show_opt = input("Also show optimal O/F results? (y/n): ").strip().lower()
 
     for pc in CHAMBER_PRESSURES:
         r = compute_sizing(target_thrust_N, pc, OF_TARGET)
         pretty_print(r)
 
-        # Plotting logic remains the same...
-        Isp_list = [compute_sizing(target_thrust_N, pc, of)['Isp'] for of in OF_RANGE]
-        idx_isp = np.nanargmax(Isp_list)
-        opt_Isp_OF = OF_RANGE[idx_isp]
-
         if show_opt == "y":
+            Isp_list = [compute_sizing(target_thrust_N, pc, of)['Isp'] for of in OF_RANGE]
+            idx_isp = np.nanargmax(Isp_list)
+            opt_Isp_OF = OF_RANGE[idx_isp]
             print("=== OPTIMAL RESULTS SUMMARY ===")
             pretty_print(compute_sizing(target_thrust_N, pc, opt_Isp_OF))
