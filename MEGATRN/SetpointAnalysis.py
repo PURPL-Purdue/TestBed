@@ -10,7 +10,7 @@ from matplotlib.widgets import Slider
 # =====================================================
 
 OXIDIZER = "LOX"
-FUEL = "ETHANOL"
+FUEL = "RP1"
 
 TARGET_THRUST_LBF = 900.0
 CHAMBER_PRESSURES = [200.0]
@@ -172,6 +172,7 @@ def pretty_print(r):
     print("="*60)
     print(f"Pc = {r['pc_psi']} psi | O/F = {r['of']:.3f}")
     print(f" Chamber Temp (gas) = {r['Tc']:.1f} K")
+    print(f" isp = {r['Isp']:.3f} s")
     print(f" mdot = {r['mdot']:.3f} kg/s")
     print(f" Dia Throat = {r['Dt']*100:.2f} cm | Dia Exit = {r['De']*100:.2f} cm")
     print(f" Chamber D = {r['D_chamber']*100:.2f} cm | Full chamber L = {r['L_chamber_full']:.2f} cm")
