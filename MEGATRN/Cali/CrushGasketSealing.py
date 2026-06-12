@@ -5,7 +5,10 @@ import math
 # =====================================================
 # --- Pressure Zone Configurations ---
 P_core = 200.0                  # Internal core pressure (psi)
-P_coolant = 300.0               # Inter-gasket coolant jacket cavity pressure (psi)
+P_coolant = 200.0               # Inter-gasket coolant jacket cavity pressure (psi)
+
+# --- Multi-Component Stack Configuration ---
+N_interfaces = 3                # Number of clamped joint interfaces in the stack
 
 # --- Inner Gasket Properties (Solid Flat Copper) ---
 G_mean_inner = 4.26             # Mean diameter of the inner gasket (inches)
@@ -24,7 +27,7 @@ bolt_diam = 0.5                 # Nominal rod diameter (inches)
 bolt_yield_psi = 125000         # Rod yield strength (psi)
 flange_thick_mm = 30.0          # Flange axial depth/thickness (mm)
 estimated_bolt_circle_diam = 5.90551 # Adjusted Bolt Circle Diameter to clear outer gasket (inches)
-
+SafetyFactor = 1.3              # Safety factor for bolt strength design
 
 # =====================================================
 # === MULTI-ZONE PRESSURE FLANGE CALCULATIONS ========
@@ -42,23 +45,22 @@ b_out = b0_out if b0_out <= 0.25 else 0.5 * math.sqrt(b0_out)
 G_out = G_mean_outer if b0_out <= 0.25 else (G_mean_outer + b0_out) - (2.0 * b_out)
 
 # 3. Summed Hydrostatic End Forces (H)
-# Inner zone pressure acts on the area inside the inner gasket
-H_core = (math.pi * (G_in ** 2) / 4.0) * P_core
-# Inter-gasket pressure acts on the annular area between the two reaction diameters
-H_annulus = (math.pi * ((G_out ** 2) - (G_in ** 2)) / 4.0) * P_coolant
+# Every separate interface experiences a fluid pressure separation force acting on the system
+H_core = ((math.pi * (G_in ** 2) / 4.0) * P_core) * N_interfaces
+H_annulus = ((math.pi * ((G_out ** 2) - (G_in ** 2)) / 4.0) * P_coolant) * N_interfaces
 H_total = H_core + H_annulus
 
 # 4. Summed Joint Compression Loads (Hp)
-# Operating compression for both gaskets reacting to their surrounding fluid environments
-Hp_inner = (2.0 * b_in * math.pi * G_in) * m_inner * abs(P_coolant - P_core)
-Hp_outer = (2.0 * b_out * math.pi * G_out) * m_outer * P_coolant
+# Operating compression for both gaskets reacting to their surrounding fluid environments across all interfaces
+Hp_inner = ((2.0 * b_in * math.pi * G_in) * m_inner * abs(P_coolant - P_core)) * N_interfaces
+Hp_outer = ((2.0 * b_out * math.pi * G_out) * m_outer * P_coolant) * N_interfaces
 Hp_total = Hp_inner + Hp_outer
 
 # 5. Combined Required Bolt Operating Load (Wm1)
 Wm1 = H_total + Hp_total
 
 # 6. Combined Required Initial Gasket Seating Load (Wm2)
-# Both copper rings must be crushed simultaneously during dry assembly
+# Both copper rings must be crushed simultaneously during dry assembly (clamped in series)
 Wm2_inner = math.pi * b_in * G_in * y_inner
 Wm2_outer = math.pi * b_out * G_out * y_outer
 Wm2_total = Wm2_inner + Wm2_outer
@@ -67,7 +69,7 @@ Wm2_total = Wm2_inner + Wm2_outer
 W_controlling = max(Wm1, Wm2_total)
 
 # 7. Bolt Sizing & Count Assessment
-bolt_allowable_stress = bolt_yield_psi / 4.0
+bolt_allowable_stress = bolt_yield_psi / SafetyFactor
 required_bolt_area_Am = W_controlling / bolt_allowable_stress
 single_bolt_area = (math.pi * (bolt_diam ** 2)) / 4.0
 min_bolts_by_strength = math.ceil(required_bolt_area_Am / single_bolt_area)
@@ -99,6 +101,7 @@ print("==================================================")
 print(f"Core Fluid Pressure           : {P_core:.1f} psi")
 print(f"Coolant Cavity Pressure       : {P_coolant:.1f} psi")
 print(f"Flange Thickness              : {flange_thick_mm:.1f} mm ({flange_thick_in:.4f} in)")
+print(f"Number of Clamped Interfaces   : {N_interfaces}")
 print("--------------------------------------------------")
 print(f"Hydrostatic End Force (Core)  : {H_core:.2f} lbf")
 print(f"Hydrostatic End Force (Cavity): {H_annulus:.2f} lbf")
@@ -108,6 +111,7 @@ print(f"Operating Bolt Load (Wm1)     : {Wm1:.2f} lbf")
 print(f"Gasket Seating Load (Wm2)     : {Wm2_total:.2f} lbf")
 print(f"Controlling Structural Load   : {W_controlling:.2f} lbf")
 print("--------------------------------------------------")
+print(f"One Bolt Area : {single_bolt_area:.4f} sq.in")
 print(f"Required Total Bolt Area (Am) : {required_bolt_area_Am:.4f} sq.in")
 print(f"Min Bolts Required by Strength: {min_bolts_by_strength}")
 print("--------------------------------------------------")
