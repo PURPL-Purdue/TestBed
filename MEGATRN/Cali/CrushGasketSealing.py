@@ -8,7 +8,7 @@ P_core = 200.0                  # Internal core pressure (psi)
 P_coolant = 200.0               # Inter-gasket coolant jacket cavity pressure (psi)
 
 # --- Multi-Component Stack Configuration ---
-N_interfaces = 3                # Number of clamped joint interfaces in the stack
+N_interfaces = 4                # Number of clamped joint interfaces in the stack
 
 # --- Inner Gasket Properties (Solid Flat Copper) ---
 G_mean_inner = 4.26             # Mean diameter of the inner gasket (inches)
@@ -26,7 +26,7 @@ y_outer = 13000.0
 bolt_diam = 0.5                 # Nominal rod diameter (inches)
 bolt_yield_psi = 125000         # Rod yield strength (psi)
 flange_thick_mm = 30.0          # Flange axial depth/thickness (mm)
-estimated_bolt_circle_diam = 5.90551 # Adjusted Bolt Circle Diameter to clear outer gasket (inches)
+estimated_bolt_circle_diam = 6 # Adjusted Bolt Circle Diameter to clear outer gasket (inches)
 SafetyFactor = 1.3              # Safety factor for bolt strength design
 
 # =====================================================

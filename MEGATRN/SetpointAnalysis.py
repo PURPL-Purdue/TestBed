@@ -92,7 +92,7 @@ def compute_sizing(F_newtons, pc_psi, of):
     ch_rho_raw, th_rho_raw, _ = cea_fac.get_Densities(Pc=pc_psi, MR=of, eps=eps)
     ch_sonic_raw, th_sonic_raw, _ = cea_fac.get_SonicVelocities(Pc=pc_psi, MR=of, eps=eps)
 
-    # Step 4: Isolate Mach Numbers without using the broken get_MachNumber unpacker
+    # Step 4: Isolate Mach Numbers
     # For an FAC engine, chamber Mach is solved via contraction ratio; throat is always choked (1.0)
     ch_mach = cea_fac.get_Chamber_MachNumber(Pc=pc_psi, MR=of, fac_CR=contraction_ratio)
     th_mach = 1.0
