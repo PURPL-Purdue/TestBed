@@ -1,4 +1,4 @@
-function [] = generateContour(hotwallGeometry, filename, resolution)
+function [] = generateContour(hotwallGeometry, file_name, resolution, outputDir)
     
     in_to_m = 0.0254;
 
@@ -44,13 +44,14 @@ function [] = generateContour(hotwallGeometry, filename, resolution)
     outData = [x_points(:), r_points(:), area_ratio(:)];
 
     repoDir = fileparts(mfilename('fullpath'));   % folder the .m file lives in
-    outName = fullfile(repoDir, "Contour_" + filename + ".xlsx");
+    outName = fullfile(repoDir, "Contour_" + file_name + ".xlsx");
 
     % Delete old file if it exists
     if isfile(outName)
         delete(outName);
     end
 
+    outName = fullfile(outputDir, "Contour_" + file_name + ".xlsx");
     writematrix(outData, outName, 'FileType', 'spreadsheet');
 
 

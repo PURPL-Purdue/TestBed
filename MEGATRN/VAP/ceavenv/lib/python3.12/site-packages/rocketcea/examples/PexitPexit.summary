@@ -1,0 +1,31 @@
+------------------------------------------------------------
+Parametric Solutions
+parasol v0.2.1
+contact: C. Taylor, cet@appliedpython.com
+------------------------------------------------------------
+
+System Analysis
+   by: Charlie Taylor
+ date: Monday March 06, 2023
+
+================= Design Variables ==================
+ NAME VALUE MINIMUM MAXIMUM DESCRIPTION              
+   Pc  1500    1400    3000 Chamber Pressure  (psia) 
+  eps    20      10      60 Nozzle Area Ratio        
+=====================================================
+
+======================== Result Variables ========================
+   NAME   VALUE DESCRIPTION                  LOW-LIMIT HIGH-LIMIT 
+ IspVac 436.348 Vacuum Isp  (sec)                  ---        --- 
+  Pexit 8.07005 Nozzle Exit Pressure  (psia)       ---        --- 
+  IspSL 390.148 Sea Level Isp  (sec)               ---        --- 
+==================================================================
+
+
+
+
+======================================
+==========FULL SYSTEM SUMMARY=========
+======================================
+ParametricSoln: Nozzle Area Ratio
+            

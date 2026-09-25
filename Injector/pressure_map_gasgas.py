@@ -135,9 +135,9 @@ def build_inverse_interpolators(fu_p_map, ox_p_map, pc_axis, of_axis, fill_value
 
 
 def pressure_map(minOF, maxOF, maxPc, resolution, cstar_eff,
-                 throat_area, fuel_CdA, ox_CdA):
+                 throat_area, fuel_CdA, ox_CdA, fuel_choice, ox_choice):
 
-    engine = CEA_Obj(oxName="GOX", fuelName="GH2")
+    engine = CEA_Obj(oxName=ox_choice, fuelName=fuel_choice)
 
     pc_scale = np.linspace(1.0, maxPc, resolution)   # PSI
     OF_scale = np.linspace(minOF, maxOF, resolution)  # -
@@ -155,14 +155,23 @@ def pressure_map(minOF, maxOF, maxPc, resolution, cstar_eff,
             m_dot_fu = m_dot_total / (1.0 + OF)
             m_dot_ox = m_dot_total - m_dot_fu
 
-            fu_p_map[i, j] = required_feed_pressure_orifice(
-                m_dot_fu, fuel_CdA, T=293.15, gamma=gamma_H2,
-                p_chamber=pc, R=R_H2
-            )
-            ox_p_map[i, j] = required_feed_pressure_orifice(
-                m_dot_ox, ox_CdA, T=293.15, gamma=gamma_O2,
-                p_chamber=pc, R=R_O2
-            )
+            if fuel_choice == "GH2":
+
+                fu_p_map[i, j] = required_feed_pressure_orifice(
+                    m_dot_fu, fuel_CdA, T=293.15, gamma=gamma_H2,
+                    p_chamber=pc, R=R_H2
+                )
+            else:
+                print("Fuel not currently supported")
+            
+            if ox_choice == "GOX":
+            
+                ox_p_map[i, j] = required_feed_pressure_orifice(
+                    m_dot_ox, ox_CdA, T=293.15, gamma=gamma_O2,
+                    p_chamber=pc, R=R_O2
+                )
+            else:
+                print("Ox not currently supported")
 
         print(f"Chamber pressure: {pc:.1f} psi")
 
