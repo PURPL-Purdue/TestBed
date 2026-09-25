@@ -6,19 +6,14 @@ from scipy.integrate import solve_ivp
 from thermal_solver import calculate_convection_coeff, heat_equation
 
 AMBIENT_P_PSI = 14.7
-EFFICIENCY_FACTOR = .85
-
-NOZZLE_HALF_ANGLE_DEG = 15.0
-LSTAR = 1.0922
-
+EFFICIENCY_FACTOR = 1.0
 G0 = 9.80665
+R_UNIVERSAL = 8314.4621
 
-OXIDIZER = "LOX"
-FUEL = "RP1"
+OXIDIZER = "GOX"
+FUEL = "ETHANOL"
 DENSITY_RP1 = 810.0
 DENSITY_LOX = 1140.0
-
-R_UNIVERSAL = 8314.4621
 
 
 # =================== PARAMETERS (THERMAL) ====================
@@ -111,15 +106,13 @@ def CEA(F_lbf, of, pc_psi):
 
     cstar = cea.get_Cstar(Pc=pc_psi, MR=of)  # now returns m/s (set in CEA object)
 
-    # Removed in^2 → m^2 conversion (0.0006452)
-    # Keep geometry in meters by converting once properly
     At_m2 = At * 0.00064516  # correct in^2 → m^2
 
     Dt = math.sqrt(4.0 * At_m2 / math.pi) # m
 
     # mdot from definition: mdot = Pc*At/c*
     # Convert Pc (psi) → Pa and At → m^2 for SI consistency
-    mdot = (pc_psi * 6894.757 * At_m2) / cstar  # kg/s (removed 0.45359237 factor)
+    mdot = (pc_psi * 6894.757 * At_m2) / cstar  # kg/s 
 
     Ae = At_m2 * eps
     De = math.sqrt(4.0 * Ae / math.pi)
@@ -127,60 +120,60 @@ def CEA(F_lbf, of, pc_psi):
     Ve = Cf * cstar * EFFICIENCY_FACTOR  # m/s
     Isp = Ve / G0                        # seconds
     
-    #Chamber THermal Analysis
-    Ac = math.pi * ((0.127 / 2)**2  - (0.107 / 2)**2) # m^2
-    V_c = mdot / (Ac  * (PcPa / (287 * Tc))) # math.sqrt(gamma * R_specific * Tc)# m/s
-    # print(f"Calculated chamber velocity: {V_c:.2f} m/s")
+    # #Chamber THermal Analysis
+    # Ac = math.pi * ((0.127 / 2)**2  - (0.107 / 2)**2) # m^2
+    # V_c = mdot / (Ac  * (PcPa / (287 * Tc))) # math.sqrt(gamma * R_specific * Tc)# m/s
+    # # print(f"Calculated chamber velocity: {V_c:.2f} m/s")
     
-    # Convert Pc from psi to Pa for thermal analysis
-    H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, 0.107, V_c, eps)[0:2]
-    # print(f"Convection Coefficient: {H_conv:.2f} W/m^2-K, Gas Temperature: {T_gas:.2f} K")
+    # # Convert Pc from psi to Pa for thermal analysis
+    # H_conv, T_gas = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, 0.107, V_c, eps)[0:2]
+    # # print(f"Convection Coefficient: {H_conv:.2f} W/m^2-K, Gas Temperature: {T_gas:.2f} K")
     
-    #Throat Thermal Analysis
-    V_th = math.sqrt(gamma * R_specific * Tc * (2.0 / (gamma + 1.0))) # m/s at the throat
-    # print(f"Calculated throat velocity: {V_th:.2f} m/s")
-    H_conv_throat, T_gas_throat = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, Dt, V_th, eps)[0:2]
+    # #Throat Thermal Analysis
+    # V_th = math.sqrt(gamma * R_specific * Tc * (2.0 / (gamma + 1.0))) # m/s at the throat
+    # # print(f"Calculated throat velocity: {V_th:.2f} m/s")
+    # H_conv_throat, T_gas_throat = calculate_convection_coeff(OXIDIZER, FUEL, of, PcPa, Dt, V_th, eps)[0:2]
     
-    T_initial = 25 + 273.15  # Celsius to Kelvin
-    # ==================== SOLVE ====================
-    n_nodes = 50
-    r_nodes = np.linspace(0.107, 0.127, n_nodes)
-    dr = r_nodes[1] - r_nodes[0]
-    T0 = np.full(n_nodes, T_initial)
-    t_final = 20 # seconds
-    sol_c = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv, T_gas, K_METAL), 
-                    method='BDF', t_eval=np.linspace(0, t_final, 1000))
+    # T_initial = 25 + 273.15  # Celsius to Kelvin
+    # # ==================== SOLVE ====================
+    # n_nodes = 50
+    # r_nodes = np.linspace(0.107, 0.127, n_nodes)
+    # dr = r_nodes[1] - r_nodes[0]
+    # T0 = np.full(n_nodes, T_initial)
+    # t_final = 20 # seconds
+    # sol_c = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv, T_gas, K_METAL), 
+    #                 method='BDF', t_eval=np.linspace(0, t_final, 1000))
 
-    r_nodes = np.linspace(Dt, Dt + THICKNESS, n_nodes)
-    dr = r_nodes[1] - r_nodes[0]
-    sol_t = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv_throat, T_gas_throat, K_METAL), 
-                    method='BDF', t_eval=np.linspace(0, t_final, 1000))
+    # r_nodes = np.linspace(Dt, Dt + THICKNESS, n_nodes)
+    # dr = r_nodes[1] - r_nodes[0]
+    # sol_t = solve_ivp(heat_equation, [0, t_final], T0, args=(r_nodes, dr, n_nodes, ALPHA, H_conv_throat, T_gas_throat, K_METAL), 
+    #                 method='BDF', t_eval=np.linspace(0, t_final, 1000))
     # ==================== RESULTS ====================
-    T_res_c = sol_c.y
-    times_c = sol_c.t
-    T_res_t = sol_t.y
-    times_t = sol_t.t
+    # T_res_c = sol_c.y
+    # times_c = sol_c.t
+    # T_res_t = sol_t.y
+    # times_t = sol_t.t
     
-    inner_wall_temp_c = T_res_c[1, :]
-    inner_wall_temp_t = T_res_t[1, :]
+    # inner_wall_temp_c = T_res_c[1, :]
+    # inner_wall_temp_t = T_res_t[1, :]
 
-    # Find melting time
-    melt_indices = np.where(inner_wall_temp_c >= T_MELT)[0]
-    if len(melt_indices) > 0:
-        t_melt_c = times_c[melt_indices[0]]
-        # print(f"CRITICAL: Inner wall melts at {t_melt:.3f} seconds.")
-    else:
-        t_melt_c = -1
-        # print("Wall did not melt within the time frame.")
+    # # Find melting time
+    # melt_indices = np.where(inner_wall_temp_c >= T_MELT)[0]
+    # if len(melt_indices) > 0:
+    #     t_melt_c = times_c[melt_indices[0]]
+    #     # print(f"CRITICAL: Inner wall melts at {t_melt:.3f} seconds.")
+    # else:
+    #     t_melt_c = -1
+    #     # print("Wall did not melt within the time frame.")
 
-    #Find melting time for throat
-    melt_indices_throat = np.where(inner_wall_temp_t >= T_MELT)[0]
-    if len(melt_indices_throat) > 0:
-        t_melt_t = times_t[melt_indices_throat[0]]
-        # print(f"CRITICAL: Throat wall melts at {t_melt:.3f} seconds.")
-    else:
-        t_melt_t = -1
-        # print("Throat wall did not melt within the time frame.")
+    # #Find melting time for throat
+    # melt_indices_throat = np.where(inner_wall_temp_t >= T_MELT)[0]
+    # if len(melt_indices_throat) > 0:
+    #     t_melt_t = times_t[melt_indices_throat[0]]
+    #     # print(f"CRITICAL: Throat wall melts at {t_melt:.3f} seconds.")
+    # else:
+    #     t_melt_t = -1
+    #     # print("Throat wall did not melt within the time frame.")
     
     result = {
         'pc_psi': pc_psi,
@@ -199,8 +192,8 @@ def CEA(F_lbf, of, pc_psi):
         'De': De,
         'R_specific': R_specific,
         'material': material,
-        't_melt_chamber': t_melt_c,
-        't_melt_throat': t_melt_t
+        # 't_melt_chamber': t_melt_c,
+        # 't_melt_throat': t_melt_t
     }
 
     return result
@@ -234,8 +227,8 @@ def plotter(result, FireTime, passfail, thrust_lbf):
         result['Dt'] * 100,        # cm
         (10.7 / (result['Dt'] * 100)), #contraction Ratio
         result['eps'],
-        result['t_melt_chamber'],   # seconds until melting (or -1 if no melt)
-        result['t_melt_throat'],    # seconds until melting (or -1 if no melt)
+        # result['t_melt_chamber'],   # seconds until melting (or -1 if no melt)
+        # result['t_melt_throat'],    # seconds until melting (or -1 if no melt)
         result['Ve'],              # m/s
         #result['Dt'] * 200         # chamber diameter (cm)
     ])
@@ -243,19 +236,13 @@ def plotter(result, FireTime, passfail, thrust_lbf):
     return row
 
 
-# def thermalAnalysis(result, FireTime, passfail, thrust_lbf):
-
-    
-
-#     return row
-
 if __name__ == "__main__":
 
-    ThrustStart = 100
-    ThrustMax = 1800
+    ThrustStart = 500
+    ThrustMax = 3000
     ThrustTemp = ThrustStart
     Pcstart = 100
-    PcMax = 250
+    PcMax = 380
     OFstart = 0.5
     OFTemp = OFstart
     OFEnd = 4
@@ -282,16 +269,14 @@ if __name__ == "__main__":
             while OFstart <= OFEnd:
 
                 result = CEA(ThrustStart, OFstart, Pcstart)
-
                 passfail, maxMdot = flowChecker(result['mdot'], MaxThroatDia, Pcstart, result['cstar'])
-                #passfail = OFflowChecker(OFstart, result['mdot'], MaxThroatDia)
 
                 if passfail == 1:
                     row = plotter(result, FireTime, passfail, ThrustStart)
                     rows.append(row)
 
-                    print(f"{int(row[0])} | {row[1]} | {row[2]:.2f} | {row[3]:.2f} | {row[4]:.2f} | {row[5]:.2f} | {row[6]:.2f} | {row[7]:.2f} | {row[8]:.2f} | {row[9]:.2f} | {row[10]:.2f}")
-
+                    print(f"{int(row[0])} | {row[1]} | {row[2]:.2f} | {row[3]:.2f} | {row[4]:.2f} | {row[5]:.2f} | {row[6]:.2f} | {row[7]:.2f} | {row[8]:.2f} ")
+                    # | {row[9]:.2f} | {row[10]:.2f}
                 OFstart += 0.5
             ThrustStart += 20
         Pcstart += 5
@@ -301,4 +286,4 @@ if __name__ == "__main__":
     show_opt = input("Save? (y/n): ").strip().lower()
 
     if show_opt == "y":
-        np.savetxt("LOXRPenvelope.csv", data_matrix, delimiter=",")
+        np.savetxt("EthaGOXenvelopeNEW.csv", data_matrix, delimiter=",")

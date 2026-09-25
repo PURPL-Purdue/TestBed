@@ -14,8 +14,8 @@ from matplotlib.widgets import Slider
 OXIDIZER = "LOX"
 FUEL = "RP1"
 
-TARGET_THRUST_LBF = 500.0
-CHAMBER_PRESSURES = [320.0]
+TARGET_THRUST_LBF = 1900.0
+CHAMBER_PRESSURES = [200.0]
 OF_TARGET = 2.0
 OF_RANGE = np.linspace(0.5, 3.0, 50)
 
@@ -207,9 +207,9 @@ def compute_sizing(F_newtons, pc_psi, of):
 def pretty_print(r):
     print("="*60)
     print(f"Pc = {r['pc_psi']} psi | O/F = {r['of']:.3f}")
-    #print(f" gamma = {r['gamma']:.4f} | eps = {r['eps']:.3f}")
+    print(f" gamma = {r['gamma']:.4f} | eps = {r['eps']:.3f}")
     print(f" Chamber Temp (gas) = {r['Tc']:.1f} K")
-    #print(f" Isp = {r['Isp']:.2f} s | Ve = {r['Ve']:.1f} m/s | c* = {r['cstar']:.1f} m/s")
+    print(f" Isp = {r['Isp']:.2f} s | Ve = {r['Ve']:.1f} m/s | c* = {r['cstar']:.1f} m/s")
     print(f" mdot = {r['mdot']:.3f} kg/s")
     print(f" Dia Throat = {r['Dt']*100:.2f} cm | Dia Exit = {r['De']*100:.2f} cm")
     print(f" Chamber D = {r['D_chamber']*100:.2f} cm | Chamber L = {r['L_chamber']:.2f} cm")
