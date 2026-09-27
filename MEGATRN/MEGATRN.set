@@ -10,10 +10,10 @@ in: {
 		reason: ???
 		owner: Artem Smagin, asmagin@purdue.edu
 	chamber_id = 4.2in
-		reason: ???
+		reason: Value within OD with an estimate of a heatsink wall
 		owner: Artem Smagin, asmagin@purdue.edu
 	chamber_od = 5.0in
-		reason: ???
+		reason: Larger footprint then Maelstrom with common stock availability
 		owner: Artem Smagin, asmagin@purdue.edu
 }
 
@@ -64,6 +64,77 @@ in: {
 	diam_ratio = 0.2
 		reason: 1/3-5 recommended by (D. Escher, 1996)
 		owner: Jacob Beveridge, jbeveri@purdue.edu
+}
+out: {
+}
+
+
+# CALI
+in: {
+	chamber_hw_thickness = 2.5 mm
+		reason: Wall thickness with SF under load
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_hw_thickness = 1.25 mm
+		reason: Wall thickness with SF under load
+		owner: Artem Smagin, asmagin@purdue.edu
+	flame_temp = 4.21 lb/s
+		reason: FACCEA value
+		owner: Artem Smagin, asmagin@purdue.edu
+	channel_count = 54
+		reason: Decent surface area coverage
+		owner: Artem Smagin, asmagin@purdue.edu	
+	channel_dia_chamber = 0.003 m
+		reason: thermal analysis results for resulting velocity required
+		owner: Artem Smagin, asmagin@purdue.edu	
+	channel_dia_throat = 0.00125 m
+		reason: thermal analysis results for resulting velocity required
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_temp_in = 295 k
+		reason: Fluid input conditions at inlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_temp_out = 4.21 lb/s
+		reason: Fluid output conditions at outlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_p_in = 4.21 lb/s
+		reason: Fluid input conditions at inlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_p_out = 4.21 lb/s
+		reason: Fluid output conditions at outlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	material_roughness = 2.4 micrometers
+		reason: average manufacturing roughness for ploss
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_dia = 0.0527 m
+		reason: FACCEA output from MEGATRN
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_flux = 12289 BTU/ft^2s
+		reason: Output from thermal analysis
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_length = 12 in
+		reason: Input Rod Length
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_dia = 0.5 in
+		reason: Calculated based on rod bending strength
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_tensile_stress = 125000 psi
+		reason: Rod material properties
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_E = 4.21 lb/s
+		reason: Rod material properties
+		owner: Artem Smagin, asmagin@purdue.edu	
+	washer_dia = 4.21 lb/s
+		reason: Washer properties for nut factor
+		owner: Artem Smagin, asmagin@purdue.edu
+	nut_friction_coeff = 4.21 lb/s
+		reason: Washer properties for nut factor
+		owner: Artem Smagin, asmagin@purdue.edu
+	flange_thickness = 30 mm
+		reason: Flange axial thickness
+		owner: Artem Smagin, asmagin@purdue.edu
+	bolt_circle_dia = 6.00 in
+		reason: Flange based bolt circle dia
+		owner: Artem Smagin, asmagin@purdue.edu
+
 }
 out: {
 }
