@@ -138,3 +138,78 @@ in: {
 }
 out: {
 }
+
+#STARSCRM
+in: {
+	chamber_pressure = 150 psia
+		reason: Target chamber operating pressure
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	of_ratio = 4
+		reason: Target mixture ratio
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	total_mass_flow = 0.0285 kg/s
+		reason: Required total mass flow
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	torch_duration = 0.5-1 s
+		reason: Required ignition duration
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	oxidizer = GOX
+		reason: Selected oxidizer
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	fuel = GCH4
+		reason: Selected fuel
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	oxidizer_inlet_pressure = 600 psia
+		reason: Oxidizer feed pressure
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	pre_ignition_chamber_pressure = 100 psia
+		reason: Pressure prior to ignition
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	fuel_inlet_pressure = 600 psia
+		reason: Fuel feed pressure
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	oxidizer_mass_flow = 0.0228 kg/s
+		reason: Calculated oxidizer mass flow
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	fuel_mass_flow = 0.0057 kg/s
+		reason: Calculated fuel mass flow
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	discharge_coefficient = 0.9
+		reason: Estimated discharge coefficient
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	ignition_method = Resonance
+		reason: Selected ignition method
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	auto_ignition_temp = 600 K
+		reason: Propellant auto-ignition temperature
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	nozzle_pressure_ratio = 6
+		reason: Target nozzle pressure ratio
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	cavity_depth = 17.7 mm
+		reason: Calculated resonance cavity depth
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	cavity_entrance_diameter = 2.66 mm
+		reason: Calculated cavity entrance diameter
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	cavity_internal_tip_diameter = 0.71 mm
+		reason: Calculated cavity internal tip diameter
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	l_star = 98.298 mm
+		reason: Target characteristic length
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	chamber_volume = 4600.3464 mm³
+		reason: Calculated chamber volume
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	throat_diameter = 7.7 mm
+		reason: Calculated throat diameter
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	throat_area = 46.8 mm²
+		reason: Calculated throat area
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	material = SS316
+		reason: Selected chamber material
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+}
+
+```
