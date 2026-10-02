@@ -1,0 +1,29 @@
+%% Plotter for varioous things
+% Set equations and arrays
+temp = [298:805];
+thermalConductivity = -1350 + (10.9*temp) + (-0.0283*temp.^2) + ((3.21*10^-05)*temp.^3) + ((-1.33*10^-8)*temp.^4);
+
+% Channel Dimensions
+        figure;
+        hold on; box on;
+        
+        % Plot with contrasting, muted colors (blue, orange, gray)
+        h1 = plot(temp, thermalConductivity, '-', 'LineWidth', 1.8, 'Color', [0.00 0.45 0.74]); % blue
+        % h2 = plot(axialDist, channelWidths,  '-', 'LineWidth', 1.8, 'Color', [0.85 0.33 0.10]); % orange
+        % h3 = plot(axialDist, wallThicknesses, '-', 'LineWidth', 1.8, 'Color', [0.50 0.50 0.50]); % gray
+        
+        % Axis labels
+        xlabel('Temperature [K]', 'FontSize', 12);
+        ylabel('Thermal Conductivity [W/m*K]', 'FontSize', 12);
+        
+        % Grid and ticks
+        grid on;
+        grid minor;
+        set(gca, 'XMinorTick', 'on', 'YMinorTick', 'on', ...
+                 'FontSize', 11, 'LineWidth', 1);
+        xlim([temp(1), temp(end)]);
+        
+        ylim([0, max(thermalConductivity)*1.1]);
+        % Legend
+        legend([thermalConductivity], {'Thermal Conductivity'}, ...
+               'Location', 'best', 'Box', 'off');

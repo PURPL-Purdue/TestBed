@@ -1,0 +1,215 @@
+# General
+in: {
+	chamber_pressure = 200psi
+		reason: Maintain allowable injector stiffness given TI constraints
+		owner: Artem Smagin, asmagin@purdue.edu
+	expansion_ratio = 2.704
+		reason: Expand to ambient pressure ASL
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_diam = 5.271cm
+		reason: ???
+		owner: Artem Smagin, asmagin@purdue.edu
+	chamber_id = 4.2in
+		reason: Value within OD with an estimate of a heatsink wall
+		owner: Artem Smagin, asmagin@purdue.edu
+	chamber_od = 5.0in
+		reason: Larger footprint then Maelstrom with common stock availability
+		owner: Artem Smagin, asmagin@purdue.edu
+}
+
+# VAP
+in: {
+	mass_flow = 4.21 lb/s
+		reason: Maximum within TI limits
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	of_ratio = 1.0
+		reason: Minimize combustion temperature while still being within reasonable efficiency
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	oxidizer = "Liquid Oxygen"
+		reason: Liquid oxidizer supported by TI
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	fuel = "Ethanol"
+		reason: Less coking than RP-1
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	lox_stiffness = 20%
+		reason: Maintain combustion stability
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+
+	radial_discharge_coeff = 0.61
+		reason: Standard Cd for sharp wall
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	annular_discharge_coeff = 0.98
+		reason: Standard Cd for smooth transition
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+
+	sleeve_thickness = 100thou
+		reason: Manufacturing limit is 40thou, want to play it safe
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	pintle_wall = 100thou
+		reason: Structural integrity and manufacturability
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	blockage_factor = 85%
+		reason: Optimal based on literature (source lost)
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	mill_diameter = 40thou
+		reason: Current BIDC tooling
+		owner: Dominik Sloup, dsloup@purdue.edu
+	friction_coeff = 0.8
+		reason: ???
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	servo_encoder_count = 6400
+		reason: Supplier spec. sheet
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	
+	diam_ratio = 0.2
+		reason: 1/3-5 recommended by (D. Escher, 1996)
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+}
+out: {
+}
+
+
+# CALI
+in: {
+	chamber_hw_thickness = 2.5 mm
+		reason: Wall thickness with SF under load
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_hw_thickness = 1.25 mm
+		reason: Wall thickness with SF under load
+		owner: Artem Smagin, asmagin@purdue.edu
+	flame_temp = 4.21 lb/s
+		reason: FACCEA value
+		owner: Artem Smagin, asmagin@purdue.edu
+	channel_count = 54
+		reason: Decent surface area coverage
+		owner: Artem Smagin, asmagin@purdue.edu	
+	channel_dia_chamber = 0.003 m
+		reason: thermal analysis results for resulting velocity required
+		owner: Artem Smagin, asmagin@purdue.edu	
+	channel_dia_throat = 0.00125 m
+		reason: thermal analysis results for resulting velocity required
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_temp_in = 295 k
+		reason: Fluid input conditions at inlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_temp_out = 4.21 lb/s
+		reason: Fluid output conditions at outlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_p_in = 4.21 lb/s
+		reason: Fluid input conditions at inlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	coolant_p_out = 4.21 lb/s
+		reason: Fluid output conditions at outlet
+		owner: Artem Smagin, asmagin@purdue.edu
+	material_roughness = 2.4 micrometers
+		reason: average manufacturing roughness for ploss
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_dia = 0.0527 m
+		reason: FACCEA output from MEGATRN
+		owner: Artem Smagin, asmagin@purdue.edu
+	throat_flux = 12289 BTU/ft^2s
+		reason: Output from thermal analysis
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_length = 12 in
+		reason: Input Rod Length
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_dia = 0.5 in
+		reason: Calculated based on rod bending strength
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_tensile_stress = 125000 psi
+		reason: Rod material properties
+		owner: Artem Smagin, asmagin@purdue.edu
+	rod_E = 4.21 lb/s
+		reason: Rod material properties
+		owner: Artem Smagin, asmagin@purdue.edu	
+	washer_dia = 4.21 lb/s
+		reason: Washer properties for nut factor
+		owner: Artem Smagin, asmagin@purdue.edu
+	nut_friction_coeff = 4.21 lb/s
+		reason: Washer properties for nut factor
+		owner: Artem Smagin, asmagin@purdue.edu
+	flange_thickness = 30 mm
+		reason: Flange axial thickness
+		owner: Artem Smagin, asmagin@purdue.edu
+	bolt_circle_dia = 6.00 in
+		reason: Flange based bolt circle dia
+		owner: Artem Smagin, asmagin@purdue.edu
+
+}
+out: {
+}
+
+#STARSCRM
+in: {
+	chamber_pressure = 150 psia
+		reason: Target chamber operating pressure
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	of_ratio = 4
+		reason: Target mixture ratio
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	total_mass_flow = 0.0285 kg/s
+		reason: Required total mass flow
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	torch_duration = 0.5-1 s
+		reason: Required ignition duration
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	oxidizer = GOX
+		reason: Selected oxidizer
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	fuel = GCH4
+		reason: Selected fuel
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	oxidizer_inlet_pressure = 600 psia
+		reason: Oxidizer feed pressure
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	pre_ignition_chamber_pressure = 100 psia
+		reason: Pressure prior to ignition
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	fuel_inlet_pressure = 600 psia
+		reason: Fuel feed pressure
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	oxidizer_mass_flow = 0.0228 kg/s
+		reason: Calculated oxidizer mass flow
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	fuel_mass_flow = 0.0057 kg/s
+		reason: Calculated fuel mass flow
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	discharge_coefficient = 0.9
+		reason: Estimated discharge coefficient
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	ignition_method = Resonance
+		reason: Selected ignition method
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	auto_ignition_temp = 600 K
+		reason: Propellant auto-ignition temperature
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	nozzle_pressure_ratio = 6
+		reason: Target nozzle pressure ratio
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	cavity_depth = 17.7 mm
+		reason: Calculated resonance cavity depth
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	cavity_entrance_diameter = 2.66 mm
+		reason: Calculated cavity entrance diameter
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	cavity_internal_tip_diameter = 0.71 mm
+		reason: Calculated cavity internal tip diameter
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	l_star = 98.298 mm
+		reason: Target characteristic length
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	chamber_volume = 4600.3464 mm³
+		reason: Calculated chamber volume
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	throat_diameter = 7.7 mm
+		reason: Calculated throat diameter
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	throat_area = 46.8 mm²
+		reason: Calculated throat area
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+	material = SS316
+		reason: Selected chamber material
+		owner: Pranav Vijayanand, vijayan0@purdue.edu
+}
+
+```
