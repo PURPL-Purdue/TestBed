@@ -52,7 +52,7 @@ gox_stiffness: 1.7  # (N/A) Dominik Sloup
 gox_orifice_number: 48 # (N/A) Dominik Sloup
 gox_discharge_coeff: 0.8 # (N/A) Dominik Sloup
 gox_tube_inner_dia: 0.9 # (in) Dominik Sloup
-gox_temperature: 293.15 # (K) Dominik Sloup
+m_ox_temp: 293.15 # (K) Dominik Sloup
 
 fuel_stiffness: 0.19 # (N/A) Dominik Sloup
 fuel_orifice_number: 48 # (N/A) Dominik Sloup
@@ -77,24 +77,27 @@ isp: 188 # (s) Dominik Sloup
 # Maelstrom chamber geometry
 
 throat_diameter: 1.3195 # AS MACHINED, DO NOT CHANGE
-throat_area: 1.3706 # AS MACHINED, DO NOT CHANGE
+m_throat_area: 1.3706 # AS MACHINED, DO NOT CHANGE
 total_length: 7.399  # AS MACHINED, DO NOT CHANGE
 exit_diameter: 2.309 # (in) Dominik Sloup
 chamber_volume: 59.1  # (in^3) Dominik Sloup
 
 # Maelstrom oxidizer injector parameters
 
-gox_design_mdot: 1.222 # (lb/s) Dominik Sloup
-gox_CdA: 0.0733   # (in^2) Dominik Sloup
-gox_orifice_dia: 0.0472441 # AS MACHINED, DO NOT CHANGE
-gox_feed_pressure: 675  # (psi) Declan Koch, required be under 675 (@ 1.292 lb/s) to keep gox line velocity under 75 ft/s
-gox_SCFM: 882.21  # (ft^3/min) Dominik Sloup
+ox_design_mdot: 1.222 # (lb/s) Dominik Sloup
+m_ox_CdA: 0.0733   # (in^2) Dominik Sloup
+ox_orifice_dia: 0.0472441 # AS MACHINED, DO NOT CHANGE
+ox_feed_pressure: 675  # (psi) Declan Koch, required be under 675 (@ 1.292 lb/s) to keep gox line velocity under 75 ft/s
+ox_SCFM: 882.21  # (ft^3/min) Dominik Sloup
+m_ox_gamma: 1.4 # (N/A) Dominik Sloup
+m_ox_R: 259.84 # (J/kgK) Dominik Sloup
 
 # Maelstrom fuel injector parameters
 
 fuel_design_mdot: 1.438 # (lb/s) Dominik Sloup
 fuel_orifice_dia: 0.04  # (in) Dominik Sloup
-fuel_CdA: 0.04771  # (in^2) Dominik Sloup
+m_fuel_CdA: 0.04771  # (in^2) Dominik Sloup
+m_fuel_rho: 0.785 # (g/cm^3)
 fuel_injector_pressure: 297 # (psi) Dominik Sloup
 n2_SCFM: 40.98 # (ft^3/min) Dominik Sloup
 
@@ -105,3 +108,28 @@ critical_pressure_ratio: 0.7 # (N/A) Dominik Sloup
 minumum_pressure_ratio: 0.6 # (N/A) Dominik Sloup
 venturi_throat_diameter: 0.123 # (in) Dominik Sloup
 venturi_CdA: 0.0111 # (in^2) Dominik Sloup
+
+# Torch chamber geometry
+
+t_throat_area: 0.0098395 # (in^2)
+
+t_ox_temp: 293.15 # (K) Dominik Sloup
+t_fuel_temp: 293.15 # (K) Dominik Sloup
+
+t_ox_R: 259.84 # (J/kgK)
+t_fuel_R: 4124.24 # (J/kgK)
+
+t_fuel_gamma: 1.4
+t_ox_gamma: 1.4
+
+t_ox_CdA: 0.00061575216 # (in^2) Dominik Sloup, Cd of 1.00, 0.028"
+t_fuel_CdA: 0.00080424771  # (in^2) Dominik Sloup, Cd of 1.00, 0.016"
+
+# Pressure trace identifiers 
+
+m_ox_press: "PT_GO2_06"
+m_fuel_press: "PT_FU_02"
+m_chamber_press: "PT_ML_04"
+t_ox_press: "PT_GO2_05"
+t_fuel_press: "PT_H2_03"
+t_chamber_press: "PT_TI_01"
