@@ -97,7 +97,7 @@ m_ox_R: 259.84 # (J/kgK) Dominik Sloup
 fuel_design_mdot: 1.438 # (lb/s) Dominik Sloup
 fuel_orifice_dia: 0.04  # (in) Dominik Sloup
 m_fuel_CdA: 0.04771  # (in^2) Dominik Sloup
-m_fuel_rho: 0.785 # (g/cm^3)
+m_fuel_rho: 785 # (kg/m^3) Dominik Sloup
 fuel_injector_pressure: 297 # (psi) Dominik Sloup
 n2_SCFM: 40.98 # (ft^3/min) Dominik Sloup
 
@@ -116,11 +116,11 @@ t_throat_area: 0.0098395 # (in^2)
 t_ox_temp: 293.15 # (K) Dominik Sloup
 t_fuel_temp: 293.15 # (K) Dominik Sloup
 
-t_ox_R: 259.84 # (J/kgK)
-t_fuel_R: 4124.24 # (J/kgK)
+t_ox_R: 259.84 # (J/kgK) Dominik Sloup
+t_fuel_R: 4124.24 # (J/kgK) Dominik Sloup
 
-t_fuel_gamma: 1.4
-t_ox_gamma: 1.4
+t_fuel_gamma: 1.4 # (N/A)  Dominik Sloup
+t_ox_gamma: 1.4 # (N/A)  Dominik Sloup
 
 t_ox_CdA: 0.00061575216 # (in^2) Dominik Sloup, Cd of 1.00, 0.028"
 t_fuel_CdA: 0.00080424771  # (in^2) Dominik Sloup, Cd of 1.00, 0.016"
