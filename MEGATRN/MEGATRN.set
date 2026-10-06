@@ -212,4 +212,28 @@ in: {
 		owner: Pranav Vijayanand, vijayan0@purdue.edu
 }
 
+#TVC / DPTCN
+in: {
+	max_angle_of_gimbal = 10 degrees
+		reason: Small Angle approximation for linear control systems
+		owner: Dewang Sahay, dsahay@purdue.edu
+	structural_factor_of_safety = 1.5
+		reason: all structures must have a FOS greater than 1.5 per NASA guidelines
+		owner: Dewang Sahay, dsahay@purdue.edu
+	max_power_input = 600 Watts
+		reason: TI limit
+		owner: Dewang Sahay, dsahay@purdue.edu
+	max_response_time = 300 ms 
+		reason: RP-01-TVC
+		owner: Dewang Sahay, dsahay@purdue.edu
+	min_data_collection_time = 10 readings/second
+		reason: accurate data collection 
+		owner: Dewang Sahay, dsahay@purdue.edu
+	max_distance_from_FMS = 2.5 ft
+		reason: TI limit
+		owner: Dewang Sahay, dsahay@purdue.edu
+}
+out: {
+}
+
 ```
