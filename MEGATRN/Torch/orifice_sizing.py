@@ -6,10 +6,12 @@ import math
 
 
 # Define basic parameters
-mdot_fuel = 0.0057                          # kg/s
-mdot_oxid = 0.0228                          # kg/s
+mdot_total = 0.0285                         # kg/s
+mdot_fuel = mdot_total / 3                  # kg/s
+mdot_oxid = mdot_total - mdot_fuel          # kg/s
+print(mdot_fuel + mdot_oxid)
 Cd = 0.9
-chamber_pressure = 932860.66                # Pa
+chamber_pressure = 1.034e6                  # Pa
 inlet_pressure = 4.137e6                    # Pa
 input_temp = 25 + 273.15                    # K
 m2_to_mm2 = 1e6                             # Multiply by this value
@@ -43,5 +45,3 @@ fuel_diam = 2 * math.sqrt(fuel_area / math.pi)                      # mm
 # Print out the results
 print(f"O2:  gamma = {gamma_o2:.4f}; area = {oxid_area:.4e} mm^2; diameter = {oxid_diam:.3f} mm")
 print(f"CH4: gamma = {gamma_ch4:.4f}; area = {fuel_area:.4e} mm^2; diameter = {fuel_diam:.3f} mm")
-
-
