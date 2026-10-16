@@ -42,6 +42,6 @@ oxid_diam = 2 * math.sqrt(oxid_area / math.pi)                      # mm
 fuel_diam = 2 * math.sqrt(fuel_area / math.pi)                      # mm
 
 
-# Print out the results
+# Print out results
 print(f"O2:  gamma = {gamma_o2:.4f}; area = {oxid_area:.4e} mm^2; diameter = {oxid_diam:.3f} mm")
 print(f"CH4: gamma = {gamma_ch4:.4f}; area = {fuel_area:.4e} mm^2; diameter = {fuel_diam:.3f} mm")
