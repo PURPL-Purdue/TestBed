@@ -9,7 +9,7 @@ import math
 # Define basic parameters
 Cd = 0.9                                                  
 preig_chamber_pressure = 689476                                         # Pa
-inlet_pressure = 4.137e6                                                # Pa (600 psia)
+inlet_pressure = 6.205e6                                                # Pa (900 psia)
 input_temp = 25 + 273.15                                                # K
 R_universal = 8.314                                                     # J/(mol*K)
 m2_to_mm2 = 1e6                                                         # mm^2/m^2
@@ -56,7 +56,8 @@ print(f"Cavity Position Range: {Xm * 1000 :.2f} to {Xc * 1000 :.2f}mm")
 
 # Calculate Nozzle to cavity gap
 # Using gap at the Hartmann–Trolle estimated cell length - https://iris.polito.it/retrieve/handle/11583/2782256/e384c433-0327-d4b2-e053-9f05fe0a1d67/resonant_igniter.pdf
-s_d = 1.8 * ((p_exit / preig_chamber_pressure) - 1.9) ** 0.5            # Dimensionless (s/d)
+s_d = 1.8 * ((p_exit / preig_chamber_pressure) - 1.9) ** 0.5            #
+print(s_d)
 cavity_dist = s_d * d_exit                                              # m
 
 print(f"Hartmann-Trolle Estimated Cavity Gap: {cavity_dist * 1000:.2f} mm")
@@ -90,9 +91,9 @@ L_D = 6
 cavity_len = L_D * cavity_entry_diam                                    # mm
 print(f"Cavity Length: {cavity_len:.3f} mm")
 
-# Picking angle of cavity to be 4
+# Picking angle of cavity to be 5
 # Source - https://www.tandfonline.com/doi/full/10.1080/00102202.2011.589874?scroll=top&needAccess=true
-cavity_angle = 4                                                        # degrees
+cavity_angle = 5                                                        # degrees
 cavity_tip_diam = cavity_entry_diam - 2 * cavity_len * math.tan(math.radians(cavity_angle / 2))  # mm
 
 print(f"Cavity Tip Diameter: {cavity_tip_diam:.3f} mm")

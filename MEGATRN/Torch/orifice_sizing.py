@@ -12,7 +12,7 @@ mdot_oxid = mdot_total - mdot_fuel          # kg/s
 print(mdot_fuel + mdot_oxid)
 Cd = 0.9
 chamber_pressure = 1.034e6                  # Pa
-inlet_pressure = 4.137e6                    # Pa
+inlet_pressure = 6.205e6                    # Pa
 input_temp = 25 + 273.15                    # K
 m2_to_mm2 = 1e6                             # Multiply by this value
 
