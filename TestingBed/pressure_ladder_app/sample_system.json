@@ -1,0 +1,8 @@
+{
+  "config": {"fluid":"Gas","inlet_psia":200.0,"outlet_psia":14.7,"temperature_k":293.15,"gamma":1.4,"gas_constant":287.05,"gas_viscosity":0.0000181,"liquid_density":998.0,"liquid_viscosity":0.001,"vapor_psia":0.34},
+  "stages": [
+    {"orifice_d_mm":12.7,"cd":0.8,"pipe_d_mm":25.4,"pipe_l_m":0.5,"roughness_mm":0.045,"fl":0.85,"fstart":0.65},
+    {"orifice_d_mm":12.7,"cd":0.8,"pipe_d_mm":25.4,"pipe_l_m":0.5,"roughness_mm":0.045,"fl":0.85,"fstart":0.65},
+    {"orifice_d_mm":12.7,"cd":0.8,"pipe_d_mm":25.4,"pipe_l_m":0.5,"roughness_mm":0.045,"fl":0.85,"fstart":0.65}
+  ]
+}
