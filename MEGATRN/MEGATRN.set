@@ -71,46 +71,49 @@ out: {
 
 # CALI
 in: {
-	chamber_hw_thickness = 2.5 mm
+	thrust = 900 lbf
+		reason: Selected by Pintle
+		owner: Artem Smagin, asmagin@purdue.edu
+	chamber_hw_thickness = 0.098 in
 		reason: Wall thickness with SF under load
 		owner: Artem Smagin, asmagin@purdue.edu
-	throat_hw_thickness = 1.25 mm
+	throat_hw_thickness = 0.049 in
 		reason: Wall thickness with SF under load
 		owner: Artem Smagin, asmagin@purdue.edu
-	flame_temp = 4.21 lb/s
+	flame_temp = 7138.2 F
 		reason: FACCEA value
 		owner: Artem Smagin, asmagin@purdue.edu
 	channel_count = 54
 		reason: Decent surface area coverage
 		owner: Artem Smagin, asmagin@purdue.edu	
-	channel_dia_chamber = 0.003 m
+	channel_dia_chamber = 0.118 in
 		reason: thermal analysis results for resulting velocity required
 		owner: Artem Smagin, asmagin@purdue.edu	
-	channel_dia_throat = 0.00125 m
+	channel_dia_throat = 0.049 in
 		reason: thermal analysis results for resulting velocity required
 		owner: Artem Smagin, asmagin@purdue.edu
-	coolant_temp_in = 295 k
+	coolant_temp_in = 71.33 F
 		reason: Fluid input conditions at inlet
 		owner: Artem Smagin, asmagin@purdue.edu
-	coolant_temp_out = 4.21 lb/s
+	coolant_temp_out = 337.87 F
 		reason: Fluid output conditions at outlet
 		owner: Artem Smagin, asmagin@purdue.edu
-	coolant_p_in = 4.21 lb/s
+	coolant_p_in = 200 psi
 		reason: Fluid input conditions at inlet
 		owner: Artem Smagin, asmagin@purdue.edu
-	coolant_p_out = 4.21 lb/s
+	coolant_p_out = 200 psi
 		reason: Fluid output conditions at outlet
 		owner: Artem Smagin, asmagin@purdue.edu
 	material_roughness = 2.4 micrometers
 		reason: average manufacturing roughness for ploss
 		owner: Artem Smagin, asmagin@purdue.edu
-	throat_dia = 0.0527 m
+	throat_dia = 2.07 in
 		reason: FACCEA output from MEGATRN
 		owner: Artem Smagin, asmagin@purdue.edu
 	throat_flux = 12289 BTU/ft^2s
 		reason: Output from thermal analysis
 		owner: Artem Smagin, asmagin@purdue.edu
-	rod_length = 12 in
+	rod_length = 16 in
 		reason: Input Rod Length
 		owner: Artem Smagin, asmagin@purdue.edu
 	rod_dia = 0.5 in
@@ -119,13 +122,13 @@ in: {
 	rod_tensile_stress = 125000 psi
 		reason: Rod material properties
 		owner: Artem Smagin, asmagin@purdue.edu
-	rod_E = 4.21 lb/s
+	rod_E = 27500 ksi
 		reason: Rod material properties
 		owner: Artem Smagin, asmagin@purdue.edu	
-	washer_dia = 4.21 lb/s
+	washer_dia = 0.7965 in
 		reason: Washer properties for nut factor
 		owner: Artem Smagin, asmagin@purdue.edu
-	nut_friction_coeff = 4.21 lb/s
+	nut_friction_coeff = 0.16
 		reason: Washer properties for nut factor
 		owner: Artem Smagin, asmagin@purdue.edu
 	flange_thickness = 30 mm
@@ -133,6 +136,36 @@ in: {
 		owner: Artem Smagin, asmagin@purdue.edu
 	bolt_circle_dia = 6.00 in
 		reason: Flange based bolt circle dia
+		owner: Artem Smagin, asmagin@purdue.edu
+	chamber_pressure = 200 psi
+		reason: Operating setpoint from MEGATRN/OPTVMVS
+		owner: Artem Smagin, asmagin@purdue.edu
+	mass_flow = 4.21 lbm/s
+		reason: Total mass flow rate
+		owner: Artem Smagin, asmagin@purdue.edu
+	of_ratio = 1.0
+		reason: ETHALOX nominal mixture ratio
+		owner: Artem Smagin, asmagin@purdue.edu
+	expansion_ratio = 2.7
+		reason: RocketCEA calculated nozzle expansion ratio
+		owner: Artem Smagin, asmagin@purdue.edu
+	chamber_id = 4.21 in
+		reason: Sized inner chamber diameter
+		owner: Artem Smagin, asmagin@purdue.edu
+	chamber_length = 9.49 in
+		reason: Modular chamber total length
+		owner: Artem Smagin, asmagin@purdue.edu
+	actual_lstar = 44.93 in
+		reason: Chamber volume to throat area ratio
+		owner: Artem Smagin, asmagin@purdue.edu
+	bolt_count = 10
+		reason: ASME PCC-1 minimum bolt count
+		owner: Artem Smagin, asmagin@purdue.edu
+	nut_factor = 0.2297
+		reason: Motosh equation calculated nut factor
+		owner: Artem Smagin, asmagin@purdue.edu
+	torque_per_bolt = 23.29 ft/lbs
+		reason: Required bolt tightening torque
 		owner: Artem Smagin, asmagin@purdue.edu
 
 }
