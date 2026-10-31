@@ -30,7 +30,8 @@ D_out_imp = Q_(0.0625, "in")                # gas outlet orifice diameter
 
 Cd_liq = 0.61                               # estimate: sharp-edged orifice, liquid
 Cd_gas = 0.80                               # estimate: gas through valve/fitting
-dt = 1e-3                                   # s
+dt = 1e-5                                   # s
+t_max = 10.0                                # s, abort if the manifold hasn't filled by now
 
 
 # ---------------------------------------------------------------------------
@@ -106,6 +107,7 @@ P_m = P_amb                                 # Pa
 t_tot = 0.0                                 # s
 
 rho_g = gas.density                         # kg/m^3
+rho_g_0 = rho_g                             # kg/m^3, initial gas density
 m_g = rho_g * V0                            # kg
 Z = P_m * V_g / (m_g * R * T)               # compressibility factor
 
@@ -116,3 +118,53 @@ print(f"Gas:    {GAS.name}, R = {R:.3f} J/(kg K), gamma = {gamma:.4f}, Z = {Z:.5
 print(f"        rho_g = {Q_(rho_g, 'kg/m**3').m_as('lb/ft**3'):.5f} lb/ft^3, "
       f"m_g = {Q_(m_g, 'kg').m_as('lb'):.4e} lb")
 print(f"A_in = {Q_(A_in, 'm**2').m_as('in**2'):.4e} in^2, A_out = {Q_(A_out, 'm**2').m_as('in**2'):.4e} in^2")
+
+
+# ---------------------------------------------------------------------------
+# Time-marching loop
+# Gas pressure is taken straight from the real-gas EOS at (rho_g, T) each step;
+# Z is still computed for reporting.
+# ---------------------------------------------------------------------------
+history = {"t": [], "P_m": [], "V_L": [], "mdot_L": [], "mdot_g": [], "choked": [], "Z": []}
+
+while True:
+    mdot_L = liquid_mdot(P_m)
+    mdot_g, choked = gas_mdot(P_m)
+
+    history["t"].append(t_tot)
+    history["P_m"].append(P_m)
+    history["V_L"].append(V_L)
+    history["mdot_L"].append(mdot_L)
+    history["mdot_g"].append(mdot_g)
+    history["choked"].append(choked)
+    history["Z"].append(Z)
+
+    # Update control volumes over dt (gas can't leave faster than what's left)
+    V_g_prev = V_g
+    V_L += mdot_L / rho_L * dt
+    m_g -= min(mdot_g * dt, m_g)
+    V_g = V0 - V_L
+
+    # Manifold full: interpolate within the last step for when V_g hit zero
+    if V_g <= 0:
+        t_fill = t_tot + dt * V_g_prev / (V_g_prev - V_g)
+        break
+
+    t_tot += dt
+    if t_tot > t_max:
+        raise RuntimeError(f"Manifold not full after {t_max} s (V_g = {V_g:.3e} m^3)")
+
+    # Update gas state
+    rho_g = m_g / V_g
+    P_m = PropsSI("P", "Dmass", rho_g, "T", T, GAS.coolprop_name)
+    Z = P_m / (rho_g * R * T)
+
+
+# Print out results
+P_m_hist = history["P_m"]
+i_peak = max(range(len(P_m_hist)), key=P_m_hist.__getitem__)
+n_choked = sum(history["choked"])
+print(f"\nFill time = {t_fill * 1e3:.3f} ms ({len(P_m_hist)} steps, dt = {dt:.0e} s)")
+print(f"Peak P_m  = {Q_(P_m_hist[i_peak], 'Pa').m_as('psi'):.2f} psia at t = {history['t'][i_peak] * 1e3:.3f} ms")
+print(f"Gas outlet choked for {n_choked * dt * 1e3:.3f} ms of the fill")
+print(f"Purge gas vented: {(1 - m_g / (rho_g_0 * V0)) * 100:.2f} % of initial mass")
