@@ -62,6 +62,38 @@ M_g = PropsSI("molar_mass", GAS.coolprop_name)      # kg/mol
 R = R_u / M_g                               # J/(kg K), specific gas constant of purge gas
 gamma = gas.specific_heat / PropsSI("Cvmass", "T", T, "P", P_amb, GAS.coolprop_name)
 
+# Choked when P_a / P_m is at or below this critical pressure ratio
+P_ratio_crit = math.pow(2 / (gamma + 1), gamma / (gamma - 1))
+
+
+# ---------------------------------------------------------------------------
+# Mass flow helpers
+# Flows are clamped to zero instead of reversing when the pressure difference flips.
+# ---------------------------------------------------------------------------
+def liquid_mdot(P_m):
+    """Liquid mass flow in through the inlet orifice [kg/s], incompressible orifice equation."""
+    if P_m >= P_f:
+        return 0.0
+    return Cd_liq * A_in * math.sqrt(2 * rho_L * (P_f - P_m))
+
+
+def gas_mdot(P_m):
+    """Purge gas mass flow out through the outlet orifice [kg/s], isentropic ideal-gas nozzle.
+    Returns (mdot, choked)."""
+    if P_m <= P_a:
+        return 0.0, False
+
+    P_ratio = P_a / P_m
+    if P_ratio <= P_ratio_crit:
+        mdot = Cd_gas * A_out * P_m * math.sqrt(gamma / (R * T)) \
+            * math.pow(2 / (gamma + 1), (gamma + 1) / (2 * (gamma - 1)))
+        return mdot, True
+
+    mdot = Cd_gas * A_out * P_m * math.sqrt(
+        2 * gamma / ((gamma - 1) * R * T)
+        * (math.pow(P_ratio, 2 / gamma) - math.pow(P_ratio, (gamma + 1) / gamma)))
+    return mdot, False
+
 
 # ---------------------------------------------------------------------------
 # Initialize (t = 0, manifold full of purge gas)
