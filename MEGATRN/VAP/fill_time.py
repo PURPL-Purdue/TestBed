@@ -5,6 +5,8 @@
 # Calculations done in SI unit
 
 import math
+import os
+import matplotlib.pyplot as plt
 import pint
 from pyfluids import Fluid, FluidsList, Input
 from CoolProp.CoolProp import PropsSI
@@ -168,3 +170,42 @@ print(f"\nFill time = {t_fill * 1e3:.3f} ms ({len(P_m_hist)} steps, dt = {dt:.0e
 print(f"Peak P_m  = {Q_(P_m_hist[i_peak], 'Pa').m_as('psi'):.2f} psia at t = {history['t'][i_peak] * 1e3:.3f} ms")
 print(f"Gas outlet choked for {n_choked * dt * 1e3:.3f} ms of the fill")
 print(f"Purge gas vented: {(1 - m_g / (rho_g_0 * V0)) * 100:.2f} % of initial mass")
+
+
+# ---------------------------------------------------------------------------
+# Plots: manifold pressure and liquid inlet velocity vs time
+# Liquid velocity is the mean velocity through the inlet orifice area, mdot_L / (rho_L * A_in).
+# ---------------------------------------------------------------------------
+t_ms = [t * 1e3 for t in history["t"]]
+P_m_psia = [Q_(P, "Pa").m_as("psi") for P in P_m_hist]
+v_L_fps = [Q_(mdot / (rho_L * A_in), "m/s").m_as("ft/s") for mdot in history["mdot_L"]]
+
+line_color = "#2a78d6"
+ref_color = "#52514e"
+
+fig, (ax_P, ax_v) = plt.subplots(2, 1, sharex=True, figsize=(8, 6), constrained_layout=True)
+
+ax_P.plot(t_ms, P_m_psia, color=line_color, linewidth=2)
+ax_P.axhline(P_a_imp.m_as("psi"), color=ref_color, linewidth=1, linestyle="--")
+ax_P.annotate("P_a", xy=(t_fill * 1e3, P_a_imp.m_as("psi")), xytext=(-8, 4),
+              textcoords="offset points", ha="right", color=ref_color, fontsize=9)
+ax_P.set_title("Manifold pressure", loc="left")
+ax_P.set_ylabel("P_m [psia]")
+
+ax_v.plot(t_ms, v_L_fps, color=line_color, linewidth=2)
+ax_v.set_title("Liquid velocity through inlet orifice", loc="left")
+ax_v.set_ylabel("v_L [ft/s]")
+ax_v.set_xlabel("Time [ms]")
+
+for ax in (ax_P, ax_v):
+    ax.axvline(t_fill * 1e3, color=ref_color, linewidth=1, linestyle=":")
+    ax.grid(True, color="#e5e4e0", linewidth=0.8)
+    ax.set_axisbelow(True)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+ax_v.annotate(f"t_fill = {t_fill * 1e3:.1f} ms", xy=(t_fill * 1e3, 1), xycoords=("data", "axes fraction"),
+              xytext=(-6, -4), textcoords="offset points", ha="right", va="top", color=ref_color, fontsize=9)
+
+fig.suptitle(f"Manifold fill: {LIQUID.name} into {GAS.name}-purged manifold", x=0.01, ha="left")
+fig.savefig(os.path.join(os.path.dirname(os.path.abspath(__file__)), "fill_time.png"), dpi=150)
+plt.show()
