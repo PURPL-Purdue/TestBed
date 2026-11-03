@@ -17,7 +17,7 @@ class SleeveThreadDesignPoint:
 class SleeveThreadGeometry:
     L_eng: Q_[float] # Thread engagement length
 
-def calcMeanDiameter(F: Q_[float], sigma_UTS: Q_[float], tau_UTS: Q_[float], K: float, L_eng: Q_[float]) -> Q_[float]:
+def calcMeanDiameter(F: Q_[float], tau_UTS: Q_[float], K: float, L_eng: Q_[float]) -> Q_[float]:
     d_mean = (F / (math.pi * L_eng * K * tau_UTS)).to("millimeters")
     return d_mean
 
@@ -26,8 +26,8 @@ def calcShearArea(d_mean: Q_[float], L_eng: Q_[float], K: float) -> Q_[float]:
     return A_shear
 
 def calcShearStress(F: Q_[float], A_shear: Q_[float]) -> Q_[float]:
-    tau = (F / A_shear).to("MPa")
-    return tau
+    tau_allow = (F / A_shear).to("MPa")
+    return tau_allow
 
 class SleeveThreads:
     def __init__(self, design_point: SleeveThreadDesignPoint, geometry: SleeveThreadGeometry):
@@ -37,13 +37,28 @@ class SleeveThreads:
         self.K = design_point.K
         self.L_eng = geometry.L_eng
 
-        self.d_mean = calcMeanDiameter(self.F, self.sigma_UTS, self.tau_UTS, self.K, self.L_eng)
+        self.d_mean = calcMeanDiameter(self.F, self.tau_UTS, self.K, self.L_eng)
 
         self.A_shear = calcShearArea(self.d_mean, self.L_eng, self.K)
-        self.tau = calcShearStress(self.F, self.A_shear)
+        self.tau_allow = calcShearStress(self.F, self.A_shear)
 
+    def summary(self):
+        return (
+            f"Design Points and Geometry:\n"
+            f"Required Force: {self.F:.2f}\n"
+            f"Ultimate Tensile Strength: {self.sigma_UTS:.2f}\n"
+            f"Ultimate Shear Strength: {self.tau_UTS:.2f}\n"
+            f"Thread Form Factor: {self.K:.2f}\n"
+            f"Thread Engagement Length: {self.L_eng:.2f}\n"
+            f"\n"
+            f"Calculated values:\n"
+            f"Mean Diameter: {self.d_mean:.2f}\n"
+            f"Shear Area: {self.A_shear:.2f}\n"
+            f"Allowable Shear Stress: {self.tau_allow:.2f}\n"
+        )
 if __name__ == "__main__":
     sleeveDesign = SleeveThreadDesignPoint(F = Q_(100, "N"), sigma_UTS = Q_(480, "MPa"), tau_UTS = Q_(240, "MPa"), K = 0.5)
     sleeveGeometry = SleeveThreadGeometry(L_eng = orifice_height)
 
     threads = SleeveThreads(sleeveDesign, sleeveGeometry)
+    print(threads.summary())
