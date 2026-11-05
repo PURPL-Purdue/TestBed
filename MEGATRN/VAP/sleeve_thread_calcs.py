@@ -25,10 +25,6 @@ def calcShearArea(d_mean: Q_[float], L_eng: Q_[float], K: float) -> Q_[float]:
     A_shear = (math.pi * d_mean * L_eng * K).to("millimeters**2")
     return A_shear
 
-def calcShearStress(F: Q_[float], A_shear: Q_[float]) -> Q_[float]:
-    tau_allow = (F / A_shear).to("MPa")
-    return tau_allow
-
 class SleeveThreads:
     def __init__(self, design_point: SleeveThreadDesignPoint, geometry: SleeveThreadGeometry):
         self.F = design_point.F
@@ -40,7 +36,6 @@ class SleeveThreads:
         self.d_mean = calcMeanDiameter(self.F, self.tau_UTS, self.K, self.L_eng)
 
         self.A_shear = calcShearArea(self.d_mean, self.L_eng, self.K)
-        self.tau_allow = calcShearStress(self.F, self.A_shear)
 
     def summary(self):
         return (
@@ -54,7 +49,6 @@ class SleeveThreads:
             f"Calculated values:\n"
             f"Mean Diameter: {self.d_mean:.2f}\n"
             f"Shear Area: {self.A_shear:.2f}\n"
-            f"Allowable Shear Stress: {self.tau_allow:.2f}\n"
         )
 if __name__ == "__main__":
     sleeveDesign = SleeveThreadDesignPoint(F = Q_(100, "N"), sigma_UTS = Q_(480, "MPa"), tau_UTS = Q_(240, "MPa"), K = 0.5)
