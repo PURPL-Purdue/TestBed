@@ -1,6 +1,12 @@
 import pint
 
-ureg = pint.UnitRegistry(auto_reduce_dimensions=True, system="US")
+ureg = pint.UnitRegistry(
+    auto_reduce_dimensions=True,
+    autoconvert_to_preferred=True,
+    system="US"
+)
+ureg.default_preferred_units = [ureg.psi, ureg.inch, ureg.pound, ureg.pound_force, ureg.second]
+ureg.setup_matplotlib()
 
 def read_parameters(filename, section):
     params = {}
@@ -46,7 +52,7 @@ def read_parameters(filename, section):
             if name in params:
                 raise Exception(f"Duplicate field '{name}' in 'in:' block at line {i}")
             if '"' in value:
-                params[name] = value
+                params[name] = value.strip('"')
             else:
                 params[name] = ureg(value)
             state = "reason"

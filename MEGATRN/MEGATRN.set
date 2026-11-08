@@ -1,5 +1,8 @@
 # General
 in: {
+	thrust = 900 lbf
+		reason: Corresponds to Pc
+		owner: Artem Smagin, asmagin@purdue.edu
 	chamber_pressure = 200psi
 		reason: Maintain allowable injector stiffness given TI constraints
 		owner: Artem Smagin, asmagin@purdue.edu
@@ -15,6 +18,13 @@ in: {
 	chamber_od = 5.0in
 		reason: Larger footprint then Maelstrom with common stock availability
 		owner: Artem Smagin, asmagin@purdue.edu
+
+	ambient_pressure = 14.695psi
+		reason: Standard atmospheric pressure
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+	ambient_temp = 25 degC
+		reason: Standard ambient temperature
+		owner: Jacob Beveridge, jbeveri@purdue.edu
 }
 
 # VAP
@@ -25,7 +35,7 @@ in: {
 	of_ratio = 1.0
 		reason: Minimize combustion temperature while still being within reasonable efficiency
 		owner: Jacob Beveridge, jbeveri@purdue.edu
-	oxidizer = "Liquid Oxygen"
+	oxidizer = "Oxygen"
 		reason: Liquid oxidizer supported by TI
 		owner: Jacob Beveridge, jbeveri@purdue.edu
 	fuel = "Ethanol"
@@ -54,15 +64,16 @@ in: {
 	mill_diameter = 40thou
 		reason: Current BIDC tooling
 		owner: Dominik Sloup, dsloup@purdue.edu
-	friction_coeff = 0.8
-		reason: ???
-		owner: Jacob Beveridge, jbeveri@purdue.edu
 	servo_encoder_count = 6400
 		reason: Supplier spec. sheet
 		owner: Jacob Beveridge, jbeveri@purdue.edu
 	
 	diam_ratio = 0.2
 		reason: 1/3-5 recommended by (D. Escher, 1996)
+		owner: Jacob Beveridge, jbeveri@purdue.edu
+
+	sleeve_radial_tolerance = 2thou
+		reason: Estimated based on machining / fit tolerances
 		owner: Jacob Beveridge, jbeveri@purdue.edu
 }
 out: {
@@ -268,5 +279,3 @@ in: {
 }
 out: {
 }
-
-```

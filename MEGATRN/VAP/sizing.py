@@ -2,98 +2,121 @@ from math import pi, sqrt, isnan, atan2, cos, sin, acos, asin, ceil, floor
 from rocketcea.cea_obj import CEA_Obj
 import numpy as np
 import matplotlib.pyplot as plt
+import CoolProp.CoolProp as cp
+import pint
+
+import sys
+
+sys.path.append("./")
 
 import get_oring
 import cv_manifold
 import orb
-
-in_to_m = 0.0254
-lb_to_kg = 0.4536
-N_to_lbf = 0.2248
-lbf_to_lbins = 386.09
+import set_file_parser
 
 def get_throttle_target(Pc, OF, ep):
-    rhoe = cea.get_Densities(Pc, OF, ep)[2] / (12 ** 3)
-    mach = cea.get_MachNumber(Pc, OF, ep)
-    sonic = cea.get_SonicVelocities(Pc, OF, ep)[2] * 12
-    Pe = Pc / cea.get_PcOvPe(Pc, OF, ep)
+    rhoe = set_file_parser.ureg.Quantity(cea.get_Densities(Pc.m, OF, ep)[2], "lb/ft**3")
+    mach = cea.get_MachNumber(Pc.m, OF, ep)
+    sonic = set_file_parser.ureg.Quantity(cea.get_SonicVelocities(Pc.m, OF, ep)[2], "ft/s")
+    Pe = Pc / cea.get_PcOvPe(Pc.m, OF, ep)
 
-    actual = Pe + (rhoe * (mach * sonic) ** 2) / lbf_to_lbins
+    actual = Pe + (rhoe * (mach * sonic) ** 2)
 
     return actual
 
-stiffness = 0.20
-sleeve_thickness = 0.100
-pintle_wall = 0.100
-blockage_factor = 0.85
 
-Cdr = 0.61
-Cda = 0.98
 
-Pa = 14.695
+general_params = set_file_parser.read_parameters("./MEGATRN/MEGATRN.set", "General")
+vap_params = set_file_parser.read_parameters("./MEGATRN/MEGATRN.set", "VAP")
 
-max_thrust = 900 # lbf
-Pc = 200 # psi
-of_ratio = 1
-Mdot = 1.90997 / lb_to_kg
+max_thrust = general_params['thrust']
+Pc = general_params['chamber_pressure']
+of_ratio = vap_params['of_ratio']
+Mdot = vap_params['mass_flow']
 Mf = Mdot / (1 + of_ratio)
 Mo = Mf * of_ratio
-rhof = 785 * (in_to_m ** 3) / lb_to_kg # Ethanol
-rhoo = 1205 / lb_to_kg * (in_to_m ** 3) # LOx
 
-expansion_ratio = 2.704
-throat_diam = 0.05271 / in_to_m
-chamber_diameter = 4.2 # in
-chamber_od = 5.0 # in
+expansion_ratio = general_params['expansion_ratio']
+throat_diam = general_params['throat_diam']
+chamber_diameter = general_params['chamber_id']
+chamber_od = general_params['chamber_od']
 exit_area = expansion_ratio * throat_diam**2 * pi * 0.25
 
-Dp = 0.2 * chamber_diameter
+Cdr = vap_params['radial_discharge_coeff']
+Cda = vap_params['annular_discharge_coeff']
 
-mill_diam = 0.040
+Pa = general_params['ambient_pressure']
 
-friction = 0.8
-servo_encoder_count = 6400
+Dp = vap_params['diam_ratio'] * chamber_diameter
+
+mill_diam = vap_params['mill_diameter']
+
+servo_encoder_count = vap_params['servo_encoder_count']
+
+stiffness = vap_params['lox_stiffness']
+sleeve_thickness = vap_params['sleeve_thickness']
+pintle_wall = vap_params['pintle_wall']
+blockage_factor = vap_params['blockage_factor']
+
+rhof = set_file_parser.ureg.Quantity(cp.PropsSI(
+        'D',
+        'P', ((1 + stiffness) * Pc).to("Pa").m, # Ox & Fuel stiffnesses close enough to ignore compressibility
+        'T', general_params['ambient_temp'].to("K").m,
+        vap_params['fuel']
+        ), "kg/m**3")
+rhoo = set_file_parser.ureg.Quantity(cp.PropsSI(
+    'D',
+    'P', ((1 + stiffness) * Pc).to("Pa").m,
+    'Qmass', 0, # Will be just below boiling
+    vap_params['oxidizer']
+    ), "kg/m**3")
+
+alignment_limit = vap_params['sleeve_radial_tolerance']
 
 #======== END OF PARAMETERS ========
-Dbore = floor(16.0 * (Dp - 2.0 * pintle_wall)) / 16.0
+Dbore = set_file_parser.ureg.Quantity(floor((16.0 * (Dp - 2.0 * pintle_wall)).m) / 16.0, "in")
 
 slot_count = round(blockage_factor * pi * Dbore / mill_diam / 2.0) * 2.0
 
-Aslot = Mo / sqrt(2 * rhoo * stiffness * Pc * lbf_to_lbins) / Cdr
-print(f"Slot Area: {Aslot:.6f}")
+Aslot = Mo / (2 * rhoo * stiffness * Pc)**0.5 / Cdr
+Aslot.ito_preferred()
+Aslot.ito_reduced_units()
 slot_height = Aslot / (slot_count * mill_diam) + (1 - pi / 4) * mill_diam
 
 Rmomentum = Mo ** 2 / rhoo / Aslot
 
 Aann = Mf ** 2 / (1.5 * Rmomentum) / rhof
-Dann = sqrt((4 * Aann) / pi + (Dp + 2 * sleeve_thickness)** 2)
+Dann = ((4 * Aann) / pi + (Dp + 2 * sleeve_thickness)** 2)**0.5
 
-Pdf = (Mf ** 2 / (2 * Cda ** 2 * Aann ** 2 * rhof)) / lbf_to_lbins
+Pdf = (Mf ** 2 / (2 * Cda ** 2 * Aann ** 2 * rhof))
 ox_feed = (1 + stiffness) * Pc
 fuel_feed = Pdf + Pc
 
-min_rp1_diam = 2 * sqrt(Aann / pi)
-min_lox_diam = 2 * sqrt(Aslot / pi)
+min_rp1_diam = 2 * (Aann / pi)**0.5
+min_lox_diam = 2 * (Aslot / pi)**0.5
 
 delta_ann = (Dann - Dp - 2 * sleeve_thickness)/2
 
-print(f"Pintle Tip Outer Diameter (in): {Dp:.3f}")
-print(f"Pintle Tip Inner Diameter (in): {Dbore:.3f}")
-print(f"Pintle Slot Count: {slot_count}")
-print(f"Pintle Slot Height (in): {slot_height:.3f}")
-print(f"Actual Blockage Factor: {slot_count * mill_diam / pi / Dbore:.3f}")
-print(f"Annulus Outer Diameter (in): {Dann:.3f}")
-print(f"Annulur Gap (in): {delta_ann:.3f}")
-print(f"Fuel Stiffness (%): {100 * Pdf/Pc:.1f}")
-print(f"LOx Feed Pressure (psia): {ox_feed: .0f}")
-print(f"Fuel Feed Pressure (psia): {fuel_feed: .0f}")
-print(f"Mininum LOx Inlet Diameter (in): {min_lox_diam:.3f}")
-print(f"Mininum Fuel Inlet Diameter (in): {min_rp1_diam:.3f}")
+print(f"Slot Area: {Aslot:.6f~P}")
+print(f"Pintle Tip Outer Diameter: {Dp:.3f~P}")
+print(f"Pintle Tip Inner Diameter: {Dbore:.3f~P}")
+print(f"Pintle Slot Count: {slot_count:~P}")
+print(f"Pintle Slot Height: {slot_height:.3f~P}")
+print(f"Actual Blockage Factor: {slot_count * mill_diam / pi / Dbore:.3f~P}")
+print(f"Annulus Outer Diameter: {Dann:.3f~P}")
+print(f"Annulur Gap: {delta_ann:.3f~P}")
+print(f"Fuel Stiffness (%): {100 * Pdf/Pc:.1f~P}")
+print(f"LOx Feed Pressure: {ox_feed:.0f~P}")
+print(f"Fuel Feed Pressure: {fuel_feed:.0f~P}")
+print(f"Mininum LOx Inlet Diameter: {min_lox_diam:.3f~P}")
+print(f"Mininum Fuel Inlet Diameter: {min_rp1_diam:.3f~P}")
 
-cea = CEA_Obj(oxName='LOX', fuelName='Ethanol')
+cea = CEA_Obj(oxName='LOX', fuelName=vap_params['fuel'])
+if vap_params['oxidizer'] != "Oxygen":
+    print(f"!!!WARNING!!! CEA is set up to use LOx as oxidizer, SET file says using {vap_params['oxidizer']} instead")
 
 throttles = np.linspace(1.0, 0.01, 100)
-chamber_pressures = np.empty_like(throttles)
+chamber_pressures = np.empty_like(throttles, pint.Quantity)
 for i in range(len(throttles)):
     throttle = throttles[i]
 
@@ -107,40 +130,39 @@ for i in range(len(throttles)):
         if abs(actual / desired) < 0.0000001:
             converged = True
         else:
-            epsilon = get_throttle_target(chamber_pressure + 0.01, Mo / Mf, expansion_ratio)
+            epsilon = get_throttle_target(chamber_pressure + set_file_parser.ureg.Quantity(0.01, "psi"), Mo / Mf, expansion_ratio)
             epsilon -= desired
 
-            slope = (epsilon - actual) / 0.01
+            slope = (epsilon - actual) / set_file_parser.ureg.Quantity(0.01, "psi")
             chamber_pressure -= actual / slope
 
     chamber_pressures[i] = chamber_pressure
 
-mass_flows = np.empty_like(throttles)
+mass_flows = np.empty_like(throttles, pint.Quantity)
 for i in range(len(throttles)):
-    rhoe = cea.get_Densities(chamber_pressures[i], Mo / Mf, expansion_ratio)[2] / (12 ** 3)
-    mach = cea.get_MachNumber(chamber_pressures[i], Mo / Mf, expansion_ratio)
-    sonic = cea.get_SonicVelocities(chamber_pressures[i], Mo / Mf, expansion_ratio)[2] * 12
+    rhoe = set_file_parser.ureg.Quantity(cea.get_Densities(chamber_pressures[i].m, Mo / Mf, expansion_ratio)[2], "lb/ft**3")
+    mach = cea.get_MachNumber(chamber_pressures[i].m, Mo / Mf, expansion_ratio)
+    sonic = set_file_parser.ureg.Quantity(cea.get_SonicVelocities(chamber_pressures[i].m, Mo / Mf, expansion_ratio)[2], "ft/s")
 
     mass_flows[i] = rhoe * mach * sonic * exit_area
 
 ox_fraction = Mo / (Mo + Mf)
 fuel_fraction = Mf / (Mo + Mf)
-lox_areas = np.empty_like(throttles)
-fuel_areas = np.empty_like(throttles)
-lox_stiffnesses = np.empty_like(throttles)
-fuel_stiffnesses = np.empty_like(throttles)
+lox_areas = np.empty_like(throttles, pint.Quantity)
+fuel_areas = np.empty_like(throttles, pint.Quantity)
+lox_stiffnesses = np.empty_like(throttles, pint.Quantity)
+fuel_stiffnesses = np.empty_like(throttles, pint.Quantity)
 for i in range(len(throttles)):
-    lox_areas[i] = (ox_fraction * mass_flows[i]) / sqrt(2 * rhoo * (ox_feed - chamber_pressures[i]) * lbf_to_lbins) / Cdr
-    fuel_areas[i] = (fuel_fraction * mass_flows[i]) / sqrt(2 * rhof * (fuel_feed - chamber_pressures[i]) * lbf_to_lbins) / Cda
+    lox_areas[i] = (ox_fraction * mass_flows[i]) / (2 * rhoo * (ox_feed - chamber_pressures[i]))**0.5 / Cdr
+    fuel_areas[i] = (fuel_fraction * mass_flows[i]) / (2 * rhof * (fuel_feed - chamber_pressures[i]))**0.5 / Cda
     lox_stiffnesses[i] = (ox_feed - chamber_pressures[i]) / chamber_pressures[i]
     fuel_stiffnesses[i] = (fuel_feed - chamber_pressures[i]) / chamber_pressures[i]
 
-
 tmrs = np.empty_like(throttles)
 lmrs = np.empty_like(throttles)
-spray_angles = np.empty_like(throttles)
-lox_vels = np.empty_like(throttles)
-fuel_vels = np.empty_like(throttles)
+spray_angles = np.empty_like(throttles, pint.Quantity)
+lox_vels = np.empty_like(throttles, pint.Quantity)
+fuel_vels = np.empty_like(throttles, pint.Quantity)
 for i in range(len(throttles)):
     lox_mom = (ox_fraction * mass_flows[i]) ** 2 / rhoo / lox_areas[i]
     fuel_mom = (fuel_fraction * mass_flows[i]) ** 2 / rhof / fuel_areas[i]
@@ -156,15 +178,14 @@ ispvacs = np.empty_like(throttles)
 ispambs = np.empty_like(throttles)
 separation_point = 0.0
 for i in range(len(throttles)):
-    ispvacs[i] = cea.get_Isp(chamber_pressures[i], Mo / Mf, expansion_ratio)
-    ispambs[i], mode = cea.estimate_Ambient_Isp(chamber_pressures[i], Mo / Mf, expansion_ratio, Pa)
+    ispvacs[i] = cea.get_Isp(chamber_pressures[i].m, Mo / Mf, expansion_ratio)
+    ispambs[i], mode = cea.estimate_Ambient_Isp(chamber_pressures[i].m, Mo / Mf, expansion_ratio, Pa.m)
     if mode == "Separated" and throttles[i] > separation_point:
         separation_point = throttles[i]
         print(f"Separation at: {separation_point}")
 
-slotheights = np.empty_like(throttles)
-annulargaps = np.empty_like(throttles)
-alignment_limit = 0.002
+slotheights = np.empty_like(throttles, pint.Quantity)
+annulargaps = np.empty_like(throttles, pint.Quantity)
 min_slotheight = None
 min_throttle = None
 sleeve_50 = None
@@ -178,11 +199,11 @@ cap2_height = mill_diam * 0.5
 cap1_gap = None
 cap2_gap = None
 for i in range(len(throttles)):
-    annulargaps[i] = (Dann - sqrt(Dann**2 - 4 * fuel_areas[i] / pi)) / 2
+    annulargaps[i] = (Dann - (Dann**2 - 4 * fuel_areas[i] / pi)**0.5) / 2
     if throttles[i] >= cap1_limit:
         theta = 1.0
-        err = 1.0
-        while abs(err/(throttles[i]*Aslot/slot_count)) > 0.00000001:
+        err = set_file_parser.ureg.Quantity("1.0", "in**2")
+        while abs(err)/(throttles[i]*Aslot/slot_count) > set_file_parser.ureg.Quantity(0.00000001, "1"):
             err = Aslot / slot_count * (1.0 - throttles[i]) - mill_diam**2 * 0.125 * (theta - sin(theta))
             theta -= err / (-1.0 * mill_diam**2 * 0.125 * (1.0 - cos(theta)))
         slotheights[i] = slot_height + mill_diam * 0.5 * (cos(theta * 0.5) - 1.0)
@@ -193,8 +214,8 @@ for i in range(len(throttles)):
             cap1_gap = annulargaps[i]
     else:
         theta = 1.0
-        err = 1.0
-        while abs(err/(throttles[i]*Aslot/slot_count)) > 0.00000001:
+        err = set_file_parser.ureg.Quantity("1.0", "in**2")
+        while abs(err)/(throttles[i]*Aslot/slot_count) > set_file_parser.ureg.Quantity(0.00000001, "1"):
             err = 0.125 * mill_diam**2 * (theta - sin(theta)) - throttles[i] * Aslot / slot_count
             theta -= err / (0.125 * mill_diam**2 * (1.0 - cos(theta)))
         slotheights[i] = mill_diam * 0.5 * (1.0 - cos(theta * 0.5))
@@ -205,28 +226,28 @@ for i in range(len(throttles)):
     if throttles[i] == 0.50:
         sleeve_50 = (Dann - Dp) / 2 - annulargaps[50]
 
-with open("sleeve.txt", "w") as file:
+with open("MEGATRN/VAP/sleeve.txt", "w") as file:
     for i in range(len(throttles)):
-        file.write(f"{annulargaps[i]-delta_ann:f},0.0,{slot_height-slotheights[i]:f}\n")
+        file.write(f"{annulargaps[i]-delta_ann:f~P},0.0,{slot_height-slotheights[i]:f~P}\n")
 
 sleeve_max = (Dann - Dp) / 2 - np.min(annulargaps)
 
 optimal_arm = chamber_od / 2.0
 
 
-print(f"Sleeve Thickness at 50% Throttle (in): {sleeve_50:.3f}")
-print(f"Sleeve Thickness at 0% Throttle (in): {sleeve_max:.3f}")
+print(f"Sleeve Thickness at 50% Throttle: {sleeve_50:.3f~P}")
+print(f"Sleeve Thickness at 0% Throttle: {sleeve_max:.3f~P}")
 print(f"Reliable Minimum Throttle (%): {min_throttle * 100:.0f}")
-print(f"Minimum Expected Chamber Pressure (psia): {min_pc:.0f}")
-print(f"Approx. Throttle Accuracy (%): {100.0 * (chamber_od * 0.5 * 2 * pi / servo_encoder_count) / slot_height:.1f}")
-print(f"Downwards Force (lbf): {fuel_feed * pi * 0.25 * (Dann**2 - (Dp+sleeve_thickness*2)**2):.1f}")
+print(f"Minimum Expected Chamber Pressure: {min_pc:.0f~P}")
+print(f"Approx. Throttle Accuracy (%): {100.0 * (chamber_od * 0.5 * 2 * pi / servo_encoder_count) / slot_height:.1f~P}")
+print(f"Downwards Force: {fuel_feed * pi * 0.25 * (Dann**2 - (Dp+sleeve_thickness*2)**2):.1f~P}")
 
 get_oring.load_orings()
 
-foring = get_oring.inner_diam(chamber_diameter - 0.5)
+foring = get_oring.inner_diam(chamber_diameter.m - 0.5)
 foring_gland = get_oring.get_face_gland_size(foring['num'])
 
-pintle_ring = get_oring.radial_min_rod_od(Dp)
+pintle_ring = get_oring.radial_min_rod_od(Dp.m)
 pintle_gland = get_oring.get_radial_gland_size(pintle_ring['num'])
 
 sleeve_ring = get_oring.radial_min_rod_od(
@@ -241,15 +262,15 @@ print(f"Pintle O-Ring: #{pintle_ring['num']:03d}")
 cv_min_diam = min_rp1_diam / 2 # Vibes
 cv_areas = cv_manifold.calc_cv(
     Mf,
-    in_to_m * min_rp1_diam / 2,
+    min_rp1_diam / 2,
     rhof,
     4,
-    10000 * pi * cv_min_diam**2 / 4 * in_to_m**2
+    10000 * pi * cv_min_diam**2 / 4
 )
-cv_max_diam = sqrt(4 * cv_areas[0] / pi)
+cv_max_diam = (4 * cv_areas[0] / pi)**0.5
 
-pintle_orb = orb.orb_min_thread(Dbore)
-fuel_orb = orb.orb_min_diam(min_rp1_diam)
+pintle_orb = orb.orb_min_thread(Dbore.m)
+fuel_orb = orb.orb_min_diam(min_rp1_diam.m)
 pt_orb = orb.dash_num(2)
 
 print(f"Pintle (LOx) ORB: -{pintle_orb['num']} ({pintle_orb['tube']:.4f})")
@@ -330,7 +351,6 @@ pintle_bolt_count=2
 
 fig1, ax1 = plt.subplots(2, 3)
 fig2, ax2 = plt.subplots(2, 2)
-fig3, ax3 = plt.subplots(1, 1)
 ax1[0,0].plot(throttles, chamber_pressures)
 ax1[0,0].set_xlim(0.0, 1.0)
 ax1[0,0].set_ylim(0.0, Pc)
@@ -429,10 +449,5 @@ ax2[1,1].set_ylabel("Annular Gap (in)")
 ax2[1,1].set_title("Annular Gap vs. Slot Height")
 ax2[1,1].legend(["Annular Gap", "Reliable Minimum Throttle", "Bottom Cap", "Top Cap"])
 ax2[1,1].grid()
-
-ax3.plot(throttles, lox_vels)
-ax3.plot(throttles, fuel_vels)
-ax3.legend(["LOx Velocity", "Fuel Velocity"])
-ax3.grid()
 
 plt.show()
