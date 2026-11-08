@@ -261,13 +261,13 @@ print(f"Pintle O-Ring: #{pintle_ring['num']:03d}")
 
 cv_min_diam = min_rp1_diam / 2 # Vibes
 cv_areas = cv_manifold.calc_cv(
-    Mf,
-    min_rp1_diam / 2,
-    rhof,
+    Mf.to("kg/s").m,
+    min_rp1_diam.to("m").m / 2,
+    rhof.to("kg/m**3").m,
     4,
-    10000 * pi * cv_min_diam**2 / 4
+    10000 * pi * cv_min_diam.to("m").m**2 / 4
 )
-cv_max_diam = (4 * cv_areas[0] / pi)**0.5
+cv_max_diam = set_file_parser.ureg.Quantity((4 * cv_areas[0] / pi)**0.5, "m")
 
 pintle_orb = orb.orb_min_thread(Dbore.m)
 fuel_orb = orb.orb_min_diam(min_rp1_diam.m)
@@ -277,15 +277,15 @@ print(f"Pintle (LOx) ORB: -{pintle_orb['num']} ({pintle_orb['tube']:.4f})")
 print(f"Fuel ORB: -{fuel_orb['num']}")
 print(f"PT ORB: -{pt_orb['num']}")
 
-with open("master.exp", "w") as file:
+with open("MEGATRN/VAP/master.exp", "w") as file:
     file.write(f"""
 // Version:  3
-[Inch]annular_gap={delta_ann:.4f}
-[Degree]annulus_angle=60
-[Inch]chamber_id={chamber_diameter:.4f}
-[Inch]chamber_od={chamber_od:.4f}
-[Inch]cv_max_diam={cv_max_diam:.4f}
-[Inch]cv_min_diam={cv_min_diam:.4f}
+[Inch]annular_gap={delta_ann.m:.4f}
+[Degrees]annulus_angle=60
+[Inch]chamber_id={chamber_diameter.to_preferred().m:.4f}
+[Inch]chamber_od={chamber_od.to_preferred().m:.4f}
+[Inch]cv_max_diam={cv_max_diam.to_preferred().m:.4f}
+[Inch]cv_min_diam={cv_min_diam.to_preferred().m:.4f}
 [Degrees]drill_angle=118
 [Inch]faceplate_thickness=0.125
 [Inch]foring_depth={foring_gland['depth']:.4f}
@@ -296,13 +296,13 @@ with open("master.exp", "w") as file:
 [Inch]nub_thickness=faceplate_thickness * 0.75
 [Inch]pintle_flange_extension=5/16
 [Inch]pintle_flange_thickness=0.125
-[Inch]pintle_id={Dbore:.4f}
-[Inch]pintle_od={Dp:.4f}
+[Inch]pintle_id={Dbore.to_preferred().m:.4f}
+[Inch]pintle_od={Dp.to_preferred().m:.4f}
 [Inch]pintle_oring_depth={pintle_gland['depth']:.4f}
 [Inch]pintle_oring_id={pintle_gland['id']:.4f}
 [Inch]pintle_oring_width={pintle_gland['width']:.4f}
-[Inch]plenum_height={cv_min_diam/2:.4f}
-[Inch]sleeve_50_thickness={sleeve_50:.4f}
+[Inch]plenum_height={cv_min_diam.to_preferred().m/2:.4f}
+[Inch]sleeve_50_thickness={sleeve_50.to_preferred().m:.4f}
 [Inch]sleeve_extrusion_id={pintle_orb['spotface_diam']:.4f}
 [Inch]sleeve_extrusion_height=2.5
 [Inch]sleeve_oring_depth={sleeve_gland['depth']:.4f}
@@ -310,8 +310,8 @@ with open("master.exp", "w") as file:
 [Inch]sleeve_oring_width={sleeve_gland['width']:.4f}
 [Inch]sleeve_pin_thickness=0.250
 [Inch]sleeve_ring_od={sleeve_gland['id'] + sleeve_gland['depth']:.4f}
-[Inch]sleeve_thickness={sleeve_thickness:.4f}
-[Inch]slot_height={slot_height:.4f}
+[Inch]sleeve_thickness={sleeve_thickness.to_preferred().m:.4f}
+[Inch]slot_height={slot_height.to_preferred().m:.4f}
 [Inch]pintle_chamfer_od={pintle_orb['chamfer_od']:.4f}
 [Inch]pintle_thread_diam={pintle_orb['thread_diam']:.4f}
 (String) pintle_thread_type="{pintle_orb['thread_type']}"
@@ -336,8 +336,8 @@ with open("master.exp", "w") as file:
 [Degrees]pt_chamfer_angle={pt_orb['chamfer_angle']:.4f}
 [Inch]pt_tap_length={pt_orb['thread_length']:.4f}
 [Inch]pt_pipe_diam={pt_orb['min_id']:.4f}
-[Inch]slot_width={mill_diam:.4f}
-slot_count={slot_count}
+[Inch]slot_width={mill_diam.m:.4f}
+slot_count={slot_count.m}
 bolt_count=4
 (String) bolt_type="1/4-20"
 [Inch]servo_width=3.4
