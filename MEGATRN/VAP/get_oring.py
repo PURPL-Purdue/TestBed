@@ -2,7 +2,7 @@ orings = []
 radial_glands = []
 
 def load_orings():
-    with open("orings.csv", "r") as file:
+    with open("MEGATRN/VAP/orings.csv", "r") as file:
         lines = file.readlines()
         for line in lines:
             num,ID,OD = line.split()
@@ -12,7 +12,7 @@ def load_orings():
                 'OD': mixed_to_float(OD)
             })
 
-    with open("oring_glands.csv", "r") as file:
+    with open("MEGATRN/VAP/oring_glands.csv", "r") as file:
         lines = file.readlines()
         i = 0
         while i < len(lines):

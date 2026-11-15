@@ -9,3 +9,7 @@ __pycache__/
 REGEN/MatlabCEA/+CEA/bin/ZZa26964
 Zephyr/Pintle/ceavenv/
 *.exp
+venv/
+*.exe
+MEGATRN/VAP/sleeve.txt
+*.swp

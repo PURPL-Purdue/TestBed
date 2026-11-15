@@ -12,7 +12,7 @@ def mixed_to_float(mixed):
         num,den = parts[1].split('/')
         return float(parts[0]) + int(num) / int(den)
 
-with open("orbs.csv", "r") as file:
+with open("./MEGATRN/VAP/orbs.csv", "r") as file:
     lines = file.readlines()
     for line in lines:
         parts = line.split(',')
@@ -40,7 +40,7 @@ with open("orbs.csv", "r") as file:
             'secondary_chamfer_angle': 45
         })
 
-with open("orb_plug.csv", "r") as file:
+with open("./MEGATRN/VAP/orb_plug.csv", "r") as file:
     lines = file.readlines()
     for line in lines:
         parts = line.split(',')
