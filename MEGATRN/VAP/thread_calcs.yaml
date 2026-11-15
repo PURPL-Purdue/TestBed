@@ -4,94 +4,88 @@
 #   thread_calcs.py reads every number from here. No numbers live in the code.                    #
 #   Run:  python MEGATRN/VAP/thread_calcs.py                (uses this file)                      #
 #         python MEGATRN/VAP/thread_calcs.py other.yaml     (uses another file)                   #
-#   Units in parentheses.                                                                         #
-#                                                                                                 #
-#   Every input is tagged with where its value comes from:                                        #
-#     [SET FILE]  copied from MEGATRN.set -- owner listed, don't change here without them         #
-#     [SOURCED]   from a standard / reference / data sheet (named in the comment)                 #
-#     [CONFIRM]   reasonable value but needs a check against CAD or the team                      #
-#     [FILLER]    placeholder guess -- replace before trusting the answer                         #
-#     [SETTING]   calc setting, not a physical value                                              #
+#   Units in parentheses. [FILLER] = placeholder until CAD / test data is in.                     #
 ###################################################################################################
 
 ######################################
-###### ENGINE / INJECTOR
+###### ENGINE / INJECTOR (from MEGATRN.set)
 ######################################
 
-chamber_pressure: 200      # (psia) [SET FILE] Artem Smagin
-chamber_id: 4.2            # (in) [SET FILE] Artem Smagin
-lox_stiffness: 0.20        # (N/A) [SET FILE] Jacob Beveridge
-pintle_wall: 0.100         # (in) [SET FILE] Jacob Beveridge
-diam_ratio: 0.2            # (N/A) [SET FILE] pintle OD / chamber ID, Jacob Beveridge
-mass_flow: 4.21            # (lbm/s) [SET FILE] total, Jacob Beveridge
-of_ratio: 1.0              # (N/A) [SET FILE] Jacob Beveridge
+chamber_pressure: 200      # (psia) 
+chamber_id: 4.2            # (in) 
+lox_stiffness: 0.20        # (N/A) 
+pintle_wall: 0.100         # (in)
+diam_ratio: 0.2            # (N/A) 
+mass_flow: 4.21            # (lbm/s) total
+of_ratio: 1.0              # (N/A)
 
 ######################################
 ###### 1. SEPARATING FORCE
 ######################################
 
-manifold_pressure: null    # (psia) [CONFIRM] null -> (1 + lox_stiffness) * chamber_pressure = 240. Use reg/tank max if higher (transients)
-atm_pressure: 14.7         # (psia) [SOURCED] standard atmosphere
-effective_dia: null        # (in) [CONFIRM] dia pressure acts over. null -> pintle OD (conservative, per whiteboard)
+manifold_pressure: null    # (psia) null -> (1 + lox_stiffness) * chamber_pressure. Set reg/tank max for transients
+atm_pressure: 14.7         # (psia)
+effective_dia: null        # (in) dia pressure acts over. null -> pintle OD (conservative)
 
 ######################################
-###### GEOMETRY
+###### GEOMETRY [FILLER -- from CAD]
 ######################################
 
-shaft_od: null             # (in) [CONFIRM] SS OD over the threads. null -> pintle OD (0.840). Check CAD
-bore_min: 0.50             # (in) [FILLER] smallest bore we can neck the Cu to under the threads. Flow limit -- ask injector owner
-grip_length: 0.25          # (in) [FILLER] clamped length, shoulder to threads. BIGGEST LEVER -- get from CAD
-shoulder_width: 0.050      # (in) [CONFIRM] shoulder radial width, half the wall (per Vasu). Capped at the SS wall. Check CAD
-min_wall: 0.030            # (in) [CONFIRM] thinnest Cu or SS wall we'll machine. Ask the shop
-wall_step: 0.005           # (in) [SETTING] step when growing the Cu wall
+shaft_od: null             # (in) SS OD over the threads. null -> pintle OD
+bore_min: 0.50             # (in) smallest bore we'll neck the Cu down to under the threads [FILLER]
+grip_length: 0.25          # (in) clamped length, same for tip and shaft [FILLER]
+shoulder_width: 0.050      # (in) shoulder radial width (half the wall)
+min_wall: 0.030            # (in) thinnest Cu or SS wall we'll machine
+wall_step: 0.005           # (in) step when growing the Cu wall
 
 ######################################
 ###### MATERIALS (room temp)
 ######################################
 
-cu_yield: 10000            # (psi) [FILLER] annealed OFHC, typical ASTM. Real range 3.8-10 ksi by anneal/braze -- need heat treat
-cu_ultimate: 32000         # (psi) [SOURCED] annealed OFHC, NASA CR-134806 / AZoM
-cu_modulus: 17.0e+6        # (psi) [SOURCED] OFHC copper, AZoM (16.7 Msi)
-ss_yield: 30000            # (psi) [SOURCED] 316 annealed, ASTM A276 minimum
-ss_ultimate: 75000         # (psi) [SOURCED] 316 annealed, ASTM A276 minimum
-ss_modulus: 28.0e+6        # (psi) [SOURCED] 316 SS, typical
-lox_density: 0.04353       # (lbm/in^3) [SOURCED] 1205 kg/m^3, same as sizing.py
+cu_yield: 10000            # (psi) annealed OFHC. 3.8-10 ksi depending on anneal/braze!
+cu_ultimate: 32000         # (psi)
+cu_modulus: 17.0e+6        # (psi)
+ss_yield: 30000            # (psi) 316 annealed
+ss_ultimate: 75000         # (psi)
+ss_modulus: 28.0e+6        # (psi)
+lox_density: 0.04353       # (lbm/in^3)
 
 ######################################
-###### TEMPERATURES
+###### TEMPERATURES [FILLER -- until thermal model]
 ######################################
 
-room_temp: 70               # (F) [SETTING] reference temp for the yield data; no strength credit below this
-cu_temp: 70                # (F) [FILLER] copper at the joint -- needs thermal model
-ss_temp: 70                # (F) [FILLER] SS at the joint -- needs thermal model
-cu_temp_sweep: [70, 200, 400, 600, 800]   # (F) [SETTING] sensitivity table
+cu_temp: 70                # (F) copper tip at the joint
+ss_temp: 70                # (F) SS shaft at the joint
+cu_temp_sweep: [70, 200, 400, 600, 800]   # (F) sensitivity table
 
 # Yield vs temperature, as fraction of room-temp yield. No credit taken for cold (clamped to 1 at 70 F).
-cu_yield_temps: [68, 80.6, 392, 620.6, 752, 932, 980.6, 1112, 1340.6, 1472]          # (F) [SOURCED] annealed OFCu, qedfusion.org/LIB/PROPS/PANOS/ofc.html Table 1
-cu_yield_ratio: [1.0, 0.989, 0.769, 0.665, 0.615, 0.562, 0.546, 0.500, 0.381, 0.288]  # (N/A) [SOURCED] same table, / 26 MPa RT
-cu_yield_fit_order: 3      # [SETTING] cubic fit, max residual ~0.5%
-ss_yield_temps: [70, 300, 600]           # (F) [SOURCED] 316L plate, INL/CON-06-11962 Table 2
-ss_yield_ratio: [1.0, 0.618, 0.510]      # (N/A) [SOURCED] same table, lowest of 4 heats (conservative). Linear interp
+# Cu: annealed OFCu, qedfusion.org/LIB/PROPS/PANOS/ofc.html Table 1 -> cubic fit
+cu_yield_temps: [68, 80.6, 392, 620.6, 752, 932, 980.6, 1112, 1340.6, 1472]          # (F)
+cu_yield_ratio: [1.0, 0.989, 0.769, 0.665, 0.615, 0.562, 0.546, 0.500, 0.381, 0.288]  # (N/A)
+cu_yield_fit_order: 3
+# SS: 316L plate, INL/CON-06-11962 Table 2, lowest of 4 heats -> linear interp (only 3 points)
+ss_yield_temps: [70, 300, 600]           # (F)
+ss_yield_ratio: [1.0, 0.618, 0.510]      # (N/A)
 
 ######################################
 ###### 3. PRELOAD LOSSES
 ######################################
 
-embedding: 2.165e-4        # (in) [SOURCED] VDI 2230 steel values, Rz<10um: 3 um thread + 2.5 um shoulder. Cu likely worse -- need finish
-include_thermal: true      # [SETTING] LOx chill-down loss on/off. May not happen (shaft shrinks onto Cu)
-cu_cold_contraction: 0.0029   # (N/A) [FILLER] dL/L 293 K -> ~90 K, from memory -- check NIST cryo data
-ss_cold_contraction: 0.0027   # (N/A) [FILLER] dL/L 293 K -> ~90 K, from memory -- check NIST cryo data
-relax_fraction: 0.25       # (N/A) [FILLER] preload lost to Cu creep hot. Pure guess, no data
+embedding: 2.165e-4        # (in) VDI 2230 Rz<10um: 3 um thread + 2.5 um shoulder. Soft Cu may be worse
+include_thermal: true      # LOx chill-down: Cu contracts more than SS -> preload drops. May not happen
+cu_cold_contraction: 0.0029   # (N/A) dL/L 293 K -> ~90 K [FILLER -- check NIST]
+ss_cold_contraction: 0.0027   # (N/A) dL/L 293 K -> ~90 K [FILLER -- check NIST]
+relax_fraction: 0.25       # (N/A) fraction of preload lost to Cu creep hot [FILLER, no data]
 
 ######################################
 ###### TORQUE
 ######################################
 
-friction_sweep: [0.10, 0.15, 0.20, 0.25]   # (N/A) [FILLER] threads + shoulder. Depends on lube -- torque set at the highest
+friction_sweep: [0.10, 0.15, 0.20, 0.25]   # (N/A) threads + shoulder. Torque set at the highest
 
 ######################################
 ###### 4. THREADS
 ######################################
 
-fos_target: 2.0            # (N/A) [CONFIRM] team notes said 2-4x
-thread_tables: [unf_threads.csv, unc_threads.csv]   # [SETTING] files next to the script: dia, TPI, name
+fos_target: 2.0            # (N/A)
+thread_tables: [unf_threads.csv, unc_threads.csv]   # files next to the script: dia, TPI, name
