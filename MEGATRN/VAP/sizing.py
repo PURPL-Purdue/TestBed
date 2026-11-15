@@ -180,9 +180,9 @@ separation_point = 0.0
 for i in range(len(throttles)):
     ispvacs[i] = cea.get_Isp(chamber_pressures[i].m, Mo / Mf, expansion_ratio)
     ispambs[i], mode = cea.estimate_Ambient_Isp(chamber_pressures[i].m, Mo / Mf, expansion_ratio, Pa.m)
-    if mode == "Separated" and throttles[i] > separation_point:
+    if mode.startswith("Separated") and throttles[i] > separation_point:
         separation_point = throttles[i]
-        print(f"Separation at: {separation_point}")
+        print(f"Separation at: {separation_point * 100.0}%")
 
 slotheights = np.empty_like(throttles, pint.Quantity)
 annulargaps = np.empty_like(throttles, pint.Quantity)
@@ -267,7 +267,7 @@ cv_areas = cv_manifold.calc_cv(
     4,
     10000 * pi * cv_min_diam.to("m").m**2 / 4
 )
-cv_max_diam = set_file_parser.ureg.Quantity((4 * cv_areas[0] / pi)**0.5, "m")
+cv_max_diam = set_file_parser.ureg.Quantity((4 * cv_areas[0] / pi)**0.5, "in")
 
 pintle_orb = orb.orb_min_thread(Dbore.m)
 fuel_orb = orb.orb_min_diam(min_rp1_diam.m)
@@ -416,13 +416,13 @@ ax1[0,2].grid()
 
 ax1[1,2].plot(throttles, ispvacs)
 ax1[1,2].plot(throttles, ispambs)
-ax1[1,2].vlines(separation_point, 0.0, 1.05 * np.max(ispvacs), linestyles='dashed', label='Flow Separation')
+ax1[1,2].vlines(separation_point, 0.0, 1.05 * np.max(ispvacs), linestyles='dashed')
 ax1[1,2].set_xlim(0.0, 1.0)
 ax1[1,2].set_ylim(0.0, 1.05 * np.max(ispvacs))
 ax1[1,2].set_xlabel("Thrust Level (actual/full)")
 ax1[1,2].set_ylabel("ISP (s)")
 ax1[1,2].set_title("Vacuum and Sea Level ISP vs. Throttle Level")
-ax1[1,2].legend(["Vacuum", "Sea Level"])
+ax1[1,2].legend(["Vacuum", "Sea Level", "Flow Separation"])
 ax1[1,2].grid()
 
 ax2[1,0].plot(throttles, slotheights)
